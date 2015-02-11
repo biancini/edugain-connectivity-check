@@ -9,7 +9,8 @@ $arrContextOptions=array(
 	),
 );
             
-            $map_url = "http://mds.edugain.org";
+//$map_url = "http://mds.edugain.org";
+$map_url = "https://spemb.lab.unimo.it/edugain-md.xml";
             
 if (($metadataXML = file_get_contents($map_url, false, stream_context_create($arrContextOptions)))===false){
 	echo "Error fetching eduGAIN metadata XML\n";
