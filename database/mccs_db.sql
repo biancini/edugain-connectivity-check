@@ -6,7 +6,8 @@ CHARSET utf8;
 
 CREATE DATABASE IF NOT EXISTS mccs_db CHARACTER SET=utf8;
 
-grant all privileges on mccs_db.* to mccs_user@localhost identified by 'ciaomccs';
+GRANT ALL PRIVILEGES ON mccs_db.* TO mccs_user@localhost IDENTIFIED BY 'ciaomccs';
+FLUSH PRIVILEGES;
 
 use mccs_db;
 
