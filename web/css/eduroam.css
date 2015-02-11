@@ -1,0 +1,90 @@
+body {
+	background: #bcd7e8 repeat-x;
+	font-family:Verdana, Arial, Helvetica, sans-serif;
+	font-size:11px;
+	padding:0;
+	margin:0;
+}
+a:visited{
+	color:#000;
+}
+a {
+	color:#000;
+}
+img {
+	border:0;
+}
+table {
+	
+}
+
+select {
+	max-width:200px;
+}
+
+input[type="text"], input[type="password"], input[type="password"] {
+	width:200px;
+	border: 1px solid;
+}
+input.narrow{
+	width:100px;
+}
+input.wide{
+	width:300px;
+}
+	
+div.admin_naslov{
+	margin:10px;
+	padding:5px;
+	font-size:14px;
+	font-weight:bold;
+}
+table.container {
+	width:1000px;
+	background-color:#fff;
+}
+td.body {
+	border:#166A8F 1px solid;
+	border-top:#166A8F solid 3px;
+}
+div.menu {
+	font-size:14px;
+	text-decoration:none;
+}
+div.menu a:hover {
+	background-color: #e9e9e9;
+}
+table.list_table tr.odd_row, table.list_table th.odd_row{
+	background-color: #e9e9e9;
+}
+table.list_table td{
+	border-bottom: 1px solid #e9e9e9;
+}
+table.list_table td.filter_td{
+	background-color: #e9e9e9;
+	border: 1px solid #ffffff;
+}
+table.view_table th {
+	text-align:right;
+}
+table.view_table th.th_title {
+	text-align:center;
+	background-color: #e9e9e9;
+}
+
+tr.white{
+	background-color:#FFFFFF;
+}
+tr.red{
+	background-color:#FF4040;
+}
+tr.green{
+	background-color:#72F80E;
+}
+tr.yellow{
+	background-color:#FFFF80
+}
+div.message{
+	color:red;
+	padding:5px;
+}
