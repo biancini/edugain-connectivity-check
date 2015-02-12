@@ -22,7 +22,7 @@ UNIQUE (registrationAuthority)
 INSERT INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
 ('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
 INSERT INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
-('idem', 'idem-help@garr.it', 'http://www.idem.garr.it/')
+('idem', 'idem-help@garr.it', 'http://www.idem.garr.it/');
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors
 (
