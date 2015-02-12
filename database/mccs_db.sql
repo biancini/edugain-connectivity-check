@@ -6,7 +6,7 @@ CHARSET utf8;
 
 CREATE DATABASE IF NOT EXISTS mccs_db CHARACTER SET=utf8;
 
-GRANT ALL PRIVILEGES ON mccs_db.* TO mccs_user@localhost IDENTIFIED BY 'ciaomccs';
+GRANT ALL PRIVILEGES ON mccs_db.* TO mccs_user@localhost IDENTIFIED BY 'password_db_mccs';
 FLUSH PRIVILEGES;
 
 use mccs_db;
@@ -21,6 +21,8 @@ UNIQUE (registrationAuthority)
 
 INSERT INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
 ('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
+INSERT INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
+('idem', 'idem-help@garr.it', 'http://www.idem.garr.it/')
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors
 (

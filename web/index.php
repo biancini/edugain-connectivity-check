@@ -16,11 +16,11 @@
 		<tr>
 			<td class="body">
 				<?php
-				var $show='list_idps';
-				var $f_coc_found=1;
-				var $f_last_seen=1;
-				var $f_order='entityID';
-				var $f_id_status=2;
+				 $show='list_idps';
+				 $f_coc_found=1;
+				 $f_last_seen=1;
+				 $f_order='entityID';
+				 $f_id_status=2;
 				?>
 				<div class="admin_naslov">Identity providers | <a href="?show=list_idp_tests">All IdP test results</a> | <a href="https://wiki.edugain.org/Monitoring_tool_instructions" target="_blank">Instructions</a></div>
 				<div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
@@ -1044,11 +1044,11 @@
 		<td colspan="15" align="center">Records found: 38</td>
 	</tr>
 	<tr>
-                                var $show='list_idps';
-                                var $f_coc_found=1;
-                                var $f_last_seen=1;
-                                var $f_order='entityID';
-                                var $f_id_status=2;
+                                 $show='list_idps';
+                                 $f_coc_found=1;
+                                 $f_last_seen=1;
+                                 $f_order='entityID';
+                                 $f_id_status=2;
 
 		<td colspan="15" align="center">
 			1&nbsp;

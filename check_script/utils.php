@@ -13,47 +13,50 @@
 
 function extractIdPfromXML ($metadata){
 	
-		$xml = simplexml_load_string($metadata, null, LIBXML_COMPACT, "md", TRUE);
-		
+		//$xml = simplexml_load_string($metadata, null, LIBXML_COMPACT, "md", TRUE);
+		$xml = simplexml_load_string($metadata, null, LIBXML_COMPACT);
+	
 		// Register the used namespaced into the SimpleXMLElement
 		$ns = $xml->getNamespaces(true);
-		foreach ($ns as $key => $value){
-			$xml->registerXPathNamespace($key, $value);
-		}
-	
+
 		// Consider only IDP' EntityDescriptors that have an HTTP-Redirect <md:SingleSignOnService>
- 		$items = $xml->xpath("//md:EntityDescriptor[md:IDPSSODescriptor/md:SingleSignOnService[@Binding='urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']]");
- 		
+ 		$items = $xml->xpath("//*[local-name()='EntityDescriptor'][*[local-name()='IDPSSODescriptor']/*[local-name()='SingleSignOnService'][@Binding='urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']]");
+
  		// Extract the entityID, the registrationAuthority, the SingleSignOnService (HTTP-Redirect), the technicalContacts and the supportContacts
  		$idps = [];
  		$count = 0;
  		foreach($items as $idp){	
  			$count++;
+
+ 			$idps[$count]['entityID'] = (string)$idp['entityID'];
+
+ 			$idps[$count]['registrationAuthority'] = (string)$idp->xpath("./*[local-name()='Extensions']/*[local-name()='RegistrationInfo']/@registrationAuthority")[0];
  			
- 			$idp_entityID = $idp['entityID'];
- 			$idps[$count]['entityID'] = (string)$idp_entityID;
+ 			$idps[$count]['SingleSignOnService'] = (string)$idp->xpath("./*[local-name()='IDPSSODescriptor']/*[local-name()='SingleSignOnService'][@Binding='urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']/@Location")[0];
  			
- 			$idps[$count]['registrationAuthority'] = (string)$idp->xpath("./md:Extensions/mdrpi:RegistrationInfo/@registrationAuthority")[0];
+ 			$idp_technicalContacts = $idp->xpath("./*[local-name()='ContactPerson'][@contactType='technical']");
+
+ 			if (!$idp_technicalContacts) $idps[$count]['technicalContacts'] = "Technical Contact is missing";
  			
- 			$idps[$count]['SingleSignOnService'] = (string)$idp->xpath("./md:IDPSSODescriptor/md:SingleSignOnService[@Binding='urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']/@Location")[0];
- 			
- 			$idp_technicalContacts = $idp->xpath("./md:ContactPerson[@contactType='technical']");
  			$techContacts = [];
  			foreach ($idp_technicalContacts as $techContact){
- 				$techContacts[] = $techContact->children($ns['md'])->EmailAddress;
+ 				$techContacts[] = ($ns['md']) ? $techContact->children($ns['md'])->EmailAddress : $techContact->children->EmailAddress;
  			}
-
+ 			
  			foreach ($techContacts as $tcCnt){
  				$idps[$count]['technicalContacts'][] = (string)$tcCnt;
  			}
+ 			 			
+ 			$idp_supportContacts = $idp->xpath("./*[local-name()='ContactPerson'][@contactType='support']");
  			
- 			$idp_supportContacts = $idp->xpath("./md:ContactPerson[@contactType='support']");
- 			$suppContacts = [];
- 			foreach ($idp_supportContacts as $suppContact){
- 				$suppContacts[] = $suppContact->children($ns['md'])->EmailAddress;
- 			}
- 			foreach ($suppContacts as $spCnt){
- 				$idps[$count]['supportContacts'][] = (string)$spCnt;
+ 			if ($idp_supportContacts){
+	 			$suppContacts = [];
+	 			foreach ($idp_supportContacts as $suppContact){
+	 				$suppContacts[] = ($ns['md']) ? $suppContact->children($ns['md'])->EmailAddress : $suppContact->children->EmailAddress;
+	 			}
+	 			foreach ($suppContacts as $spCnt){
+	 				$idps[$count]['supportContacts'][] = (string)$spCnt;
+	 			}
  			}
  		}
 		return $idps;
@@ -66,10 +69,9 @@ function extractIdPfromXML ($metadata){
    @param String $httpRedirectServiceLocation the HTTP-Redirect service location URL of an identity provider
    @return array("ok", "http_code", "curl_return", "messages", "form_valid")
 
-
 */
 
-function checkIdp($httpRedirectServiceLocation){
+function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
 	
    global $verbose;
    
@@ -77,35 +79,22 @@ function checkIdp($httpRedirectServiceLocation){
    $date = date('Y-m-d\TH:i:s\Z');
    $id = md5($date.rand(1, 1000000));
 
-   $samlRequest1 = '
+   $samlRequest = '
       <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
-         AssertionConsumerServiceURL="https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST"
+         AssertionConsumerServiceURL="'.$spACSurl.'"
          Destination="'.$httpRedirectServiceLocation.'"
          ID="_'.$id.'"
          IssueInstant="'.$date.'"
          ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Version="2.0">
          <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
-            https://attribute-viewer.aai.switch.ch/shibboleth
+            '.$spEntityID.'
          </saml:Issuer>
          <samlp:NameIDPolicy AllowCreate="1"/>
       </samlp:AuthnRequest>';
-/*
-   $samlRequest2 = '
-      <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
-         AssertionConsumerServiceURL="https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST"
-         Destination="'.$httpRedirectServiceLocation.'"
-         ID="_'.$id.'"
-         IssueInstant="'.$date.'"
-         ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Version="2.0">
-         <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
-            https://sp24-test.garr.it/shibboleth
-         </saml:Issuer>
-         <samlp:NameIDPolicy AllowCreate="1"/>
-      </samlp:AuthnRequest>';
-*/
-   $samlRequest1 = preg_replace('/[\s]+/',' ',$samlRequest1);
-   $samlRequest1 = urlencode( base64_encode( gzdeflate( $samlRequest1 ) ) );
-   $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest1;
+
+   $samlRequest = preg_replace('/[\s]+/',' ',$samlRequest);
+   $samlRequest = urlencode( base64_encode( gzdeflate( $samlRequest ) ) );
+   $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
    $curl = curl_init($url);
    curl_setopt_array($curl, array(
       CURLOPT_FOLLOWLOCATION => true,
@@ -156,13 +145,11 @@ function checkIdp($httpRedirectServiceLocation){
 
    }
    
-   //global $verbose;
    if($verbose && !$ok){
       echo $httpRedirectServiceLocation." ERROR \n";
       //if($html) var_dump($html);
    }
    
-   /* Creo un array associativo in cui inserisco diverse voci*/
    $ret = array(
       "ok" => $ok,
       "form_valid" => $validForm,
@@ -171,13 +158,10 @@ function checkIdp($httpRedirectServiceLocation){
       "messages" => $error
    );
    
-   /* Se $html viene riempita col codice html della pagina perche' la sessione cURL non ha ricevuto errore
-      allora inserisco nell'array "ret" all'indice "html" il codice della pagina. */
-//    if($html){
-//       $ret["html"] = $html;
-//    }
+   if($html){
+      $ret["html"] = $html;
+   }
    
-   /* Restitutisco l'array associativo */
    return $ret;
 }
 ?>
