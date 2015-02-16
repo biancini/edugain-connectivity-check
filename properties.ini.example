@@ -1,0 +1,21 @@
+; This configuration file contains information to
+; connect to the MySQL database used to store
+; metadata and idp check information.
+
+; Rename this file to properties.ini and check
+; information before running the code.
+
+[check_script]
+map_url = http://mds.edugain.org
+spEntityID_1 = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
+spEntityID_2 = https://sp24-test.garr.it/shibboleth
+spACSurl_1 = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
+spACSurl_2 = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
+
+[db_connection]
+db_host = localhost
+db_port = 3306
+db_name = mccs
+db_user = db_user
+db_password = password
+
