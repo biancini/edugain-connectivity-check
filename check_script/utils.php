@@ -162,6 +162,8 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
    
    if($html){
       $ret["html"] = $html;
+   } else {
+      $ret["html"] = "";
    }
    
    return $ret;

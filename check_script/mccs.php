@@ -50,6 +50,7 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 		foreach ($idpList as $idp){
 			$count++;
 
+			$ignore_entity = false;
 			$previous_status = NULL;
 			$check_ok = true;
 			$reason = 'OK';
@@ -61,6 +62,7 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 			if ($result->num_rows > 0) {
 				while ($row = $result->fetch_assoc()) {
 					$previous_status = $row['currentResult'];
+					$ignore_entity = $row['ignoreEntity'];
 				}
 			} else {
 				$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, technicalContacts, supportContacts) VALUES (';
@@ -71,6 +73,11 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 				$sql .= ")";
 
 				$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+			}
+
+			if ($ignore_entity == true) {
+				print "Entity " . $idp['entityID'] . " ignored.\n";
+				continue;
 			}
 
 			for ($i = 0; $i < count($spEntityIDs); $i++) {
