@@ -2,6 +2,9 @@
 ; connect to the MySQL database used to store
 ; metadata and idp check information.
 
+; Rename this file to properties.ini and check
+; information before running the code.
+
 [check_script]
 map_url = http://mds.edugain.org
 spEntityID_1 = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
