@@ -23,7 +23,7 @@ function extractIdPfromXML ($metadata){
  		$items = $xml->xpath("//*[local-name()='EntityDescriptor'][*[local-name()='IDPSSODescriptor']/*[local-name()='SingleSignOnService'][@Binding='urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']]");
 
  		// Extract the entityID, the registrationAuthority, the SingleSignOnService (HTTP-Redirect), the technicalContacts and the supportContacts
- 		$idps = [];
+ 		$idps = array();
  		$count = 0;
  		foreach($items as $idp){	
  			$count++;
@@ -38,7 +38,8 @@ function extractIdPfromXML ($metadata){
 
  			if (!$idp_technicalContacts) $idps[$count]['technicalContacts'] = "Technical Contact is missing";
  			
- 			$techContacts = [];
+			$idps[$count]['technicalContacts'] = array();
+ 			$techContacts = array();
  			foreach ($idp_technicalContacts as $techContact){
  				$techContacts[] = ($ns['md']) ? $techContact->children($ns['md'])->EmailAddress : $techContact->children->EmailAddress;
  			}
@@ -49,14 +50,13 @@ function extractIdPfromXML ($metadata){
  			 			
  			$idp_supportContacts = $idp->xpath("./*[local-name()='ContactPerson'][@contactType='support']");
  			
- 			if ($idp_supportContacts){
-	 			$suppContacts = [];
-	 			foreach ($idp_supportContacts as $suppContact){
-	 				$suppContacts[] = ($ns['md']) ? $suppContact->children($ns['md'])->EmailAddress : $suppContact->children->EmailAddress;
-	 			}
-	 			foreach ($suppContacts as $spCnt){
-	 				$idps[$count]['supportContacts'][] = (string)$spCnt;
-	 			}
+			$idps[$count]['supportContacts'] = array();
+ 			$suppContacts = array();
+ 			foreach ($idp_supportContacts as $suppContact){
+ 				$suppContacts[] = ($ns['md']) ? $suppContact->children($ns['md'])->EmailAddress : $suppContact->children->EmailAddress;
+ 			}
+ 			foreach ($suppContacts as $spCnt){
+ 				$idps[$count]['supportContacts'][] = (string)$spCnt;
  			}
  		}
 		return $idps;
@@ -110,6 +110,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
    $error = array();
    $validForm = true;
    $ok = true;
+
    if($html == false || $http_code != 200){
       $ok = false;                  
       if(curl_error($curl)){
@@ -117,6 +118,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
          $error[] = curl_error($curl);
       } else {
          if($verbose) echo "Status code: ".$info['http_code']."\n";
+         $error[] = "Status code: ".$info['http_code'];
       }
    } else {
       $pattern_username = '/<input.*name=[\'"]?(j_)?username/i';
@@ -129,7 +131,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
          if(preg_match($pattern_username, $html)){
             //okay
          } else {
-            $msg = "did not find input name=j_username";
+            $msg = "Did not find input for username.";
             $error[] = $msg;
             $validForm = $ok = false;
          }
@@ -137,7 +139,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
          if(preg_match($pattern_password, $html)){
             //okay
          } else {
-            $msg = "did not find input name=j_password";
+            $msg = "Did not find input for password.";
             $error[] = $msg;
             $validForm = $ok = false;
          }

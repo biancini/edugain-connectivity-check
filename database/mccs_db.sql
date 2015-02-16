@@ -13,31 +13,38 @@ use mccs_db;
 
 CREATE TABLE IF NOT EXISTS Federations
 (
-federationName VARCHAR(255) NULL,
-emailAddress VARCHAR(255) NULL,
-registrationAuthority VARCHAR(255) NOT NULL PRIMARY KEY,
-UNIQUE (registrationAuthority)
-)ENGINE=InnoDB  DEFAULT CHARSET="utf8";
+	federationName VARCHAR(255) NULL,
+	emailAddress VARCHAR(255) NULL,
+	registrationAuthority VARCHAR(255) NOT NULL PRIMARY KEY,
+	UNIQUE (registrationAuthority)
+) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
-INSERT INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
-('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
-INSERT INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
-('idem', 'idem-help@garr.it', 'http://www.idem.garr.it/');
+INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
+	('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
+INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
+	('idem', 'idem-help@garr.it', 'http://www.idem.garr.it/');
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors
 (
-entityID VARCHAR(255) NULL,
-registrationAuthority VARCHAR(255) NOT NULL,
-ignoreEntity BOOLEAN NOT NULL default 0,
-lastCheck TIMESTAMP NULL default NULL,
-checkResult BLOB NULL,
-checkStatusCode VARCHAR(16) NULL,
-previousCheckStatusCode VARCHAR(16) NULL,
-technicalContacts BLOB NULL,
-supportContacts BLOB NULL,
-UNIQUE (entityID),
-FOREIGN KEY (registrationAuthority) REFERENCES Federations(registrationAuthority)
-)ENGINE=InnoDB  DEFAULT CHARSET="utf8";
+	entityID VARCHAR(255) NOT NULL PRIMARY KEY,
+	registrationAuthority VARCHAR(255) NOT NULL,
+	ignoreEntity BOOLEAN NOT NULL default 0,
+	lastCheck TIMESTAMP NULL default NULL,
+	currentResult VARCHAR(16) NULL default NULL,
+	previousResult VARCHAR(16) NULL default NULL,
+	technicalContacts BLOB NULL,
+	supportContacts BLOB NULL,
+	UNIQUE (entityID),
+	FOREIGN KEY (registrationAuthority) REFERENCES Federations(registrationAuthority)
+) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
-
-
+CREATE TABLE IF NOT EXISTS EntityChecks
+(
+	entityID VARCHAR(255) NOT NULL,
+	spEntityID VARCHAR(255) NOT NULL,
+	checkTime TIMESTAMP NOT NULL default CURRENT_TIMESTAMP,
+	checkHtml BLOB NULL,
+	httpStatusCode INTEGER NOT NULL,
+	checkResult VARCHAR(16) NOT NULL,
+	FOREIGN KEY (entityID) REFERENCES EntityDescriptors(entityID)
+) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
