@@ -2,28 +2,20 @@
             
 include ("utils.php");
             
+$conf_array = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
+$map_url = $conf_array['check_script']['map_url'];
+$spEntityID_1 = $conf_array['check_script']['spEntityID_1'];
+$spEntityID_2 = $conf_array['check_script']['spEntityID_2'];
+$spACSurl_1 = $conf_array['check_script']['spACSurl_1'];
+$spACSurl_2 = $conf_array['check_script']['spACSurl_2'];
+            
 $arrContextOptions=array(
 	"ssl"=>array(
-	"verify_peer"=>false,
-	"verify_peer_name"=>false,
+		"verify_peer"=>false,
+		"verify_peer_name"=>false,
 	),
 );
 
-/* Test with eduGAIN metadata */
-// $map_url = "http://mds.edugain.org";
-// $spEntityID_1 = "https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth";
-// $spEntityID_2 = "https://sp24-test.garr.it/shibboleth";
-// $spACSurl_1 = "https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST";
-// $spACSurl_2 = "https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST";
-
-/* Test with IDEM metadata */
-$map_url = "http://www.garr.it/idem-metadata/idem2edugain-metadata-sha256.xml";
-$spEntityID_1 = "https://zeroshell.irccs-stellamaris.it:12081/shibboleth";
-$spEntityID_2 = "https://sp24-test.garr.it/shibboleth";
-$spACSurl_1 = "https://zeroshell.irccs-stellamaris.it:12081/Shibboleth.sso/SAML2/POST";
-$spACSurl_2 = "https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST";
-
-            
 if (($metadataXML = file_get_contents($map_url, false, stream_context_create($arrContextOptions)))===false){
 	echo "Error fetching eduGAIN metadata XML\n";
 } else {
