@@ -23,6 +23,9 @@ $db_name = $conf_array['db_connection']['db_name'];
 $db_user = $conf_array['db_connection']['db_user'];
 $db_password = $conf_array['db_connection']['db_password'];
 
+$edugain_feds_url = $conf_array['edugain_db_json']['json_feds_url'];
+$edugain_idps_url = $conf_array['edugain_db_json']['json_idps_url'];
+
 $arrContextOptions=array(
 	"ssl"=>array(
 		"verify_peer"=>false,
@@ -30,6 +33,12 @@ $arrContextOptions=array(
 	),
 );
 
+if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_context_create($arrContextOptions)))===false){
+	echo "Error fetching JSON eduGAIN Federation members\n";
+} else {
+	store_feds_into_db($json_edugain_feds, $conf_array['db_connection']);
+}
+	
 if (($metadataXML = file_get_contents($map_url, false, stream_context_create($arrContextOptions)))===false){
 	echo "Error fetching eduGAIN metadata XML\n";
 } else {

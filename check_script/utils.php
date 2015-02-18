@@ -1,5 +1,57 @@
 <?php
 
+function store_feds_into_db($json_edugain_feds, $database_sql){
+	
+	$db_host = $database_sql['db_host'];
+	$db_port = $database_sql['db_port'];
+	$db_name = $database_sql['db_name'];
+	$db_user = $database_sql['db_user'];
+	$db_password = $database_sql['db_password'];
+
+	$mysqli = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
+	$mysqli->set_charset("utf8");
+
+	if ($mysqli->connect_errno) {
+		die("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
+	}
+	
+	$feds_list = json_decode($json_edugain_feds, true, 10, JSON_UNESCAPED_UNICODE);
+	
+	foreach ($feds_list as $fed){ 
+
+		//If I find a registrationAuthority value for the federation
+		if ($fed['reg_auth'] !== null ){
+
+			$sql = "SELECT * FROM federations WHERE registrationAuthority = '".$fed['reg_auth']."'";
+
+			$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+
+			if ($result->num_rows > 0) {
+				while ($row = $result->fetch_assoc()) {
+  					if ($fed['name'] !== $row['federationName']){
+  						$sql = 'UPDATE federations SET federationName=' ."'". $fed['name'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
+  						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+  					}
+  						
+  					if ($fed['email'] !== $row['emailAddress']){
+  						$sql = 'UPDATE federations SET emailAddress=' ."'". $fed['email'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
+  						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+  					}
+				}
+			} else {
+				$sql  = 'INSERT INTO federations (federationName, emailAddress, registrationAuthority) VALUES (';
+				$sql .= "'" . $fed['name'] . "', ";
+				$sql .= "'" . $fed['email'] . "', ";
+				$sql .= "'" . $fed['reg_auth'] . "'";
+				$sql .= ")";
+				
+				$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+			}
+		}
+	}
+	$mysqli->close();
+}
+
 /**
  Extract useful informations stored into a SAML Metadata file.
   
