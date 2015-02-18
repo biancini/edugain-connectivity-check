@@ -62,7 +62,7 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 			$ignore_entity = false;
 			$previous_status = NULL;
 			$check_ok = true;
-			$reason = 'OK';
+			$reason = NULL;
 			$messages = array();
 
 			$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";
@@ -74,7 +74,8 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 					$ignore_entity = $row['ignoreEntity'];
 				}
 			} else {
-				$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, technicalContacts, supportContacts) VALUES (';
+				$sqr  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, technicalContacts, supportContacts) VALUES (';
+
 				$sql .= "'" . $idp['entityID'] . "', ";
 				$sql .= "'" . $idp['registrationAuthority'] . "', ";
 				$sql .= "'" . join(",", $idp['technicalContacts']) . "', ";
@@ -100,19 +101,19 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 				$sql .= $result['http_code'] . ", ";
 
 				if ($result['ok']) {
-					$sql .= "'OK'";
+					$sql .= "'1 - OK'";
 				} else {
 					$check_ok = false;
 					$messages = $result['messages'];
 
 					if (!$result['form_valid']) {
-						$reason = 'FORM-Invalid';
+						$reason = '2 - FORM-Invalid';
 					}
 					elseif ($result['http_code'] != 200) {
-						$reason = 'HTTP-Error';
+						$reason = '3 - HTTP-Error';
 					}
 					elseif ($result['curl_return'] != '') {
-						$reason = 'CURL-Error';
+						$reason = '3 - CURL-Error';
 					}
 
 					$sql .= "'" . $reason . "'";
@@ -123,7 +124,8 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 
 				// update EntityDescriptors
 				$sql = "UPDATE EntityDescriptors SET ";
-				$sql .= "currentResult = '" . $reason . "' ";
+				$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
+				$sql .= ", currentResult = '" . $reason . "' ";
 				if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
 				$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
 				$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
