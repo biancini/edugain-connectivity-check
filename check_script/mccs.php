@@ -87,7 +87,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 
 				$sql .= "'" . $idp['entityID'] . "', ";
 				$sql .= "'" . $idp['registrationAuthority'] . "', ";
-				$sql .= "'" . mysqli_real_escape_string($msqli, $idp['displayName']) . "', ";
+				$sql .= "'" . mysqli_real_escape_string($mysqli, $idp['displayName']) . "', ";
 				$sql .= "'" . $idp['technicalContacts'] . "', ";
 				$sql .= "'" . $idp['supportContacts'] . "'";
 				$sql .= ")";
@@ -145,11 +145,9 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 				//echo "The IdP ".$idp['entityID']." consumed metadata correctly\n";
 			}
 			else {
-				echo "<pre>";
 				echo "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n";
 				echo "Reason: " . $reason . "\n";
 				echo "Messages: " . print_r($messages, true) . "\n";
-				echo "</pre>";
 			}
 			echo "\n";
 		}
