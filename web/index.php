@@ -13,6 +13,8 @@ if ($mysqli->connect_errno) {
 	error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
 }
 
+$mysqli->set_charset("utf8");
+
 function getParameter($key, $default_value, $array=false) {
 	$value = (array_key_exists($key, $_REQUEST) ? $_REQUEST[$key] : $default_value);
 
