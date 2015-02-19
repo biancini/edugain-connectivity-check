@@ -22,7 +22,7 @@ function store_feds_into_db($json_edugain_feds, $database_sql){
 		//If I find a registrationAuthority value for the federation
 		if ($fed['reg_auth'] !== null ){
 
-			$sql = "SELECT * FROM federations WHERE registrationAuthority = '".$fed['reg_auth']."'";
+			$sql = "SELECT * FROM Federations WHERE registrationAuthority = '".$fed['reg_auth']."'";
 
 			$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 
@@ -39,7 +39,7 @@ function store_feds_into_db($json_edugain_feds, $database_sql){
   					}
 				}
 			} else {
-				$sql  = 'INSERT INTO federations (federationName, emailAddress, registrationAuthority) VALUES (';
+				$sql  = 'INSERT INTO Federations (federationName, emailAddress, registrationAuthority) VALUES (';
 				$sql .= "'" . $fed['name'] . "', ";
 				$sql .= "'" . $fed['email'] . "', ";
 				$sql .= "'" . $fed['reg_auth'] . "'";
@@ -53,14 +53,121 @@ function store_feds_into_db($json_edugain_feds, $database_sql){
 }
 
 /**
+ Extract useful informations stored into a JSON UTF-8 file.
+
+ @param String $json_idp_list The JSON file that contains the identity providers
+ @return array idps[]("entityID" => "value",
+							 "registrationAuthority" => "value",
+							 "SingleSignOnService" => "value",
+							 "technicalContacts" => array(),
+							 "supportContacts" => array()),
+ */
+function extractIdPfromJSON($json_idp_list){
+	
+	$idps = array();
+	
+	$idps_list = json_decode($json_idp_list, true, 10, JSON_UNESCAPED_UNICODE);
+	
+	$count = 0;
+	foreach ($idps_list as $idp){
+		$count++;
+		
+		$idps[$count]['entityID'] = (string)$idp['entityID'];
+		$idps[$count]['registrationAuthority'] = (string)$idp['registrationAuthority'];
+		$idps[$count]['SingleSignOnService'] = (string)$idp['Location'];
+		$idps[$count]['displayName'] = ""; 
+
+		$aux1 = array();
+		$aux2 = array();
+		$aux3 = array();
+		
+		if ($idp['displayname']){
+			$aux1 = explode("==", $idp['displayname']);
+			foreach ($aux1 as $result) {
+				$aux2 = explode(';', $result);
+				$aux3[$aux2[0]] = $aux2[1];
+			}
+			
+			$keys = array_keys($aux3);
+			$firstElement = $aux3[$keys[0]];
+			
+			$idps[$count]['displayName'] = (array_key_exists('en', $aux3)) ? (string)$aux3['en'] : (string)$firstElement;
+
+		} elseif ($idp['role_display_name']){
+			$aux1 = explode("==", $idp['role_display_name']);
+			
+			foreach ($aux1 as $result) {
+				$aux2 = explode(';', $result);
+				$aux3[$aux2[0]] = $aux2[1];
+			}
+
+			$keys = array_keys($aux3);
+			$firstElement = $aux3[$keys[0]];
+				
+			$idps[$count]['displayName'] = (array_key_exists('en', $aux3)) ? (string)$aux3['en'] : (string)$firstElement;
+			echo "idp ".(string)$idp['entityID']."displayName = ".$idp[$count]['displayName'];
+		} else{
+			$idp[$count]['displayName'] = "";
+		}
+		
+		if (!array_key_exists('technical', $idp['contacts'])){
+			$idps[$count]['technicalContacts'] = "Technical Contact missing";
+		}
+		else{
+			$techContacts = array ();
+			
+			$idps[$count]['technicalContacts'] = "";
+			
+			foreach ($idp['contacts']['technical'] as $techContact){
+				
+				if (array_key_exists('EmailAddress', $techContact['e_p'])){
+					foreach ($techContact['e_p']['EmailAddress'] as $emailAddress){
+						if (0 === strpos($emailAddress, 'mailto:')) {
+							$techContacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
+						} else{
+							$techContacts[] = $emailAddress;							
+						}
+					}
+				}
+			}
+			$idps[$count]['technicalContacts'] = implode(",", $techContacts);
+		}
+		
+		if (!array_key_exists('support', $idp['contacts'])){
+			$idps[$count]['supportContacts'] = "";
+		}
+		else{
+			$suppContacts = array();
+			
+			$idps[$count]['supportContacts'] = array();
+			
+			foreach ($idp['contacts']['support'] as $suppContact){
+				
+				if (array_key_exists('EmailAddress', $suppContact['e_p'])){
+					foreach ($suppContact['e_p']['EmailAddress'] as $emailAddress){
+						if (0 === strpos($emailAddress, 'mailto:')) {
+							$suppContacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
+						} else{
+							$suppContacts[] = $emailAddress;
+						}
+					}
+				}
+			}
+			$idps[$count]['supportContacts'] = implode(",", $suppContacts);
+		}
+	}
+	return $idps;
+}
+
+/**
  Extract useful informations stored into a SAML Metadata file.
   
  @param String $metadata The XML metadata that contains the identity providers
  @return array idps[]("entityID" => "value", 
- 					  "registrationAuthority" => "value", 
- 					  "SingleSignOnService" => "value", 
- 					  "technicalContacts" => array(), 
- 					  "supportContacts" => array()),
+		 					 "registrationAuthority" => "value", 
+		 					 "SingleSignOnService" => "value", 
+		 					 "technicalContacts" => array(), 
+		 					 "supportContacts" => array()),
  */
 
 function extractIdPfromXML ($metadata){
@@ -178,7 +285,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
 
       if( stripos($html, "Message did not meet security requirements") !== false){
          $msg = "$httpRedirectServiceLocation found our request did not meet security requirements. It could be that the time on the server is out of sync or probably the request took too long.";
-         monlog($msg,3);
+         //monlog($msg,3);
       } else {
          if(preg_match($pattern_username, $html)){
             //okay

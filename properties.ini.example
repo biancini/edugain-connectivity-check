@@ -19,3 +19,6 @@ db_name = mccs
 db_user = db_user
 db_password = password
 
+[edugain_db_json]
+json_feds_url = "http://technical.edugain.org/json_api.php?action=list_feds"
+json_idps_url = "http://technical.edugain.org/json_api.php?action=list_idps"
