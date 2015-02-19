@@ -13,8 +13,9 @@ CREATE TABLE IF NOT EXISTS Federations
 (
 	federationName VARCHAR(255) NULL,
 	emailAddress VARCHAR(255) NULL,
-	registrationAuthority VARCHAR(255) NOT NULL PRIMARY KEY,
-	UNIQUE (registrationAuthority)
+	registrationAuthority VARCHAR(255) NOT NULL,
+	UNIQUE (registrationAuthority),
+	PRIMARY KEY (registrationAuthority)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
 INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
@@ -22,7 +23,7 @@ INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registratio
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors
 (
-	entityID VARCHAR(255) NOT NULL PRIMARY KEY,
+	entityID VARCHAR(255) NOT NULL,
 	registrationAuthority VARCHAR(255) NOT NULL,
 	displayName VARCHAR(255),
 	ignoreEntity BOOLEAN NOT NULL default 0,
@@ -32,7 +33,8 @@ CREATE TABLE IF NOT EXISTS EntityDescriptors
 	technicalContacts BLOB NULL,
 	supportContacts BLOB NULL,
 	UNIQUE (entityID),
-	FOREIGN KEY (registrationAuthority) REFERENCES Federations(registrationAuthority)
+	FOREIGN KEY (registrationAuthority) REFERENCES Federations(registrationAuthority),
+	PRIMARY KEY (entityID)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
 CREATE TABLE IF NOT EXISTS EntityChecks
