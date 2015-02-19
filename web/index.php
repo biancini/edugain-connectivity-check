@@ -1,8 +1,50 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
 <?php
 $conf_array = parse_ini_file('../properties.ini', true);
+
+$db_host = $conf_array['db_connection']['db_host'];
+$db_port = $conf_array['db_connection']['db_port'];
+$db_name = $conf_array['db_connection']['db_name'];
+$db_user = $conf_array['db_connection']['db_user'];
+$db_password = $conf_array['db_connection']['db_password'];
+
+$mysqli = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
+if ($mysqli->connect_errno) {
+	header('HTTP/1.1 500 Internal Server Error');
+	error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
+}
+
+function getParameter($key, $default_value, $array=false) {
+	$value = (array_key_exists($key, $_REQUEST) ? $_REQUEST[$key] : $default_value);
+
+	if (!$value || trim($value) == '') {
+		$value = $default_value;
+	}
+
+	if ($array) {
+		$value = explode(",", $value);
+	}
+	return $value;
+}
+
+function getCurrentUrl($params, $excludeParam=array()) {
+	$url = $_SERVER['PHP_SELF'] . "?";
+
+	$url .= "show=" . $params['show'];
+	if (!in_array("f_order", $excludeParam) && array_key_exists("f_order", $params)) $url .= "&f_order=" . $params['f_order'];
+	if (!in_array("f_id_status", $excludeParam) && array_key_exists("f_id_status", $params)) $url .= "&f_id_status=" . implode(",", $params['f_id_status']);
+	if (!in_array("page", $excludeParam) && array_key_exists("page", $params)) $url .= "&page=" . $params['page'];
+        if (!in_array("f_entityID", $excludeParam) && array_key_exists("f_entityID", $params)) $url .= "&f_entityID=" . $params['f_entityID'];
+        if (!in_array("f_registrationAuthority", $excludeParam) && array_key_exists("f_registrationAuthority", $params)) $url .= "&f_registrationAuthority=" . $params['f_registrationAuthority'];
+        if (!in_array("f_ignore_entity", $excludeParam) && array_key_exists("f_ignore_entity", $params)) $url .= "&f_ignore_entity=" . $params['f_ignore_entity'];
+        if (!in_array("f_last_check", $excludeParam) && array_key_exists("f_last_check", $params)) $url .= "&f_last_check=" . $params['f_last_check'];
+        if (!in_array("f_current_result", $excludeParam) && array_key_exists("f_current_result", $params)) $url .= "&f_current_result=" . $params['f_current_result'];
+        if (!in_array("f_previous_result", $excludeParam) && array_key_exists("f_previous_result", $params)) $url .= "&f_previous_result=" . $params['f_previous_result'];
+
+	return $url;
+}
 ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link media="screen" href="css/eduroam.css" type="text/css" rel="stylesheet"/>
@@ -19,120 +61,220 @@ $conf_array = parse_ini_file('../properties.ini', true);
 		<tr>
 			<td class="body">
 				<?php
-				 $show='list_idps';
-				 $f_coc_found=1;
-				 $f_last_seen=1;
-				 $f_order='entityID';
-				 $f_id_status=2;
+				$params["show"] = getParameter('show', 'list_idps');
+				$params["f_order"] = getParameter('f_order', 'entityID');
+				$params["f_id_status"] = getParameter('f_id_status', 'All', true);
+                                $params["f_entityID"] = getParameter('f_entityID', 'All');
+                                $params["f_registrationAuthority"] = getParameter('f_registrationAuthority', 'All');
+                                $params["f_ignore_entity"] = getParameter('f_ignore_entity', 'All');
+                                $params["f_last_check"] = getParameter('f_last_check', 'All');
+                                $params["f_current_result"] = getParameter('f_current_result', 'All');
+                                $params["f_previous_result"] = getParameter('f_previous_result', 'All');
+				//error_log(print_r($params, true));
 				?>
 				<div class="admin_naslov">Identity providers | <a href="?show=list_idp_tests">All IdP test results</a> | <a href="https://wiki.edugain.org/Monitoring_tool_instructions" target="_blank">Instructions</a></div>
 				<div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
-				<a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=<?=$f_order?>&f_id_status=1" style="color:green" title="All REQUIRED and RECOMMENDED CoC SAML2 metadata elements in place + the privacy statement has a link that refers to the defined CoC URL">green</a> | 
-				<a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=<?=$f_order?>&f_id_status=1" title="No CoC EntityAttribute in place (the SP doesn't even claim conformance with the CoC so the CoC spec is not applicable)" style="color:black">white</a> | 
-				<a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=<?=$f_order?>&f_id_status=3" title="One or more of RECOMMENDED elements missing" style="color:yellow">yellow</a> |
-				<a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=<?=$f_order?>&f_id_status=4" title="Something REQUIRED is missing (including a lang='en' attribute in a RECOMMENDED element such as mdui:displayname or description) or the privacy statement doesn't link to the defined CoC URL" style="color:red">red</a> | 
-				<a href="?show=<?=$show?>">Show all records</a></div>
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">green</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=NULL" title="No checks performed" style="color:black">white</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:yellow">yellow</a> |
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">red</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=">Show all records</a></div>
 <div class="message"></div>
-<form name="list_idpsFRM" action="?show=<?=$show?>" method="post">
+<form name="list_idpsFRM" action="<?=getCurrentUrl($params)?>" method="post">
 <table class="list_table">
 	<tr>
 		<td class="filter_td">
-			<input type="text" name="f_entityID" value="" class="wide"/>
+			<input type="text" name="f_entityID" value="<?= $params['f_entityID'] == "All" ? "" : $params['f_entityID'] ?>" class="wide"/>
 		</td>
 	        <td class="filter_td">
-			<input type="text" name="f_registrationAuthority" value=""/>
+			<input type="text" name="f_registrationAuthority" value="<?= $params['f_registrationAuthority'] == "All" ? "" : $params['f_registrationAuthority'] ?>"/>
 		</td>
 	        <td class="filter_td">
-			<input type="text" name="f_DisplayName" value=""/>
+			&nbsp;
 		</td>
-		<td class="filter_td">&nbsp;
-			
+	        <td class="filter_td">
+			&nbsp;
 		</td>
-		<td class="filter_td">
-			<select name="f_last_seen">
-				<option value="">All</option>
-				<option value="1"selected>Last 30 days</option>
+	        <td class="filter_td">
+			<select name="f_ignore_entity">
+				<option value="All" <?= $params['f_ignore_entity'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="True" <?= $params['f_ignore_entity'] == "True" ? "selected" : "" ?>>True</option>
+				<option value="False" <?= $params['f_ignore_entity'] == "False" ? "selected" : "" ?>>False</option>
 			</select>
 		</td>
 		<td class="filter_td">
-			<select name="f_coc_found">
-				<option value="">All</option>
-				<option value="1" selected>Yes</option>
-				<option value="2" >No</option>
+			<select name="f_last_check">
+				<option value="All" <?= $params['f_last_check'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="1" <?= $params['f_last_check'] == "1" ? "selected" : "" ?>>Last 30 days</option>
 			</select>
 		</td>
 		<td class="filter_td">
-			<select name="f_id_status">
-				<option value="">All</option>
-				<option value="1">no CoC EntityAttribute in place</option>
-				<option value="2">All attributes present, privacy statement has a link to CoC</option>
-				<option value="3">All required attributes present, one or more recommended attributes missing, privacy statement has a link to CoC</option>
-				<option value="4">Required attribute is missing or privacy statement doesn't link to CoC</option>
-				<option value="5">Other</option>
-
+			<select name="f_current_result">
+				<option value="All" <?= $params['f_current_result'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="1 - OK" <?= $params['f_current_result'] == "1 - OK" ? "selected" : "" ?>>OK</option>
+				<option value="2 - FORM-Invalid" <?= $params['f_current_result'] == "2 - FORM-Invalid" ? "selected" : "" ?>>FORM-Invalid</option>
+				<option value="3 - HTTP-Error" <?= $params['f_current_result'] == "3 - HTTP-Error" ? "selected" : "" ?>>HTTP-Error</option>
+				<option value="3 - CURL-Error" <?= $params['f_current_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
 			</select>
 		</td>
-		<td class="filter_td">&nbsp;</td>
-		<td class="filter_td">&nbsp;</td>
-		<td class="filter_td"><input type="text" name="f_code" value="" class="narrow"/></td>
-		<td class="filter_td"><input type="text" name="f_code_txt" value="" class="narrow" /></td>
-		<td class="filter_td"><input type="text" name="f_content_type" value="" class="narrow" /></td>
+		<td class="filter_td">
+			<select name="f_previous_result">
+				<option value="All" <?= $params['f_previous_result'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="1 - OK" <?= $params['f_previous_result'] == "1 - OK" ? "selected" : "" ?>>OK</option>
+				<option value="2 - FORM-Invalid" <?= $params['f_previous_result'] == "2 - FORM-Invalid" ? "selected" : "" ?>>FORM-Invalid</option>
+				<option value="3 - HTTP-Error" <?= $params['f_previous_result'] == "3 - HTTP-Error" ? "selected" : "" ?>>HTTP-Error</option>
+				<option value="3 - CURL-Error" <?= $params['f_previous_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
+			</select>
+		</td>
 		<td class="filter_td" colspan="3"><input type="submit" name="filter" value="Search"  class="filter_gumb"/></td>
 	</tr>
 	<tr>
-		<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=entityID" title="Sort by entityID.">entityID</a></th>
-        	<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=registrationAuthority" title="Sort by registrationAuthority.">registrationAuthority</a></th>
-	        <th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=DisplayName" title="Sort by DisplayName.">DisplayName</a></th>
-		<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=first_seen" title="Sort by first seen.">First seen</a></th>
-		<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=last_seen" title="Sort by last seen.">Last seen</a></th>
-		<th title="CoC link found in privacy policy page">CoC found</th>
-		<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=status" title="Sort by status.">Status</a></th>
-		<th>Comment</th>
-		<th>PrivacyStatementURL</th>
-		<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=code" title="Sort by status.">Status code</a></th>
-		<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=code_txt" title="Sort by status text.">Status text</a></th>
-		<th><a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&f_order=content_type" title="Sort by content type.">Content type</a></th>
-		<th>View</th>
-		<th>Headers</th>
-		<th>Cookies</th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=entityID" title="Sort by entityID.">entityID</a></th>
+        	<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=registrationAuthority" title="Sort by registrationAuthority.">registrationAuthority</a></th>
+		<th>technicalContacts</th>
+		<th>supportContacts</th>
+	        <th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=ignoreEntity" title="Sort by ignore entity.">Ignore entity</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=lastCheck" title="Sort by last check.">Last Check</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=currentResult" title="Sort by current result.">Current result</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=previousResult" title="Sort by previous result.">Previous result</a></th>
+		<th>Checks</th>
 	</tr>
 	<tr>
-		<td class="filter_td" colspan="5">SP data</td>
-		<td class="filter_td" colspan="10">Last test results</td>
+		<td class="filter_td" colspan="4">IdP data</td>
+		<td class="filter_td" colspan="5">Last test results</td>
 	</tr>
 	<?php
-	//SELECT con ciclo for
+      	$sql_count = "SELECT COUNT(*) FROM EntityDescriptors";
+	$sql = "SELECT * FROM EntityDescriptors";
+	$sql_conditions = "";
+	if ($params['f_id_status']) {
+		if (in_array("NULL", $params['f_id_status'])) {
+			if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+			else $sql_conditions .= " AND";
+			$sql_conditions .= " currentResult IS NULL";
+		}
+		elseif (!in_array("All", $params['f_id_status'])) {
+			if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+			else $sql_conditions .= " AND";
+			$sql_conditions .= " currentResult in ('".implode("','", $params['f_id_status'])."')";
+		}
+	}
+        if ($params['f_entityID'] && $params['f_entityID'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		$sql_conditions .= " entityID LIKE '%" . $params['f_entityID'] . "%'";
+	}
+        if ($params['f_registrationAuthority'] && $params['f_registrationAuthority'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		$sql_conditions .= " registrationAuthority LIKE '%" . $params['f_registrationAuthority'] . "%'";
+	}
+        if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		$sql_conditions .= " ignoreEntity = " . ($params['f_ignore_entity'] == "True" ? 1 : 0);
+	}
+        if ($params['f_last_check'] && $params['f_last_check'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		if ($params['f_last_check'] == "1") {
+			$sql_conditions .= " lastCheck >= DATE_FORMAT(curdate() - interval 30 day,'%m/%d/%Y')";
+		}
+	}
+        if ($params['f_current_result'] && $params['f_current_result'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		$sql_conditions .= " currentResult = '" . $params['f_current_result'] . "'";
+	}
+        if ($params['f_previous_result'] && $params['f_previous_result'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		$sql_conditions .= " previousResult = '" . $params['f_previous_result'] . "'";
+	}
+
+	if ($params['f_order']) {
+		$sql_conditions .= " ORDER BY " . $params['f_order'];
+	}
+
+	// find out how many rows are in the table 
+	$result = $mysqli->query($sql_count . $sql_conditions) or error_log("Error: " . $sql_count . $sql_conditions . ": " . mysqli_error($mysqli));
+	$numrows = $result->fetch_row()[0];
+
+	$rowsperpage = 30;
+	$totalpages = ceil($numrows / $rowsperpage);
+	$page = getParameter('page', '1');
+	$page = is_numeric($page) ? (int) $page : 1;
+	if ($page > $totalpages) $page = $totalpages;
+	if ($page < 1) $page = 1;
+	$offset = ($page - 1) * $rowsperpage;
+	
+	$sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
+	//error_log($sql . $sql_conditions);
+	$result = $mysqli->query($sql . $sql_conditions) or error_log("Error: " . $sql . $sql_conditions . ": " . mysqli_error($mysqli));
+
+	while ($row = $result->fetch_assoc()) {
+		if ("1 - OK" == $row['currentResult']) $color = "green";
+		elseif ("2 - FORM-Invalid" == $row['currentResult']) $color = "yellow";
+		elseif ("3 - HTTP-Error" == $row['currentResult']) $color = "red";
+		elseif ("3 - CURL-Error" == $row['currentResult']) $color = "red";
+		else $color = "white";
+		?>
+		<tr class="<?=$color?>">
+        		<td><?=$row['entityID']?></td>
+	        	<td><?=$row['registrationAuthority']?></td>
+        		<td><?php
+				$contacts = explode(",", $row['technicalContacts']);
+				foreach ($contacts as $contact) {
+					print "<a href=\"" . $contact . "\">" . str_replace("mailto:", "", $contact) . "</a>";
+				}
+			?></td>
+        		<td><?php
+				$contacts = explode(",", $row['supportContacts']);
+				foreach ($contacts as $contact) {
+					print "<a href=\"" . $contact . "\">" . str_replace("mailto:", "", $contact) . "</a>";
+				}
+			?></td>
+	        	<td><?=$row['ignoreEntity'] == 1 ? "True" : "False"?></td>
+        		<td><?=$row['lastCheck']?></td>
+        		<td><?=substr($row['currentResult'], 4)?></td>
+	        	<td><?=substr($row['previousResult'], 4)?></td>
+			<td><a href="" title="View checks status for this entity.">View</a></td>
+		</tr>
+		<?php
+	}
 	?>
-	<tr class="green">
-		<td><a href="?f_id_sp=61&f_coc_found=1&f_last_seen=1&page=1&f_order=ts+desc&show=list_sp_tests&f_is_changed=1">http://sp.lat.csc.fi</a></td>
-        	<td>http://www.csc.fi/haka</td>
-	        <td>LAT – Language Archive Tools</td>
-		<td>2013-10-01 20:35:19</td>
-		<td>2015-02-11 03:14:10</td>
-		<td>Yes</td>
-		<td>All attributes present, privacy statement has a link to CoC</td>
-		<td>&nbsp;</td>
-		<td><a target="_blank" href="https://lat.csc.fi/corpora/Info/Lat_Privacy_Policy.html">https://lat.csc.fi/corpora/Info/Lat_Privacy_Policy.html</a></td>
-		<td>200</td>
-		<td>OK</td>
-		<td>text/html</td>
-		<td><a target="_blank" href="?sp_test_id=814881&f_coc_found=1&f_last_seen=1&page=1&f_order=entityID&show=sp_test_source&template=notemplate">View</a></td>
-		<td><a target="_blank" href="?sp_test_id=814881&f_coc_found=1&f_last_seen=1&page=1&f_order=entityID&show=headers&template=notemplate">View</a></td>
-		<td><a target="_blank" href="?sp_test_id=814881&f_coc_found=1&f_last_seen=1&page=1&f_order=entityID&show=cookies&template=notemplate"></a></td>
-	</tr>
-	<?php
-	//end SELECT
-	?>
 	<tr>
-		<td colspan="15" align="center">&nbsp;</td>
+		<td colspan="9" align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td colspan="15" align="center">Records found: 38</td>
+		<td colspan="9" align="center">Records found: <?=$numrows?></td>
 	</tr>
 	<tr>
-		<td colspan="15" align="center">1&nbsp;
-			<a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&page=2&f_order=<?=$f_order?>" title="Page 2.">2</a>&nbsp;		
-			&nbsp;<a href="?show=<?=$show?>&f_coc_found=<?=$f_coc_found?>&f_last_seen=<?=$f_last_seen?>&page=2&f_order=<?=$f_order?>" title="Next page">&gt;</a>
+		<td colspan="9" align="center">
+			<?php
+				$range = 3;
+				if ($page > 1) {
+					echo " <a href='".getCurrentUrl($params, ["page"]) . "&page=1' title='First page'>&lt;&lt;</a> ";
+					$prevpage = $page - 1;
+					echo " <a href='".getCurrentUrl($params, ["page"]) . "&page=$prevpage' title='Previous page'>&lt;</a> ";
+				}
+
+				for ($x = ($page - $range); $x < (($page + $range) + 1); $x++) {
+					if (($x > 0) && ($x <= $totalpages)) {
+						if ($x == $page) {
+							echo " $x ";
+						} else {
+							echo " <a href='".getCurrentUrl($params, ["page"]) . "&page=$x' title='Page $x'>$x</a> ";
+						}
+					}
+				}
+                 
+				if ($page != $totalpages) {
+					$nextpage = $page + 1;
+					echo " <a href='".getCurrentUrl($params, ["page"]) . "&page=$nextpage' title='Next page'>&gt;</a> ";
+					echo " <a href='".getCurrentUrl($params, ["page"]) . "&page=$totalpages' title='Last page'>&gt;&gt;</a> ";
+				}
+			?>
 		</td>
 	</tr>
 </table>
