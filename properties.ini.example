@@ -15,9 +15,9 @@ spACSurl_2 = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
 [db_connection]
 db_host = localhost
 db_port = 3306
-db_name = mccs
-db_user = db_user
-db_password = password
+db_name = mccs_db
+db_user = mccs_user
+db_password = password_db_mccs
 
 [edugain_db_json]
 json_feds_url = "http://technical.edugain.org/json_api.php?action=list_feds"
