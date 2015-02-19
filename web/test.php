@@ -82,6 +82,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
                                 $params["f_check_result"] = getParameter('f_check_result', 'All');
 				//error_log(print_r($params, true));
 				?>
+				<div class="admin_naslov"><a href="index.php">Identity providers</a> | All IdP test results | <a href="https://wiki.edugain.org/Monitoring_tool_instructions" target="_blank">Instructions</a></div>
 				<div class="admin_naslov" style="background-color: #e9e9e9;">Show Tests with status:
                                 <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">green</a> |
                                 <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=NULL" title="No checks performed" style="color:black">white</a> |
