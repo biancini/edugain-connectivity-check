@@ -13,6 +13,8 @@ if ($mysqli->connect_errno) {
 	error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
 }
 
+$mysqli->set_charset("utf8");
+
 function getParameter($key, $default_value, $array=false) {
 	$value = (array_key_exists($key, $_REQUEST) ? $_REQUEST[$key] : $default_value);
 
@@ -35,6 +37,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 	if (!in_array("page", $excludeParam) && array_key_exists("page", $params)) $url .= "&page=" . $params['page'];
         if (!in_array("f_entityID", $excludeParam) && array_key_exists("f_entityID", $params)) $url .= "&f_entityID=" . $params['f_entityID'];
         if (!in_array("f_registrationAuthority", $excludeParam) && array_key_exists("f_registrationAuthority", $params)) $url .= "&f_registrationAuthority=" . $params['f_registrationAuthority'];
+        if (!in_array("f_displayName", $excludeParam) && array_key_exists("f_displayName", $params)) $url .= "&f_displayName=" . $params['f_displayName'];
         if (!in_array("f_ignore_entity", $excludeParam) && array_key_exists("f_ignore_entity", $params)) $url .= "&f_ignore_entity=" . $params['f_ignore_entity'];
         if (!in_array("f_last_check", $excludeParam) && array_key_exists("f_last_check", $params)) $url .= "&f_last_check=" . $params['f_last_check'];
         if (!in_array("f_current_result", $excludeParam) && array_key_exists("f_current_result", $params)) $url .= "&f_current_result=" . $params['f_current_result'];
@@ -66,6 +69,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 				$params["f_id_status"] = getParameter('f_id_status', 'All', true);
                                 $params["f_entityID"] = getParameter('f_entityID', 'All');
                                 $params["f_registrationAuthority"] = getParameter('f_registrationAuthority', 'All');
+                                $params["f_displayName"] = getParameter('f_displayName', 'All');
                                 $params["f_ignore_entity"] = getParameter('f_ignore_entity', 'All');
                                 $params["f_last_check"] = getParameter('f_last_check', 'All');
                                 $params["f_current_result"] = getParameter('f_current_result', 'All');
@@ -88,6 +92,9 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		</td>
 	        <td class="filter_td">
 			<input type="text" name="f_registrationAuthority" value="<?= $params['f_registrationAuthority'] == "All" ? "" : $params['f_registrationAuthority'] ?>"/>
+		</td>
+	        <td class="filter_td">
+			<input type="text" name="f_displayName" value="<?= $params['f_displayName'] == "All" ? "" : $params['f_displayName'] ?>"/>
 		</td>
 	        <td class="filter_td">
 			&nbsp;
@@ -130,7 +137,8 @@ function getCurrentUrl($params, $excludeParam=array()) {
 	</tr>
 	<tr>
 		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=entityID" title="Sort by entityID.">entityID</a></th>
-        	<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=registrationAuthority" title="Sort by registrationAuthority.">registrationAuthority</a></th>
+        	<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=registrationAuthority" title="Sort by registration authority.">Registration authority</a></th>
+        	<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=displayName" title="Sort by display name.">Display name</a></th>
 		<th>technicalContacts</th>
 		<th>supportContacts</th>
 	        <th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=ignoreEntity" title="Sort by ignore entity.">Ignore entity</a></th>
@@ -140,7 +148,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		<th>Tests</th>
 	</tr>
 	<tr>
-		<td class="filter_td" colspan="4">IdP data</td>
+		<td class="filter_td" colspan="5">IdP data</td>
 		<td class="filter_td" colspan="5">Last test results</td>
 	</tr>
 	<?php
@@ -168,6 +176,11 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
 		$sql_conditions .= " registrationAuthority LIKE '%" . $params['f_registrationAuthority'] . "%'";
+	}
+        if ($params['f_displayName'] && $params['f_displayName'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		$sql_conditions .= " displayName LIKE '%" . $params['f_displayName'] . "%'";
 	}
         if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
@@ -222,16 +235,17 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		<tr class="<?=$color?>">
         		<td><?=$row['entityID']?></td>
 	        	<td><?=$row['registrationAuthority']?></td>
+	        	<td><?=$row['displayName']?></td>
         		<td><?php
 				$contacts = explode(",", $row['technicalContacts']);
 				foreach ($contacts as $contact) {
-					print "<a href=\"" . $contact . "\">" . str_replace("mailto:", "", $contact) . "</a>";
+					print "<a href=\"mailto:" . $contact . "\">" . $contact . "</a>";
 				}
 			?></td>
         		<td><?php
 				$contacts = explode(",", $row['supportContacts']);
 				foreach ($contacts as $contact) {
-					print "<a href=\"" . $contact . "\">" . str_replace("mailto:", "", $contact) . "</a>";
+					print "<a href=mailto:\"" . $contact . "\">" . $contact . "</a>";
 				}
 			?></td>
 	        	<td><?=$row['ignoreEntity'] == 1 ? "True" : "False"?></td>
@@ -244,13 +258,13 @@ function getCurrentUrl($params, $excludeParam=array()) {
 	}
 	?>
 	<tr>
-		<td colspan="9" align="center">&nbsp;</td>
+		<td colspan="10" align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td colspan="9" align="center">Records found: <?=$numrows?></td>
+		<td colspan="10" align="center">Records found: <?=$numrows?></td>
 	</tr>
 	<tr>
-		<td colspan="9" align="center">
+		<td colspan="10" align="center">
 			<?php
 				$range = 3;
 				if ($page > 1) {
