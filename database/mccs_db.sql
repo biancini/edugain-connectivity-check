@@ -19,8 +19,6 @@ CREATE TABLE IF NOT EXISTS Federations
 
 INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
 	('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
-INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
-	('idem', 'idem-help@garr.it', 'http://www.idem.garr.it/');
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors
 (
