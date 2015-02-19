@@ -26,8 +26,8 @@ function getParameter($key, $default_value, $array=false) {
 	return $value;
 }
 
-if (getParameter("show") == "html") {
-	$id = getParameter("id");
+if (getParameter("show", "") == "html") {
+	$id = getParameter("id", "");
 	$sql = "SELECT checkHtml FROM EntityChecks WHERE id = " . $id;
 	$result = $mysqli->query($sql) or error_log("Error: " . $sql . ": " . mysqli_error($mysqli));
 
