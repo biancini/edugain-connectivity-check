@@ -148,8 +148,8 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 				echo "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n";
 				echo "Reason: " . $reason . "\n";
 				echo "Messages: " . print_r($messages, true) . "\n";
+				echo "\n";
 			}
-			echo "\n";
 		}
 
 		$mysqli->close();
