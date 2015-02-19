@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS EntityDescriptors
 (
 	entityID VARCHAR(255) NOT NULL PRIMARY KEY,
 	registrationAuthority VARCHAR(255) NOT NULL,
-	displayName VARCHAR(255) NOT NULL,
+	displayName VARCHAR(255),
 	ignoreEntity BOOLEAN NOT NULL default 0,
 	lastCheck TIMESTAMP NULL default NULL,
 	currentResult VARCHAR(16) NULL default NULL,
