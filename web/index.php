@@ -192,6 +192,10 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		$sql_conditions .= " previousResult = '" . $params['f_previous_result'] . "'";
 	}
 
+	if ($params['f_order']) {
+		$sql_conditions .= " ORDER BY " . $params['f_order'];
+	}
+
 	// find out how many rows are in the table 
 	$result = $mysqli->query($sql_count . $sql_conditions) or error_log("Error: " . $sql_count . $sql_conditions . ": " . mysqli_error($mysqli));
 	$numrows = $result->fetch_row()[0];
