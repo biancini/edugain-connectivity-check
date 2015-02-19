@@ -83,10 +83,11 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 					$ignore_entity = $row['ignoreEntity'];
 				}
 			} else {
-				$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, technicalContacts, supportContacts) VALUES (';
+				$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (';
 
 				$sql .= "'" . $idp['entityID'] . "', ";
 				$sql .= "'" . $idp['registrationAuthority'] . "', ";
+				$sql .= "'" . $idp['displayName'] . "', ";
 				$sql .= "'" . $idp['technicalContacts'] . "', ";
 				$sql .= "'" . $idp['supportContacts'] . "'";
 				$sql .= ")";
