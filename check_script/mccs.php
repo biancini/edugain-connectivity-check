@@ -62,7 +62,7 @@ if (($metadataXML = file_get_contents($map_url, false, stream_context_create($ar
 			$ignore_entity = false;
 			$previous_status = NULL;
 			$check_ok = true;
-			$reason = NULL;
+			$reason = '1 - OK';
 			$messages = array();
 
 			$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";

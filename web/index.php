@@ -134,10 +134,10 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		<th>technicalContacts</th>
 		<th>supportContacts</th>
 	        <th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=ignoreEntity" title="Sort by ignore entity.">Ignore entity</a></th>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=lastCheck" title="Sort by last check.">Last Check</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=lastCheck" title="Sort by last test.">Last test</a></th>
 		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=currentResult" title="Sort by current result.">Current result</a></th>
 		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=previousResult" title="Sort by previous result.">Previous result</a></th>
-		<th>Checks</th>
+		<th>Tests</th>
 	</tr>
 	<tr>
 		<td class="filter_td" colspan="4">IdP data</td>
@@ -238,7 +238,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
         		<td><?=$row['lastCheck']?></td>
         		<td><?=substr($row['currentResult'], 4)?></td>
 	        	<td><?=substr($row['previousResult'], 4)?></td>
-			<td><a href="" title="View checks status for this entity.">View</a></td>
+			<td><a href="test.php?f_entityID=<?=$row['entityID']?>" title="View checks status for this entity.">View</a></td>
 		</tr>
 		<?php
 	}
