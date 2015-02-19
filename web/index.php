@@ -70,6 +70,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
                                 $params["f_last_check"] = getParameter('f_last_check', 'All');
                                 $params["f_current_result"] = getParameter('f_current_result', 'All');
                                 $params["f_previous_result"] = getParameter('f_previous_result', 'All');
+				//error_log(print_r($params, true));
 				?>
 				<div class="admin_naslov">Identity providers | <a href="?show=list_idp_tests">All IdP test results</a> | <a href="https://wiki.edugain.org/Monitoring_tool_instructions" target="_blank">Instructions</a></div>
 				<div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
@@ -83,10 +84,10 @@ function getCurrentUrl($params, $excludeParam=array()) {
 <table class="list_table">
 	<tr>
 		<td class="filter_td">
-			<input type="text" name="f_entityID" value="" class="wide"/>
+			<input type="text" name="f_entityID" value="<?= $params['f_entityID'] == "All" ? "" : $params['f_entityID'] ?>" class="wide"/>
 		</td>
 	        <td class="filter_td">
-			<input type="text" name="f_registrationAuthority" value=""/>
+			<input type="text" name="f_registrationAuthority" value="<?= $params['f_registrationAuthority'] == "All" ? "" : $params['f_registrationAuthority'] ?>"/>
 		</td>
 	        <td class="filter_td">
 			&nbsp;
@@ -96,33 +97,33 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		</td>
 	        <td class="filter_td">
 			<select name="f_ignore_entity">
-				<option value="All">All</option>
-				<option value="true">True</option>
-				<option value="false">False</option>
+				<option value="All" <?= $params['f_ignore_entity'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="True" <?= $params['f_ignore_entity'] == "True" ? "selected" : "" ?>>True</option>
+				<option value="False" <?= $params['f_ignore_entity'] == "False" ? "selected" : "" ?>>False</option>
 			</select>
 		</td>
 		<td class="filter_td">
 			<select name="f_last_check">
-				<option value="All">All</option>
-				<option value="1">Last 30 days</option>
+				<option value="All" <?= $params['f_last_check'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="1" <?= $params['f_last_check'] == "1" ? "selected" : "" ?>>Last 30 days</option>
 			</select>
 		</td>
 		<td class="filter_td">
 			<select name="f_current_result">
-				<option value="All">All</option>
-				<option value="1 - OK">OK</option>
-				<option value="2 - FORM-Invalid" >FORM-Invalid</option>
-				<option value="3 - HTTP-Error" >HTTP-Error</option>
-				<option value="3 - CURL-Error" >CURL-Error</option>
+				<option value="All" <?= $params['f_current_result'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="1 - OK" <?= $params['f_current_result'] == "1 - OK" ? "selected" : "" ?>>OK</option>
+				<option value="2 - FORM-Invalid" <?= $params['f_current_result'] == "2 - FORM-Invalid" ? "selected" : "" ?>>FORM-Invalid</option>
+				<option value="3 - HTTP-Error" <?= $params['f_current_result'] == "3 - HTTP-Error" ? "selected" : "" ?>>HTTP-Error</option>
+				<option value="3 - CURL-Error" <?= $params['f_current_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
 			</select>
 		</td>
 		<td class="filter_td">
 			<select name="f_previous_result">
-				<option value="All">All</option>
-				<option value="1 - OK">OK</option>
-				<option value="2 - FORM-Invalid" >FORM-Invalid</option>
-				<option value="3 - HTTP-Error" >HTTP-Error</option>
-				<option value="3 - CURL-Error" >CURL-Error</option>
+				<option value="All" <?= $params['f_previous_result'] == "All" ? "selected" : "" ?>>All</option>
+				<option value="1 - OK" <?= $params['f_previous_result'] == "1 - OK" ? "selected" : "" ?>>OK</option>
+				<option value="2 - FORM-Invalid" <?= $params['f_previous_result'] == "2 - FORM-Invalid" ? "selected" : "" ?>>FORM-Invalid</option>
+				<option value="3 - HTTP-Error" <?= $params['f_previous_result'] == "3 - HTTP-Error" ? "selected" : "" ?>>HTTP-Error</option>
+				<option value="3 - CURL-Error" <?= $params['f_previous_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
 			</select>
 		</td>
 		<td class="filter_td" colspan="3"><input type="submit" name="filter" value="Search"  class="filter_gumb"/></td>
@@ -171,22 +172,24 @@ function getCurrentUrl($params, $excludeParam=array()) {
         if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " ignoreEntity = " . ($params['f_ignore_entity'] == "True" ? 0 : 1);
+		$sql_conditions .= " ignoreEntity = " . ($params['f_ignore_entity'] == "True" ? 1 : 0);
 	}
         if ($params['f_last_check'] && $params['f_last_check'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " lastCheck = " . $params['f_last_check'];
+		if ($params['f_last_check'] == "1") {
+			$sql_conditions .= " lastCheck >= DATE_FORMAT(curdate() - interval 30 day,'%m/%d/%Y')";
+		}
 	}
         if ($params['f_current_result'] && $params['f_current_result'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " currentResult LIKE '%" . $params['f_current_result'] . "'";
+		$sql_conditions .= " currentResult = '" . $params['f_current_result'] . "'";
 	}
         if ($params['f_previous_result'] && $params['f_previous_result'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " previousResult LIKE '%" . $params['f_previous_result'] . "'";
+		$sql_conditions .= " previousResult = '" . $params['f_previous_result'] . "'";
 	}
 
 	// find out how many rows are in the table 
@@ -202,7 +205,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 	$offset = ($page - 1) * $rowsperpage;
 	
 	$sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
-	error_log($sql . $sql_conditions);
+	//error_log($sql . $sql_conditions);
 	$result = $mysqli->query($sql . $sql_conditions) or error_log("Error: " . $sql . $sql_conditions . ": " . mysqli_error($mysqli));
 
 	while ($row = $result->fetch_assoc()) {
