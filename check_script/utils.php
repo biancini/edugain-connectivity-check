@@ -29,12 +29,12 @@ function store_feds_into_db($json_edugain_feds, $database_sql){
 			if ($result->num_rows > 0) {
 				while ($row = $result->fetch_assoc()) {
   					if ($fed['name'] !== $row['federationName']){
-  						$sql = 'UPDATE federations SET federationName=' ."'". $fed['name'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
+  						$sql = 'UPDATE Federations SET federationName=' ."'". $fed['name'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
   						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
   					}
   						
   					if ($fed['email'] !== $row['emailAddress']){
-  						$sql = 'UPDATE federations SET emailAddress=' ."'". $fed['email'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
+  						$sql = 'UPDATE Federations SET emailAddress=' ."'". $fed['email'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
   						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
   					}
 				}

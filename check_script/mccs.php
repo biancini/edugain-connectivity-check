@@ -87,7 +87,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 
 				$sql .= "'" . $idp['entityID'] . "', ";
 				$sql .= "'" . $idp['registrationAuthority'] . "', ";
-				$sql .= "'" . $idp['displayName'] . "', ";
+				$sql .= "'" . mysqli_real_escape_string($idp['displayName']) . "', ";
 				$sql .= "'" . $idp['technicalContacts'] . "', ";
 				$sql .= "'" . $idp['supportContacts'] . "'";
 				$sql .= ")";
