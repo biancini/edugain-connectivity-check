@@ -1,13 +1,14 @@
 <?php
 $conf_array = parse_ini_file('../properties.ini', true);
+$db_connection = $conf_array['db_connection'];
 
-$db_host = $conf_array['db_connection']['db_host'];
-$db_port = $conf_array['db_connection']['db_port'];
-$db_name = $conf_array['db_connection']['db_name'];
-$db_user = $conf_array['db_connection']['db_user'];
-$db_password = $conf_array['db_connection']['db_password'];
+if (array_key_exists("db_sock", $db_connection) && !empty($db_connection['db_sock'])) {
+	$mysqli = new mysqli(null, $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], null, $db_connection['db_sock']);
+}
+else {
+	$mysqli = new mysqli($db_connection['db_host'], $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], $db_connection['db_port']);
+}
 
-$mysqli = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
 if ($mysqli->connect_errno) {
 	header('HTTP/1.1 500 Internal Server Error');
 	error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
