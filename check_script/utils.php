@@ -1,20 +1,113 @@
 <?php
 
-function store_feds_into_db($json_edugain_feds, $database_sql){
-	
-	$db_host = $database_sql['db_host'];
-	$db_port = $database_sql['db_port'];
-	$db_name = $database_sql['db_name'];
-	$db_user = $database_sql['db_user'];
-	$db_password = $database_sql['db_password'];
+function get_db_connection($db_connection) {
+	if (array_key_exists("db_sock", $db_connection) && !empty($db_connection['db_sock'])) {
+		$mysqli = new mysqli(null, $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], null, $db_connection['db_sock']);
+	}
+	else {
+		$mysqli = new mysqli($db_connection['db_host'], $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], $db_connection['db_port']);
+	}
 
-	$mysqli = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
 	$mysqli->set_charset("utf8");
-
 	if ($mysqli->connect_errno) {
 		die("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
 	}
-	
+
+	return $mysqli;
+}
+
+function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
+	$ignore_entity = false;
+	$previous_status = NULL;
+	$check_ok = true;
+	$reason = '1 - OK';
+	$messages = array();
+
+	$mysqli = null;
+
+	$mysqli = get_db_connection($db_connection);
+	$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";
+	$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+
+	if ($result->num_rows > 0) {
+		while ($row = $result->fetch_assoc()) {
+			$previous_status = $row['currentResult'];
+			$ignore_entity = $row['ignoreEntity'];
+		}
+	} else {
+		$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (';
+
+		$sql .= "'" . $idp['entityID'] . "', ";
+		$sql .= "'" . $idp['registrationAuthority'] . "', ";
+		$sql .= "'" . mysqli_real_escape_string($mysqli, $idp['displayName']) . "', ";
+		$sql .= "'" . $idp['technicalContacts'] . "', ";
+		$sql .= "'" . $idp['supportContacts'] . "'";
+		$sql .= ")";
+
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	}
+
+	if ($ignore_entity == true) {
+		print "Entity " . $idp['entityID'] . " ignored.\n";
+		$mysqli->close();
+		return;
+	}
+
+	for ($i = 0; $i < count($spEntityIDs); $i++) {
+		$result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
+
+		// fai insert in tabella EntityChecks
+		$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, checkHtml, httpStatusCode, checkResult) VALUES (';
+		$sql .= "'" . $idp['entityID'] . "', ";
+		$sql .= "'" . $spEntityIDs[$i] . "', ";
+		$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
+		$sql .= $result['http_code'] . ", ";
+
+		if ($result['ok']) {
+			$sql .= "'1 - OK'";
+		} else {
+			$check_ok = false;
+			$messages = $result['messages'];
+
+			if (!$result['form_valid']) {
+				$reason = '2 - FORM-Invalid';
+			}
+			elseif ($result['http_code'] != 200) {
+				$reason = '3 - HTTP-Error';
+			}
+			elseif ($result['curl_return'] != '') {
+				$reason = '3 - CURL-Error';
+			}
+
+			$sql .= "'" . $reason . "'";
+		}
+
+		$sql .= ")";
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+
+		// update EntityDescriptors
+		$sql = "UPDATE EntityDescriptors SET ";
+		$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
+		$sql .= ", currentResult = '" . $reason . "' ";
+		if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
+		$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	}
+
+	if ($check_ok) {
+		print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
+	}
+	else {
+		print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
+		print "Reason: " . $reason . "\n";
+		print "Messages: " . print_r($messages, true) . "\n\n";
+	}
+
+	$mysqli->close();
+}
+
+function store_feds_into_db($json_edugain_feds, $db_connection){
+	$mysqli = get_db_connection($db_connection);
 	$feds_list = json_decode($json_edugain_feds, true, 10, JSON_UNESCAPED_UNICODE);
 	
 	foreach ($feds_list as $fed){ 
