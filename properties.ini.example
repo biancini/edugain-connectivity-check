@@ -11,6 +11,7 @@ spEntityID_1 = https://attribute-viewer.aai.switch.ch/interfederation-test/shibb
 spEntityID_2 = https://sp24-test.garr.it/shibboleth
 spACSurl_1 = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
 spACSurl_2 = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
+parallel = 30
 
 [db_connection]
 db_host = localhost

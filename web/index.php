@@ -239,13 +239,13 @@ function getCurrentUrl($params, $excludeParam=array()) {
         		<td><?php
 				$contacts = explode(",", $row['technicalContacts']);
 				foreach ($contacts as $contact) {
-					print "<a href=\"mailto:" . $contact . "\">" . $contact . "</a>";
+					print "<a href=\"mailto:" . $contact . "\">" . $contact . "</a><br/>";
 				}
 			?></td>
         		<td><?php
 				$contacts = explode(",", $row['supportContacts']);
 				foreach ($contacts as $contact) {
-					print "<a href=mailto:\"" . $contact . "\">" . $contact . "</a>";
+					print "<a href=mailto:\"" . $contact . "\">" . $contact . "</a><br/>";
 				}
 			?></td>
 	        	<td><?=$row['ignoreEntity'] == 1 ? "True" : "False"?></td>
