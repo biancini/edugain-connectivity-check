@@ -19,6 +19,7 @@ db_port = 3306
 db_name = mccs_db
 db_user = mccs_user
 db_password = password_db_mccs
+db_sock = /var/run/mysqld/mysqld.sock
 
 [edugain_db_json]
 json_feds_url = "http://technical.edugain.org/json_api.php?action=list_feds"
