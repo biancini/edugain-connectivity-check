@@ -63,7 +63,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 			$pid = pcntl_fork();
 			if (!$pid) {
 				//In child
-				print "Executing check for " . $idpList[$count] . "\n";
+				print "Executing check for " . $idpList[$count]['entityID'] . "\n";
 				executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_host, $db_user, $db_password, $db_name, $db_port);
 				exit(0);
 			}
@@ -76,7 +76,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 				$pid = pcntl_fork();
 				if (!$pid) {
 					//In child
-					print "Executing check for " . $idpList[$count] . "\n";
+					print "Executing check for " . $idpList[$count]['entityID'] . "\n";
 					executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_host, $db_user, $db_password, $db_name, $db_port);
 					exit(0);
 				}
@@ -129,7 +129,7 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_host, $db_user, $d
 	}
 
 	if ($ignore_entity == true) {
-		//print "Entity " . $idp['entityID'] . " ignored.\n";
+		print "Entity " . $idp['entityID'] . " ignored.\n";
 		$mysqli->close();
 		return;
 	}
@@ -176,7 +176,7 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_host, $db_user, $d
 	}
 
 	if ($check_ok) {
-		//print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
+		print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
 	}
 	else {
 		print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
