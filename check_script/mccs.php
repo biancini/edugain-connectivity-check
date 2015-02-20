@@ -22,6 +22,8 @@ $spACSurls = array();
 $spACSurls[] = $conf_array['check_script']['spACSurl_1'];
 $spACSurls[] = $conf_array['check_script']['spACSurl_2'];
 
+$parallel = intval($conf_array['check_script']['parallel']);
+
 if (count($spEntityIDs) != count($spACSurls)) {
 	die("Configuration error. Please check properties.ini.");
 }
@@ -43,116 +45,44 @@ $arrContextOptions=array(
 );
 
 if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_context_create($arrContextOptions)))===false){
-	echo "Error fetching JSON eduGAIN Federation members\n";
+	print "Error fetching JSON eduGAIN Federation members\n";
 } else {
 	store_feds_into_db($json_edugain_feds, $conf_array['db_connection']);
 }
 
 if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_context_create($arrContextOptions)))===false){
-	echo "Error fetching JSON eduGAIN IdPs\n";
+	print "Error fetching JSON eduGAIN IdPs\n";
 } else {
 	$idpList = extractIdPfromJSON($json_edugain_idps);
 	
 	if (!$idpList) {
-		echo "Error loading eduGAIN JSON IdPs\n";
+		print "Error loading eduGAIN JSON IdPs\n";
 	} else {
-		$mysqli = null;
-		$mysqli = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
-		$mysqli->set_charset("utf8");
-		if ($mysqli->connect_errno) {
-			die("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
-		}
-
-		$count = 0;
-		foreach ($idpList as $idp){
+		$count = 1;
+		for ($i = 0; $i < $parallel; $i++) {
+			$pid = pcntl_fork();
+			if (!$pid) {
+				//In child
+				print "Executing check for " . $idpList[$count] . "\n";
+				executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_host, $db_user, $db_password, $db_name, $db_port);
+				exit(0);
+			}
 			$count++;
-
-			$ignore_entity = false;
-			$previous_status = NULL;
-			$check_ok = true;
-			$reason = '1 - OK';
-			$messages = array();
-
-			$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";
-
-			$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
-
-			if ($result->num_rows > 0) {
-				while ($row = $result->fetch_assoc()) {
-					$previous_status = $row['currentResult'];
-					$ignore_entity = $row['ignoreEntity'];
-				}
-			} else {
-				$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (';
-
-				$sql .= "'" . $idp['entityID'] . "', ";
-				$sql .= "'" . $idp['registrationAuthority'] . "', ";
-				$sql .= "'" . mysqli_real_escape_string($mysqli, $idp['displayName']) . "', ";
-				$sql .= "'" . $idp['technicalContacts'] . "', ";
-				$sql .= "'" . $idp['supportContacts'] . "'";
-				$sql .= ")";
-
-				$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
-			}
-
-			if ($ignore_entity == true) {
-				print "Entity " . $idp['entityID'] . " ignored.\n";
-				continue;
-			}
-
-			for ($i = 0; $i < count($spEntityIDs); $i++) {
-				$result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
-
-				// fai insert in tabella EntityChecks
-				$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, checkHtml, httpStatusCode, checkResult) VALUES (';
-				$sql .= "'" . $idp['entityID'] . "', ";
-				$sql .= "'" . $spEntityIDs[$i] . "', ";
-				$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
-				$sql .= $result['http_code'] . ", ";
-
-				if ($result['ok']) {
-					$sql .= "'1 - OK'";
-				} else {
-					$check_ok = false;
-					$messages = $result['messages'];
-
-					if (!$result['form_valid']) {
-						$reason = '2 - FORM-Invalid';
-					}
-					elseif ($result['http_code'] != 200) {
-						$reason = '3 - HTTP-Error';
-					}
-					elseif ($result['curl_return'] != '') {
-						$reason = '3 - CURL-Error';
-					}
-
-					$sql .= "'" . $reason . "'";
-				}
-
-				$sql .= ")";
-				$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
-
-				// update EntityDescriptors
-				$sql = "UPDATE EntityDescriptors SET ";
-				$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
-				$sql .= ", currentResult = '" . $reason . "' ";
-				if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
-				$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
-				$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
-			}
-
-			if ($check_ok) {
-				//echo "The IdP ".$idp['entityID']." consumed metadata correctly\n";
-			}
-			else {
-				echo "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n";
-				echo "Reason: " . $reason . "\n";
-				echo "Messages: " . print_r($messages, true) . "\n";
-				echo "\n";
-			}
 		}
 
-		$mysqli->close();
+		while (pcntl_waitpid(0, $status) != -1) { 
+			$status = pcntl_wexitstatus($status);
+			if ($count <= count($idpList)) {
+				$pid = pcntl_fork();
+				if (!$pid) {
+					//In child
+					print "Executing check for " . $idpList[$count] . "\n";
+					executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_host, $db_user, $db_password, $db_name, $db_port);
+					exit(0);
+				}
+				$count++;
+			} 
+		}
 	}
 	
 	$mic_time = microtime();
@@ -160,18 +90,112 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 	$mic_time = $mic_time[1] + $mic_time[0];
 	$endtime = $mic_time;
 	$total_execution_time = ($endtime - $start_time);
-	echo "<br><br>Total Executaion Time ".$total_execution_time." seconds";
+	print "\n\nTotal Executaion Time ".$total_execution_time." seconds.\n";
+}
+
+function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_host, $db_user, $db_password, $db_name, $db_port) {
+	$ignore_entity = false;
+	$previous_status = NULL;
+	$check_ok = true;
+	$reason = '1 - OK';
+	$messages = array();
+
+	$mysqli = null;
+	$mysqli = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
+	$mysqli->set_charset("utf8");
+	if ($mysqli->connect_errno) {
+		die("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
+	}
+
+	$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";
+	$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+
+	if ($result->num_rows > 0) {
+		while ($row = $result->fetch_assoc()) {
+			$previous_status = $row['currentResult'];
+			$ignore_entity = $row['ignoreEntity'];
+		}
+	} else {
+		$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (';
+
+		$sql .= "'" . $idp['entityID'] . "', ";
+		$sql .= "'" . $idp['registrationAuthority'] . "', ";
+		$sql .= "'" . mysqli_real_escape_string($mysqli, $idp['displayName']) . "', ";
+		$sql .= "'" . $idp['technicalContacts'] . "', ";
+		$sql .= "'" . $idp['supportContacts'] . "'";
+		$sql .= ")";
+
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	}
+
+	if ($ignore_entity == true) {
+		//print "Entity " . $idp['entityID'] . " ignored.\n";
+		$mysqli->close();
+		return;
+	}
+
+	for ($i = 0; $i < count($spEntityIDs); $i++) {
+		$result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
+
+		// fai insert in tabella EntityChecks
+		$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, checkHtml, httpStatusCode, checkResult) VALUES (';
+		$sql .= "'" . $idp['entityID'] . "', ";
+		$sql .= "'" . $spEntityIDs[$i] . "', ";
+		$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
+		$sql .= $result['http_code'] . ", ";
+
+		if ($result['ok']) {
+			$sql .= "'1 - OK'";
+		} else {
+			$check_ok = false;
+			$messages = $result['messages'];
+
+			if (!$result['form_valid']) {
+				$reason = '2 - FORM-Invalid';
+			}
+			elseif ($result['http_code'] != 200) {
+				$reason = '3 - HTTP-Error';
+			}
+			elseif ($result['curl_return'] != '') {
+				$reason = '3 - CURL-Error';
+			}
+
+			$sql .= "'" . $reason . "'";
+		}
+
+		$sql .= ")";
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+
+		// update EntityDescriptors
+		$sql = "UPDATE EntityDescriptors SET ";
+		$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
+		$sql .= ", currentResult = '" . $reason . "' ";
+		if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
+		$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	}
+
+	if ($check_ok) {
+		//print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
+	}
+	else {
+		print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
+		print "Reason: " . $reason . "\n";
+		print "Messages: " . print_r($messages, true) . "\n\n";
+	}
+
+	$mysqli->close();
 }
 
 // if (($metadataXML = file_get_contents($map_url, false, stream_context_create($arrContextOptions)))===false){
-// 	echo "Error fetching eduGAIN metadata XML\n";
+// 	print "Error fetching eduGAIN metadata XML\n";
 // } else {
 // 	libxml_use_internal_errors(true);
 // 	$idpList = extractIdPfromXML($metadataXML);
 // 	if (!$idpList) {
-// 		echo "Error loading eduGAIN metadata XML\n";
+// 		print "Error loading eduGAIN metadata XML\n";
 // 		foreach(libxml_get_errors() as $error) {
-// 			echo "\t", $error->message;
+// 			print "\t", $error->message;
 // 		}
 // 	} else {
 // 		$mysqli = new mysqli($db_host, $db_user, $db_password, $db_name, $db_port);
@@ -256,14 +280,14 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 // 			}
 
 // 			if ($check_ok) {
-// 				//echo "The IdP ".$idp['entityID']." consumed metadata correctly\n";
+// 				//print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
 // 			}
 // 			else {
-// 				echo "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n";
-// 				echo "Reason: " . $reason . "\n";
-// 				echo "Messages: " . print_r($messages, true) . "\n";
+// 				print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n";
+// 				print "Reason: " . $reason . "\n";
+// 				print "Messages: " . print_r($messages, true) . "\n";
 // 			}
-// 			echo "\n";
+// 			print "\n";
 // 		}
 
 // 		$mysqli->close();
