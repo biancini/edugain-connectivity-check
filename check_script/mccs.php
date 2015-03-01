@@ -12,15 +12,22 @@ $start_time = $mic_time;
 // --------------------------
             
 $conf_array = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
+
 $map_url = $conf_array['check_script']['map_url'];
 
 $spEntityIDs = array();
-$spEntityIDs[] = $conf_array['check_script']['spEntityID_1'];
-$spEntityIDs[] = $conf_array['check_script']['spEntityID_2'];
-
 $spACSurls = array();
-$spACSurls[] = $conf_array['check_script']['spACSurl_1'];
-$spACSurls[] = $conf_array['check_script']['spACSurl_2'];
+
+$regexp = "/^sp_\d/";
+
+$conf_array_keys = array_keys($conf_array);
+$sps_keys[] = preg_grep ( $regexp , $conf_array_keys);
+foreach ($sps_keys as $key => $value){
+	foreach($value as $sp => $val){
+		$spEntityIDs[] = $conf_array[$val]['entityID'];
+		$spACSurls[] = $conf_array[$val]['acs_url'];
+	}
+}
 
 $parallel = intval($conf_array['check_script']['parallel']);
 

@@ -1,5 +1,11 @@
 <?php
 
+/**
+ Create a new DB connection and return its pointer.
+
+ @param array $db_connection Array containing the datas for DB connection
+ @return new mysqli($db_connection),
+ */
 function get_db_connection($db_connection) {
 	if (array_key_exists("db_sock", $db_connection) && !empty($db_connection['db_sock'])) {
 		$mysqli = new mysqli(null, $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], null, $db_connection['db_sock']);
@@ -16,6 +22,13 @@ function get_db_connection($db_connection) {
 	return $mysqli;
 }
 
+/**
+ Execute checks on each input IdP.
+
+ @param array $idp Array containing the IdP entity
+ @param array $spEntityIDs containing the SPs entityID
+ @return new mysqli($db_connection),
+ */
 function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 	$ignore_entity = false;
 	$previous_status = NULL;

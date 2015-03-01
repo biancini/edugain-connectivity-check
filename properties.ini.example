@@ -7,11 +7,15 @@
 
 [check_script]
 map_url = http://mds.edugain.org
-spEntityID_1 = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
-spEntityID_2 = https://sp24-test.garr.it/shibboleth
-spACSurl_1 = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
-spACSurl_2 = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
 parallel = 30
+
+[sp_1]
+entityID = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
+acs_url = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
+
+[sp_2]
+entityID = https://sp24-test.garr.it/shibboleth
+acs_url = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
 
 [db_connection]
 db_host = localhost
