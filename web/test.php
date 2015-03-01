@@ -54,6 +54,30 @@ function getCurrentUrl($params, $excludeParam=array()) {
         if (!in_array("f_check_result", $excludeParam) && array_key_exists("f_check_result", $params)) $url .= "&f_check_result=" . $params['f_check_result'];
 	return $url;
 }
+
+function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {
+	date_default_timezone_set('UTC');
+	$date = date('Y-m-d\TH:i:s\Z');
+	$id = md5($date.rand(1, 1000000));
+
+	$samlRequest = '
+	      <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+	         AssertionConsumerServiceURL="'.$spACSurl.'"
+	         Destination="'.$httpRedirectServiceLocation.'"
+	         ID="_'.$id.'"
+	         IssueInstant="'.$date.'"
+	         ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Version="2.0">
+	         <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
+	            '.$spEntityID.'
+	         </saml:Issuer>
+	         <samlp:NameIDPolicy AllowCreate="1"/>
+	      </samlp:AuthnRequest>';
+
+	$samlRequest = preg_replace('/[\s]+/',' ',$samlRequest);
+	$samlRequest = urlencode( base64_encode( gzdeflate( $samlRequest ) ) );
+	$url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
+	return $url;
+}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -118,6 +142,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 				<option value="3 - CURL-Error" <?= $params['f_check_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
 			</select>
 		</td>
+		<td>&nbsp;</td>
 		<td class="filter_td"><input type="submit" name="filter" value="Search"  class="filter_gumb"/></td>
 	</tr>
 	<tr>
@@ -127,10 +152,11 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=httpStatusCode" title="Sort by HTTP status code.">HTTP status code</a></th>
 		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=checkResult" title="Sort by test result.">Test result</a></th>
 		<th>Test HTML</th>
+		<th>Repeat test</th>
 	</tr>
 	<tr>
 		<td class="filter_td" colspan="3">Test params</td>
-		<td class="filter_td" colspan="3">Test results</td>
+		<td class="filter_td" colspan="4">Test results</td>
 	</tr>
 	<?php
       	$sql_count = "SELECT COUNT(*) FROM EntityChecks";
@@ -209,6 +235,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
         		<td><?=$row['checkTime']?></td>
         		<td><?=$row['httpStatusCode']?></td>
         		<td><?=substr($row['checkResult'], 4)?></td>
+        		<td><a href="<?=createCheckUrl($row['acsUrls'], $row['serviceLocation'], $row['spEntityID'])?>" target="_blank">Repeat test</a></td>
         		<td><a href="test.php?show=html&id=<?=$row['id']?>" target="_blank">View HTML</a></td>
 		</tr>
 		<?php

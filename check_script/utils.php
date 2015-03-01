@@ -57,9 +57,11 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 		$result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
 
 		// fai insert in tabella EntityChecks
-		$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, checkHtml, httpStatusCode, checkResult) VALUES (';
+		$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult) VALUES (';
 		$sql .= "'" . $idp['entityID'] . "', ";
 		$sql .= "'" . $spEntityIDs[$i] . "', ";
+		$sql .= "'" . $idp['SingleSignOnService'] . "', ";
+		$sql .= "'" . $spACSurls[$i] . "', ";
 		$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
 		$sql .= $result['http_code'] . ", ";
 
