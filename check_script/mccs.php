@@ -21,9 +21,9 @@ $spACSurls = array();
 $regexp = "/^sp_\d/";
 
 $conf_array_keys = array_keys($conf_array);
-$sps_keys[] = preg_grep ( $regexp , $conf_array_keys);
-foreach ($sps_keys as $key => $value){
-	foreach($value as $sp => $val){
+$sps_keys[] = preg_grep ($regexp, $conf_array_keys);
+foreach ($sps_keys as $key => $value) {
+	foreach($value as $sp => $val) {
 		$spEntityIDs[] = $conf_array[$val]['entityID'];
 		$spACSurls[] = $conf_array[$val]['acs_url'];
 	}
