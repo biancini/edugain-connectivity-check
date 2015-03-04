@@ -38,50 +38,42 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 
 	$mysqli = null;
 
-	$mysqli = get_db_connection($db_connection);
-	$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";
-	$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	if ($db_connection !== NULL) {
+		$mysqli = get_db_connection($db_connection);
+		$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";
+		$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 
-	if ($result->num_rows > 0) {
-		while ($row = $result->fetch_assoc()) {
-			$previous_status = $row['currentResult'];
-			$ignore_entity = $row['ignoreEntity'];
+		if ($result->num_rows > 0) {
+			while ($row = $result->fetch_assoc()) {
+				$previous_status = $row['currentResult'];
+				$ignore_entity = $row['ignoreEntity'];
+			}
+		} else {
+			$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (';
+
+			$sql .= "'" . $idp['entityID'] . "', ";
+			$sql .= "'" . $idp['registrationAuthority'] . "', ";
+			$sql .= "'" . mysqli_real_escape_string($mysqli, $idp['displayName']) . "', ";
+			$sql .= "'" . $idp['technicalContacts'] . "', ";
+			$sql .= "'" . $idp['supportContacts'] . "'";
+			$sql .= ")";
+
+			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 		}
-	} else {
-		$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (';
-
-		$sql .= "'" . $idp['entityID'] . "', ";
-		$sql .= "'" . $idp['registrationAuthority'] . "', ";
-		$sql .= "'" . mysqli_real_escape_string($mysqli, $idp['displayName']) . "', ";
-		$sql .= "'" . $idp['technicalContacts'] . "', ";
-		$sql .= "'" . $idp['supportContacts'] . "'";
-		$sql .= ")";
-
-		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 	}
 
 	if ($ignore_entity == true) {
 		print "Entity " . $idp['entityID'] . " ignored.\n";
-		$mysqli->close();
+		if ($mysqli !== NULL) $mysqli->close();
 		return;
 	}
 
 	for ($i = 0; $i < count($spEntityIDs); $i++) {
 		$result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
-
-		// fai insert in tabella EntityChecks
-		$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult) VALUES (';
-		$sql .= "'" . $idp['entityID'] . "', ";
-		$sql .= "'" . $spEntityIDs[$i] . "', ";
-		$sql .= "'" . $idp['SingleSignOnService'] . "', ";
-		$sql .= "'" . $spACSurls[$i] . "', ";
-		$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
-		$sql .= $result['http_code'] . ", ";
-
-		if ($result['ok']) {
-			$sql .= "'1 - OK'";
+		$check_ok = array_key_exists('ok', $result) && $result['ok'];
+		if ($check_ok) {
+			$reason = '1 - OK';
 		} else {
-			$check_ok = false;
 			$messages = $result['messages'];
 
 			if (!$result['form_valid']) {
@@ -93,20 +85,29 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 			elseif ($result['curl_return'] != '') {
 				$reason = '3 - CURL-Error';
 			}
-
-			$sql .= "'" . $reason . "'";
 		}
 
-		$sql .= ")";
-		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+		// fai insert in tabella EntityChecks
+		if ($mysqli !== NULL) {
+			$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult) VALUES (';
+			$sql .= "'" . $idp['entityID'] . "', ";
+			$sql .= "'" . $spEntityIDs[$i] . "', ";
+			$sql .= "'" . $idp['SingleSignOnService'] . "', ";
+			$sql .= "'" . $spACSurls[$i] . "', ";
+			$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
+			$sql .= $result['http_code'] . ", ";
+			$sql .= "'" . $reason . "'";
+			$sql .= ")";
+			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 
-		// update EntityDescriptors
-		$sql = "UPDATE EntityDescriptors SET ";
-		$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
-		$sql .= ", currentResult = '" . $reason . "' ";
-		if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
-		$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
-		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+			// update EntityDescriptors
+			$sql = "UPDATE EntityDescriptors SET ";
+			$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
+			$sql .= ", currentResult = '" . $reason . "' ";
+			if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
+			$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
+			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+		}
 	}
 
 	if ($check_ok) {
@@ -118,7 +119,7 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 		print "Messages: " . print_r($messages, true) . "\n\n";
 	}
 
-	$mysqli->close();
+	if ($mysqli !== NULL) $mysqli->close();
 }
 
 function store_feds_into_db($json_edugain_feds, $db_connection){
@@ -339,7 +340,6 @@ function extractIdPfromXML ($metadata){
 */
 
 function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
-	
    global $verbose;
    
    date_default_timezone_set('UTC');
@@ -367,11 +367,16 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_FRESH_CONNECT => true,
       CURLOPT_SSL_VERIFYPEER => false,
+      CURLOPT_SSL_VERIFYHOST => false,
       CURLOPT_COOKIEJAR => "/dev/null",
       CURLOPT_RETURNTRANSFER => true 
    ));
    
    $html = curl_exec($curl);
+   if ($html == false) {
+     curl_setopt($curl, CURLOPT_SSLVERSION, 3);
+     $html = curl_exec($curl);
+   }
    $info = curl_getinfo($curl);
    $http_code = $info['http_code'];
    $error = array();
@@ -400,7 +405,8 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
          } else {
             $msg = "Did not find input for username.";
             $error[] = $msg;
-            $validForm = $ok = false;
+            $validForm = false;
+	    $ok = false;
          }
          
          if(preg_match($pattern_password, $html)){
@@ -408,7 +414,8 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
          } else {
             $msg = "Did not find input for password.";
             $error[] = $msg;
-            $validForm = $ok = false;
+            $validForm = false;
+            $ok = false;
          }
       }
 
@@ -418,7 +425,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
       echo $httpRedirectServiceLocation." ERROR \n";
       //if($html) var_dump($html);
    }
-   
+
    $ret = array(
       "ok" => $ok,
       "form_valid" => $validForm,
