@@ -61,6 +61,10 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 	if (!$idpList) {
 		print "Error loading eduGAIN JSON IdPs\n";
 	} else {
+		$mysqli = get_db_connection($db_connection);
+		$sql = "UPDATE EntityDescriptors SET updated = 0";
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+
 		$count = 1;
 		for ($i = 0; $i < $parallel; $i++) {
 			$pid = pcntl_fork();
@@ -86,6 +90,10 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 				$count++;
 			} 
 		}
+
+		$sql = "DELETE FROM EntityDescriptors WHERE updated = 0";
+		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+		$mysqli->close();
 	}
 	
 	$mic_time = microtime();

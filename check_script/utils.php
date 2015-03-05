@@ -103,8 +103,9 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 			// update EntityDescriptors
 			$sql = "UPDATE EntityDescriptors SET ";
 			$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
-			$sql .= ", currentResult = '" . $reason . "' ";
-			if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
+			$sql .= ", currentResult = '" . $reason . "', ";
+			if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "', ";
+			$sql .= "updated = 1 ";
 			$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
 			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 		}
@@ -369,7 +370,8 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
       CURLOPT_SSL_VERIFYPEER => false,
       CURLOPT_SSL_VERIFYHOST => false,
       CURLOPT_COOKIEJAR => "/dev/null",
-      CURLOPT_RETURNTRANSFER => true 
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_TIMEOUT => 30
    ));
    
    $html = curl_exec($curl);
@@ -442,4 +444,57 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
    
    return $ret;
 }
+
+function sendEmail($emailProperties, $recipients, $idps) {
+	include ("PHPMailer/PHPMailerAutoload.php");
+	include ("utils.php");
+
+	$mail = new PHPMailer;
+	//$mail->SMTPDebug = 3; // Enable verbose debug output
+
+	$mail->isSMTP();
+	$mail->Host = $emailProperties['host'];
+	$mail->SMTPAuth = true;
+
+	if (!empty($emailProperties['user']) && !empty($emailProperties['password'])) {
+		$mail->Username = $emailProperties['user'];
+		$mail->Password = $emailProperties['password'];
+	}
+
+	if (settype($emailProperties['tls'], 'boolean')) {
+		$mail->SMTPSecure = 'tls';
+	}
+
+	if (intval($emailProperties['port']) > 0) {
+		$mail->Port = intval($emailProperties['port']);
+	}
+
+	$mail->From = $emailProperties['from'];
+	$mail->FromName = 'MCCS monitoring service';
+	$mail->addAddress('andrea.biancini@garr.it');
+	//$mail->addReplyTo('info@example.com', 'Information');
+	//$mail->addCC('cc@example.com');
+	//$mail->addBCC('bcc@example.com');
+	$mail->isHTML(true);
+
+	$mail->Subject = 'Here is the subject';
+	$body  = 'This is the HTML message body <b>in bold!</b>. Mail inviata da PHP, ciao mitico!';
+
+	$body .= '<table>';
+	$body .= '<thead><td>IdP name</td><td>Current Status</td><td>Previous Status</td><td>Technical Concact</td><td>Link</td></thead>';
+	foreach ($idps as $entityID => $vals) {
+		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['name'] . '</td>';
+		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['current_status'] . '</td>';
+		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['previous_status'] . '</td>';
+		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['tech_contacts'] . '</td>';
+		$body .= '<tr><td>View detailed information about last checks.</td>';
+	}
+	$body .= '</table>';
+
+	$mail->AltBody = 'This is the body in plain text for non-HTML mail clients.';
+	$mail->Body    = $body;
+
+	return $mail->send();
+}
+
 ?>

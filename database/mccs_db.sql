@@ -32,8 +32,9 @@ CREATE TABLE IF NOT EXISTS EntityDescriptors
 	previousResult VARCHAR(16) NULL default NULL,
 	technicalContacts BLOB NULL,
 	supportContacts BLOB NULL,
+	updated BOOLEAN NOT NULL DEFAULT 0,
 	UNIQUE (entityID),
-	FOREIGN KEY (registrationAuthority) REFERENCES Federations(registrationAuthority),
+	FOREIGN KEY (registrationAuthority) REFERENCES Federations(registrationAuthority) ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (entityID)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
@@ -48,6 +49,6 @@ CREATE TABLE IF NOT EXISTS EntityChecks
 	checkHtml BLOB NULL,
 	httpStatusCode INTEGER NOT NULL,
 	checkResult VARCHAR(16) NOT NULL,
-	FOREIGN KEY (entityID) REFERENCES EntityDescriptors(entityID),
+	FOREIGN KEY (entityID) REFERENCES EntityDescriptors(entityID) ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";

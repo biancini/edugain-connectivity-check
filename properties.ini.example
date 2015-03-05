@@ -28,3 +28,11 @@ db_sock = /var/run/mysqld/mysqld.sock
 [edugain_db_json]
 json_feds_url = "http://technical.edugain.org/json_api.php?action=list_feds"
 json_idps_url = "http://technical.edugain.org/json_api.php?action=list_idps"
+
+[email]
+host = smtp.server.edugain.net
+port = 25
+tls = true
+user = username
+password = password
+from = mccs@edugain.net
