@@ -8,7 +8,7 @@
 [check_script]
 map_url = http://mds.edugain.org
 parallel = 30
-checkHistory = 2
+check_history = 2
 
 [sp_1]
 entityID = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth

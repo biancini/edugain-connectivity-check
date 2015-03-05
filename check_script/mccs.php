@@ -30,7 +30,7 @@ foreach ($sps_keys as $key => $value) {
 }
 
 $parallel = intval($conf_array['check_script']['parallel']);
-$checkHistory = intval($conf_array['check_script']['checkHistory']);
+$checkHistory = intval($conf_array['check_script']['check_history']);
 
 if (count($spEntityIDs) != count($spACSurls)) {
 	die("Configuration error. Please check properties.ini.");
