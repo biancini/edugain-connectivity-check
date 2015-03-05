@@ -1,5 +1,7 @@
 <?php
 
+include ("PHPMailer/PHPMailerAutoload.php");
+
 /**
  Create a new DB connection and return its pointer.
 
@@ -445,10 +447,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
    return $ret;
 }
 
-function sendEmail($emailProperties, $recipients, $idps) {
-	include ("PHPMailer/PHPMailerAutoload.php");
-	include ("utils.php");
-
+function sendEmail($emailProperties, $recipient, $idps) {
 	$mail = new PHPMailer;
 	//$mail->SMTPDebug = 3; // Enable verbose debug output
 
@@ -471,27 +470,43 @@ function sendEmail($emailProperties, $recipients, $idps) {
 
 	$mail->From = $emailProperties['from'];
 	$mail->FromName = 'MCCS monitoring service';
-	$mail->addAddress('andrea.biancini@garr.it');
-	//$mail->addReplyTo('info@example.com', 'Information');
-	//$mail->addCC('cc@example.com');
-	//$mail->addBCC('bcc@example.com');
+
+	if (!empty($emailProperties['test_recipient']) {
+		$mail->addAddress($emailProperties['test_recipient']);
+	}
+	else {
+		$mail->addAddress($recipient);
+	}
+	$mail->addReplyTo('mccs@edugain.net');
+	$mail->CharSet = 'UTF-8';
 	$mail->isHTML(true);
 
-	$mail->Subject = 'Here is the subject';
-	$body  = 'This is the HTML message body <b>in bold!</b>. Mail inviata da PHP, ciao mitico!';
+	$mail->Subject = '[MCCS] Some IdP is not consuming metadata correctly';
+	$altBody  = 'The MCCS service identified some IdP from your federation that seem to not being consuming correctly the eduGAIN metadata.';
+	$body  = '<p>'.$altBody.'<br/></p>';
 
-	$body .= '<table>';
-	$body .= '<thead><td>IdP name</td><td>Current Status</td><td>Previous Status</td><td>Technical Concact</td><td>Link</td></thead>';
+	$altBody .= '\n\n';
+	$body .= '<table border="1">';
+	$body .= '<thead><td><b>IdP name</b></td><td><b>Current Status</b></td><td><b>Previous Status</b></td><td><b>Technical Concact</b></td><td><b>Link</b></td></thead>';
 	foreach ($idps as $entityID => $vals) {
-		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['name'] . '</td>';
-		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['current_status'] . '</td>';
-		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['previous_status'] . '</td>';
-		$body .= '<tr><td>' . $idps[$cur_idp['entityID']]['tech_contacts'] . '</td>';
-		$body .= '<tr><td>View detailed information about last checks.</td>';
+		$altBody .= $vals['name'] . '('.$vals['current_status'].')\n';
+		$body .= '<tr>';
+		$body .= '<td>' . $vals['name'] . '</td>';
+		$body .= '<td>' . $vals['current_status'] . '</td>';
+		$body .= '<td>' . $vals['previous_status'] . '</td>';
+		$body .= '<td>';
+		foreach ($vals['tech_contacts'] as $contact) {
+			$body .=  '<a href="mailto:' . $contact . '">' . $contact . '</a><br/>';
+		}
+		$body .= '</td>';
+		$body .= '<td><a href="'.$emailProperties['baseurl'].'/test.php?f_entityID='.$entityID.'">View last checks</a></td>';
+		$body .= '</tr>';
 	}
+	$altBody .= '\nVisit MCCS at ' . $emailProperties['baseurl'] . ' to understand more.\nThank you for your cooperation.\nRegards.';
 	$body .= '</table>';
+	$body .= '<p><br/>Thank you for your cooperation.<br/>Regards.</p>';
 
-	$mail->AltBody = 'This is the body in plain text for non-HTML mail clients.';
+	$mail->AltBody = $altBody;
 	$mail->Body    = $body;
 
 	return $mail->send();

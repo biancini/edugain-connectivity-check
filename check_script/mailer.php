@@ -14,19 +14,19 @@ $fed_result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error
 while ($cur_federation = $fed_result->fetch_assoc()) { 
 	// federationName registrationAuthority emailAddress
 	$sql  = "SELECT * FROM EntityDescriptors WHERE ";
-	$sql .= "registrationAuthority = '" . $obj['registrationAuthority'] . "' AND ";
+	$sql .= "registrationAuthority = '" . $cur_federation['registrationAuthority'] . "' AND ";
 	$sql .= "ignoreEntity = 0 AND ";
 	$sql .= "currentResult <> '1 - OK' AND ";
 	$sql .= "previousResult <> '1 - OK'";
 
-	$result = $mysqli->query($query) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 	$idps = array();
 	while ($cur_idp = $result->fetch_assoc()) {
 		$idps[$cur_idp['entityID']] = array();
 		$idps[$cur_idp['entityID']]['name'] = $cur_idp['displayName'];
-		$idps[$cur_idp['entityID']]['current_status'] = $cur_idp['currentResult'];
-		$idps[$cur_idp['entityID']]['previous_status'] = $cur_idp['previousResult'];
-		$idps[$cur_idp['entityID']]['tech_contacts'] = $cur_idp['technicalContacts'];
+		$idps[$cur_idp['entityID']]['current_status'] = substr($cur_idp['currentResult'], 4);
+		$idps[$cur_idp['entityID']]['previous_status'] = substr($cur_idp['previousResult'], 4);
+		$idps[$cur_idp['entityID']]['tech_contacts'] = explode(",", $cur_idp['technicalContacts']);
 	}
 
 	if (!empty($cur_federation['emailAddress']) && count($idps) > 0) {

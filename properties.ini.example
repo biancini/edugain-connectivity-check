@@ -36,3 +36,5 @@ tls = true
 user = username
 password = password
 from = mccs@edugain.net
+baseurl = https://server-hosting-mccs.edugain.net/mccs
+test_recipient = 
