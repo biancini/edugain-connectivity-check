@@ -51,7 +51,12 @@ function getCurrentUrl($params, $excludeParam=array()) {
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link media="screen" href="css/ui.switchbutton.min.css" type="text/css" rel="stylesheet"/>
 <link media="screen" href="css/eduroam.css" type="text/css" rel="stylesheet"/>
+<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.switchbutton.min.js"></script>
 <title>edugain - mccs</title>
 </head>
 <body>
@@ -225,6 +230,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 	$sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
 	//error_log($sql . $sql_conditions);
 	$result = $mysqli->query($sql . $sql_conditions) or error_log("Error: " . $sql . $sql_conditions . ": " . mysqli_error($mysqli));
+	$count = 1;
 
 	while ($row = $result->fetch_assoc()) {
 		if ("1 - OK" == $row['currentResult']) $color = "green";
@@ -249,13 +255,34 @@ function getCurrentUrl($params, $excludeParam=array()) {
 					print "<a href=mailto:\"" . $contact . "\">" . $contact . "</a><br/>";
 				}
 			?></td>
-	        	<td><?=$row['ignoreEntity'] == 1 ? "True" : "False"?></td>
+	        	<td><!--div style="width: 110px"><?php
+				if ($row['ignoreEntity'] == 1) {
+					?><input type="checkbox" id="toggle_<?=$count?>" checked="checked" disabled="disabled"/><?php
+				} else {
+					?><input id="toggle_<?=$count?>" type="checkbox" disabled="disabled"/><?php
+				}
+			?></div><script>
+			$("#toggle_<?=$count?>").switchbutton({
+				checkedLabel: 'True',
+				uncheckedLabel: 'False'
+			}).change(function(){
+				console.log("Toggle for <?=$row['entityID']?> " + ($(this).prop("checked") ? "checked" : "unchecked"));
+			});
+			</script--><?php
+                                if ($row['ignoreEntity'] == 1) {
+                                        ?>True<?php
+                                } else {
+                                        ?>False<?php
+                                }
+                        ?></td>
         		<td><?=$row['lastCheck']?></td>
         		<td><?=substr($row['currentResult'], 4)?></td>
 	        	<td><?=substr($row['previousResult'], 4)?></td>
 			<td><a href="test.php?f_entityID=<?=$row['entityID']?>" title="View checks status for this entity.">View</a></td>
 		</tr>
 		<?php
+
+		$count++;
 	}
 	?>
 	<tr>
