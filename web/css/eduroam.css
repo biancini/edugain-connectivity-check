@@ -88,3 +88,9 @@ div.message{
 	color:red;
 	padding:5px;
 }
+
+.switch-wrapper {
+  display: inline-block;
+  position: relative;
+  top: 3px;
+}
