@@ -120,7 +120,7 @@ function store_feds_into_db($json_edugain_feds, $db_connection){
 	
 	foreach ($feds_list as $fed){ 
 		//If I find a registrationAuthority value for the federation
-		if ($fed['reg_auth'] !== null ){
+		if ($fed['reg_auth'] !== null && $fed['reg_auth'] !== ''){
 			$stmt = $mysqli->prepare("SELECT * FROM Federations WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
 			$stmt->bind_param("s", $fed['reg_auth']) or die("Error: " . mysqli_error($mysqli));
 			$stmt->execute() or die("Error: " . mysqli_error($mysqli));
@@ -128,6 +128,11 @@ function store_feds_into_db($json_edugain_feds, $db_connection){
 
 			if ($result->num_rows > 0) {
 				while ($row = $result->fetch_assoc()) {
+					
+					$stmt = $mysqli->prepare("UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
+					$stmt->bind_param("s", $fed['reg_auth']) or die("Error: " . mysqli_error($mysqli));
+					$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+					
   					if ($fed['name'] !== $row['federationName']){
 						$stmt = $mysqli->prepare("UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
 						$stmt->bind_param("ss", $fed['name'], $fed['reg_auth']);
@@ -137,7 +142,7 @@ function store_feds_into_db($json_edugain_feds, $db_connection){
   					if ($fed['email'] !== $row['emailAddress']){
   						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 
-						$stmt = $mysqli->prepare("UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
+						$stmt = $mysqli->prepare("UPDATE Federations SET emailAddress = ? ,  WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
 						$stmt->bind_param("ss", $fed['email'], $fed['reg_auth']);
 						$stmt->execute() or die("Error: " . mysqli_error($mysqli));
   					}
