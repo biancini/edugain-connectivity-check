@@ -30,6 +30,7 @@ foreach ($sps_keys as $key => $value) {
 }
 
 $parallel = intval($conf_array['check_script']['parallel']);
+$checkHistory = intval($conf_array['check_script']['checkHistory']);
 
 if (count($spEntityIDs) != count($spACSurls)) {
 	die("Configuration error. Please check properties.ini.");
@@ -56,6 +57,15 @@ if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_con
 if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_context_create($arrContextOptions)))===false){
 	print "Error fetching JSON eduGAIN IdPs\n";
 } else {
+	
+	$mysqli = get_db_connection($db_connection);
+	$sql = "DELETE FROM EntityChecks WHERE checkExec = 0";
+	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	
+	$sql = "UPDATE EntityChecks SET checkExec = checkExec - 1";
+	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$mysqli->close();
+	
 	$idpList = extractIdPfromJSON($json_edugain_idps);
 	
 	if (!$idpList) {
@@ -72,7 +82,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 			if (!$pid) {
 				//In child
 				print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-				executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection);
+				executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
 				exit(0);
 			}
 			$count++;
@@ -85,7 +95,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 				if (!$pid) {
 					//In child
 					print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-					executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection);
+					executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
 					exit(0);
 				}
 				$count++;

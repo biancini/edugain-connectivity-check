@@ -31,7 +31,7 @@ function get_db_connection($db_connection) {
  @param array $spEntityIDs containing the SPs entityID
  @return new mysqli($db_connection),
  */
-function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
+function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $checkHistory = 2) {
 	$ignore_entity = false;
 	$previous_status = NULL;
 	$check_ok = true;
@@ -69,12 +69,14 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 		if ($mysqli !== NULL) $mysqli->close();
 		return;
 	}
-
+	
 	for ($i = 0; $i < count($spEntityIDs); $i++) {
 		$result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
+
 		$check_ok = array_key_exists('ok', $result) && $result['ok'];
 		if ($check_ok) {
 			$reason = '1 - OK';
+			$sql .= $checkHistory - 1;
 		} else {
 			$messages = $result['messages'];
 
@@ -91,14 +93,15 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 
 		// fai insert in tabella EntityChecks
 		if ($mysqli !== NULL) {
-			$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult) VALUES (';
+			$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (';
 			$sql .= "'" . $idp['entityID'] . "', ";
 			$sql .= "'" . $spEntityIDs[$i] . "', ";
 			$sql .= "'" . $idp['SingleSignOnService'] . "', ";
 			$sql .= "'" . $spACSurls[$i] . "', ";
 			$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
 			$sql .= $result['http_code'] . ", ";
-			$sql .= "'" . $reason . "'";
+			$sql .= "'" . $reason . "', ";
+			$sql .= $checkHistory - 1;
 			$sql .= ")";
 			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 
@@ -112,6 +115,14 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 		}
 	}
+	
+	// update EntityDescriptors
+	$sql = "UPDATE EntityDescriptors SET ";
+	$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
+	$sql .= ", currentResult = '" . $reason . "' ";
+	if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
+	$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
+	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 
 	if ($check_ok) {
 		print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
@@ -471,7 +482,7 @@ function sendEmail($emailProperties, $recipient, $idps) {
 	$mail->From = $emailProperties['from'];
 	$mail->FromName = 'MCCS monitoring service';
 
-	if (!empty($emailProperties['test_recipient']) {
+	if (!empty($emailProperties['test_recipient'])) {
 		$mail->addAddress($emailProperties['test_recipient']);
 	}
 	else {
