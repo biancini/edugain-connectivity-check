@@ -64,6 +64,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 		$mysqli = get_db_connection($db_connection);
 		$sql = "UPDATE EntityDescriptors SET updated = 0";
 		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+		$mysqli->close();
 
 		$count = 1;
 		for ($i = 0; $i < $parallel; $i++) {
@@ -91,6 +92,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 			} 
 		}
 
+		$mysqli = get_db_connection($db_connection);
 		$sql = "DELETE FROM EntityDescriptors WHERE updated = 0";
 		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 		$mysqli->close();

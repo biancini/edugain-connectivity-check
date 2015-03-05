@@ -103,9 +103,9 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection) {
 			// update EntityDescriptors
 			$sql = "UPDATE EntityDescriptors SET ";
 			$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
-			$sql .= ", currentResult = '" . $reason . "', ";
-			if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "', ";
-			$sql .= "updated = 1 ";
+			$sql .= ", currentResult = '" . $reason . "' ";
+			if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
+			$sql .= ", updated = 1 ";
 			$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
 			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
 		}
