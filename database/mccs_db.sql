@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS Federations
 	federationName VARCHAR(255) NULL,
 	emailAddress VARCHAR(255) NULL,
 	registrationAuthority VARCHAR(255) NOT NULL,
+	updated BOOLEAN NOT NULL DEFAULT 0,
 	UNIQUE (registrationAuthority),
 	PRIMARY KEY (registrationAuthority)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
@@ -49,7 +50,7 @@ CREATE TABLE IF NOT EXISTS EntityChecks
 	checkHtml BLOB NULL,
 	httpStatusCode INTEGER NOT NULL,
 	checkResult VARCHAR(16) NOT NULL,
-   checkExec MEDIUMINT NOT NULL default 0,
+	checkExec MEDIUMINT NOT NULL default 0,
 	FOREIGN KEY (entityID) REFERENCES EntityDescriptors(entityID) ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";

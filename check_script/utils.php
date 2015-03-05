@@ -39,11 +39,14 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
 	$messages = array();
 
 	$mysqli = null;
+	$last_check_history = $checkHistory - 1;
 
 	if ($db_connection !== NULL) {
 		$mysqli = get_db_connection($db_connection);
-		$sql = "SELECT * FROM EntityDescriptors WHERE entityID = '" . $idp['entityID'] . "' ORDER BY lastCheck";
-		$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+		$stmt = $mysqli->prepare("SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck") or die("Error: " . mysqli_error($mysqli));
+		$stmt->bind_param("s", $idp['entityID']) or die("Error: " . mysqli_error($mysqli));
+		$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+		$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
 
 		if ($result->num_rows > 0) {
 			while ($row = $result->fetch_assoc()) {
@@ -51,16 +54,10 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
 				$ignore_entity = $row['ignoreEntity'];
 			}
 		} else {
-			$sql  = 'INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (';
+			$stmt = $mysqli->prepare("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)") or die("Error: " . mysqli_error($mysqli));
+			$stmt->bind_param("sssss", $idp['entityID'], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']) or die("Error: " . mysqli_error($mysqli));
 
-			$sql .= "'" . $idp['entityID'] . "', ";
-			$sql .= "'" . $idp['registrationAuthority'] . "', ";
-			$sql .= "'" . mysqli_real_escape_string($mysqli, $idp['displayName']) . "', ";
-			$sql .= "'" . $idp['technicalContacts'] . "', ";
-			$sql .= "'" . $idp['supportContacts'] . "'";
-			$sql .= ")";
-
-			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+			$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 		}
 	}
 
@@ -76,7 +73,6 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
 		$check_ok = array_key_exists('ok', $result) && $result['ok'];
 		if ($check_ok) {
 			$reason = '1 - OK';
-			$sql .= $checkHistory - 1;
 		} else {
 			$messages = $result['messages'];
 
@@ -93,36 +89,18 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
 
 		// fai insert in tabella EntityChecks
 		if ($mysqli !== NULL) {
-			$sql  = 'INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (';
-			$sql .= "'" . $idp['entityID'] . "', ";
-			$sql .= "'" . $spEntityIDs[$i] . "', ";
-			$sql .= "'" . $idp['SingleSignOnService'] . "', ";
-			$sql .= "'" . $spACSurls[$i] . "', ";
-			$sql .= "'" . mysqli_real_escape_string($mysqli, $result['html']) . "', ";
-			$sql .= $result['http_code'] . ", ";
-			$sql .= "'" . $reason . "', ";
-			$sql .= $checkHistory - 1;
-			$sql .= ")";
-			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
-
-			// update EntityDescriptors
-			$sql = "UPDATE EntityDescriptors SET ";
-			$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
-			$sql .= ", currentResult = '" . $reason . "' ";
-			if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
-			$sql .= ", updated = 1 ";
-			$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
-			$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+			$stmt = $mysqli->prepare("INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") or die("Error: " . mysqli_error($mysqli));
+			$stmt->bind_param("sssssisi", $idp['entityID'], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $last_check_history) or die("Error: " . mysqli_error($mysqli));
+			$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 		}
 	}
-	
+
 	// update EntityDescriptors
-	$sql = "UPDATE EntityDescriptors SET ";
-	$sql .= "lastCheck = '" . date("Y-m-d H:i:s"). "' ";
-	$sql .= ", currentResult = '" . $reason . "' ";
-	if ($previous_status != NULL) $sql .= ", previousResult = '" . $previous_status . "' ";
-	$sql .= "WHERE entityID = '" . $idp['entityID'] . "' ";
-	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	if ($mysqli !== NULL) {
+		$stmt = $mysqli->prepare("UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?") or die("Error: " . mysqli_error($mysqli));
+		$stmt->bind_param("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previous_status, $idp['entityID']) or die("Error: " . mysqli_error($mysqli));
+		$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+	}
 
 	if ($check_ok) {
 		print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
@@ -141,34 +119,33 @@ function store_feds_into_db($json_edugain_feds, $db_connection){
 	$feds_list = json_decode($json_edugain_feds, true, 10, JSON_UNESCAPED_UNICODE);
 	
 	foreach ($feds_list as $fed){ 
-
 		//If I find a registrationAuthority value for the federation
 		if ($fed['reg_auth'] !== null ){
-
-			$sql = "SELECT * FROM Federations WHERE registrationAuthority = '".$fed['reg_auth']."'";
-
-			$result = $mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+			$stmt = $mysqli->prepare("SELECT * FROM Federations WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
+			$stmt->bind_param("s", $fed['reg_auth']) or die("Error: " . mysqli_error($mysqli));
+			$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+			$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
 
 			if ($result->num_rows > 0) {
 				while ($row = $result->fetch_assoc()) {
   					if ($fed['name'] !== $row['federationName']){
-  						$sql = 'UPDATE Federations SET federationName=' ."'". $fed['name'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
-  						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+						$stmt = $mysqli->prepare("UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
+						$stmt->bind_param("ss", $fed['name'], $fed['reg_auth']);
+						$stmt->execute() or die("Error: " . mysqli_error($mysqli));
   					}
   						
   					if ($fed['email'] !== $row['emailAddress']){
-  						$sql = 'UPDATE Federations SET emailAddress=' ."'". $fed['email'] ."'".' WHERE registrationAuthority='."'". $fed['reg_auth']."'";
   						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+
+						$stmt = $mysqli->prepare("UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
+						$stmt->bind_param("ss", $fed['email'], $fed['reg_auth']);
+						$stmt->execute() or die("Error: " . mysqli_error($mysqli));
   					}
 				}
 			} else {
-				$sql  = 'INSERT INTO Federations (federationName, emailAddress, registrationAuthority) VALUES (';
-				$sql .= "'" . $fed['name'] . "', ";
-				$sql .= "'" . $fed['email'] . "', ";
-				$sql .= "'" . $fed['reg_auth'] . "'";
-				$sql .= ")";
-				
-				$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+				$stmt = $mysqli->prepare("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)") or die("Error: " . mysqli_error($mysqli));
+				$stmt->bind_param("sss", $fed['name'], $fed['email'], $fed['reg_auth']);
+				$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 			}
 		}
 	}

@@ -51,7 +51,17 @@ $arrContextOptions=array(
 if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_context_create($arrContextOptions)))===false){
 	print "Error fetching JSON eduGAIN Federation members\n";
 } else {
+	$mysqli = get_db_connection($db_connection);
+	$sql = "UPDATE Federations SET updated = 0";
+	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$mysqli->close();
+
 	store_feds_into_db($json_edugain_feds, $db_connection);
+
+	$mysqli = get_db_connection($db_connection);
+	$sql = "DELETE FROM Federations WHERE updated = 0";
+	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$mysqli->close();
 }
 
 if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_context_create($arrContextOptions)))===false){
