@@ -52,15 +52,15 @@ if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_con
 	print "Error fetching JSON eduGAIN Federation members\n";
 } else {
 	$mysqli = get_db_connection($db_connection);
-	$sql = "UPDATE Federations SET updated = 0";
-	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare("UPDATE Federations SET updated = 0") or die("Error: " . mysqli_error($mysqli));
+	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 	$mysqli->close();
 
 	store_feds_into_db($json_edugain_feds, $db_connection);
 
 	$mysqli = get_db_connection($db_connection);
-	$sql = "DELETE FROM Federations WHERE updated = 0";
-	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare("DELETE FROM Federations WHERE updated = 0") or die("Error: " . mysqli_error($mysqli));
+	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 	$mysqli->close();
 }
 
@@ -69,11 +69,11 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 } else {
 	
 	$mysqli = get_db_connection($db_connection);
-	$sql = "DELETE FROM EntityChecks WHERE checkExec = 0";
-	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare("DELETE FROM EntityChecks WHERE checkExec = 0") or die("Error: " . mysqli_error($mysqli));
+	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 	
-	$sql = "UPDATE EntityChecks SET checkExec = checkExec - 1";
-	$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare("UPDATE EntityChecks SET checkExec = checkExec - 1") or die("Error: " . mysqli_error($mysqli));
+	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 	$mysqli->close();
 	
 	$idpList = extractIdPfromJSON($json_edugain_idps);
@@ -82,8 +82,8 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 		print "Error loading eduGAIN JSON IdPs\n";
 	} else {
 		$mysqli = get_db_connection($db_connection);
-		$sql = "UPDATE EntityDescriptors SET updated = 0";
-		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+		$stmt = $mysqli->prepare("UPDATE EntityDescriptors SET updated = 0") or die("Error: " . mysqli_error($mysqli));
+		$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 		$mysqli->close();
 
 		$count = 1;
@@ -113,8 +113,8 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 		}
 
 		$mysqli = get_db_connection($db_connection);
-		$sql = "DELETE FROM EntityDescriptors WHERE updated = 0";
-		$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+		$stmt = $mysqli->prepare("DELETE FROM EntityDescriptors WHERE updated = 0") or die("Error: " . mysqli_error($mysqli));
+		$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 		$mysqli->close();
 	}
 	
