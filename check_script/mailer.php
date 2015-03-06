@@ -10,7 +10,6 @@ $email_properties = $conf_array['email'];
 $mysqli = get_db_connection($db_connection);
 
 $stmt = $mysqli->prepare("SELECT * FROM Federations") or die("Error: " . mysqli_error($mysqli));
-$stmt->bind_param("s", $cur_federation['registrationAuthority']) or die("Error: " . mysqli_error($mysqli));
 $stmt->execute() or die("Error: " . mysqli_error($mysqli));
 $fed_result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
 
