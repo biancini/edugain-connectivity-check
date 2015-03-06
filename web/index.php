@@ -46,6 +46,16 @@ function getCurrentUrl($params, $excludeParam=array()) {
 
 	return $url;
 }
+
+function refValues($arr){
+	if (strnatcmp(phpversion(),'5.3') >= 0) {
+		$refs = array();
+		foreach($arr as $key => $value)
+			$refs[$key] = &$arr[$key];
+		return $refs;
+	}
+	return $arr;
+}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -161,6 +171,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
       	$sql_count = "SELECT COUNT(*) FROM EntityDescriptors";
 	$sql = "SELECT * FROM EntityDescriptors";
 	$sql_conditions = "";
+	$query_params = array();
 	if ($params['f_id_status']) {
 		if (in_array("NULL", $params['f_id_status'])) {
 			if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
@@ -170,28 +181,33 @@ function getCurrentUrl($params, $excludeParam=array()) {
 		elseif (!in_array("All", $params['f_id_status'])) {
 			if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 			else $sql_conditions .= " AND";
-			$sql_conditions .= " currentResult in ('".implode("','", $params['f_id_status'])."')";
+			$sql_condquery_itions .= " currentResult in (?)";
+			array_push($query_params, implode("','", $params['f_id_status']));
 		}
 	}
         if ($params['f_entityID'] && $params['f_entityID'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " entityID LIKE '%" . $params['f_entityID'] . "%'";
+		$sql_conditions .= " entityID LIKE ?";
+		array_push($query_params, "%" . $params['f_entityID'] . "%");
 	}
         if ($params['f_registrationAuthority'] && $params['f_registrationAuthority'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " registrationAuthority LIKE '%" . $params['f_registrationAuthority'] . "%'";
+		$sql_conditions .= " registrationAuthority LIKE ?";
+		array_push($query_params, "%" . $params['f_registrationAuthority'] . "%");
 	}
         if ($params['f_displayName'] && $params['f_displayName'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " displayName LIKE '%" . $params['f_displayName'] . "%'";
+		$sql_conditions .= " displayName LIKE ?";
+		array_push($query_params, "%" . $params['f_displayName'] . "%");
 	}
         if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " ignoreEntity = " . ($params['f_ignore_entity'] == "True" ? 1 : 0);
+		$sql_conditions .= " ignoreEntity = ?";
+		array_push($query_params, ($params['f_ignore_entity'] == "True" ? 1 : 0));
 	}
         if ($params['f_last_check'] && $params['f_last_check'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
@@ -203,20 +219,28 @@ function getCurrentUrl($params, $excludeParam=array()) {
         if ($params['f_current_result'] && $params['f_current_result'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " currentResult = '" . $params['f_current_result'] . "'";
+		$sql_conditions .= " currentResult = ?";
+		array_push($query_params, $params['f_current_result']);
 	}
         if ($params['f_previous_result'] && $params['f_previous_result'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " previousResult = '" . $params['f_previous_result'] . "'";
+		$sql_conditions .= " previousResult = ?";
+		array_push($query_params, $params['f_previous_result']);
 	}
 
 	if ($params['f_order']) {
-		$sql_conditions .= " ORDER BY " . $params['f_order'];
+		$sql_conditions .= " ORDER BY ?";
+		array_push($query_params, $params['f_order']);
 	}
 
-	// find out how many rows are in the table 
-	$result = $mysqli->query($sql_count . $sql_conditions) or error_log("Error: " . $sql_count . $sql_conditions . ": " . mysqli_error($mysqli));
+	$query_params = array_merge(array(str_repeat('s', count($query_params))), $query_params);
+
+	// find out how many rows are in the table
+	$stmt = $mysqli->prepare($sql_count . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
+	call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+	$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
 	$numrows = $result->fetch_row()[0];
 
 	$rowsperpage = 30;
@@ -228,8 +252,10 @@ function getCurrentUrl($params, $excludeParam=array()) {
 	$offset = ($page - 1) * $rowsperpage;
 	
 	$sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
-	//error_log($sql . $sql_conditions);
-	$result = $mysqli->query($sql . $sql_conditions) or error_log("Error: " . $sql . $sql_conditions . ": " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare($sql . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
+	call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+	$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
 	$count = 1;
 
 	while ($row = $result->fetch_assoc()) {
