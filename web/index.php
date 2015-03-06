@@ -237,15 +237,16 @@ function refValues($arr){
 	}
 
 	if ($params['f_order']) {
-		$sql_conditions .= " ORDER BY ?";
-		array_push($query_params, $params['f_order']);
+		$sql_conditions .= " ORDER BY " . mysqli_real_escape_string($mysqli, $params['f_order']);
 	}
 
 	$query_params = array_merge(array(str_repeat('s', count($query_params))), $query_params);
 
 	// find out how many rows are in the table
 	$stmt = $mysqli->prepare($sql_count . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
-	call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+        if (count($query_params) > 1) {
+		call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+	}
 	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 	$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
 	$numrows = $result->fetch_row()[0];
@@ -260,7 +261,9 @@ function refValues($arr){
 	
 	$sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
 	$stmt = $mysqli->prepare($sql . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
-	call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+        if (count($query_params) > 1) {
+		call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+	}
 	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
 	$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
 	$count = 1;
