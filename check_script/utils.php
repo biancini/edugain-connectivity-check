@@ -393,29 +393,23 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
       $pattern_username = '/<input.*name=[\'"]?(j_)?username/i';
       $pattern_password = '/<input.*name=[\'"]?(j_)?password/i';
 
-      if( stripos($html, "Message did not meet security requirements") !== false){
-         $msg = "$httpRedirectServiceLocation found our request did not meet security requirements. It could be that the time on the server is out of sync or probably the request took too long.";
-         //monlog($msg,3);
+      if(preg_match($pattern_username, $html)){
+      	//okay
       } else {
-         if(preg_match($pattern_username, $html)){
-            //okay
-         } else {
-            $msg = "Did not find input for username.";
-            $error[] = $msg;
-            $validForm = false;
-	    $ok = false;
-         }
-         
-         if(preg_match($pattern_password, $html)){
-            //okay
-         } else {
-            $msg = "Did not find input for password.";
-            $error[] = $msg;
-            $validForm = false;
-            $ok = false;
-         }
+      	$msg = "Did not find input for username.";
+         $error[] = $msg;
+         $validForm = false;
+	    	$ok = false;
       }
-
+         
+      if(preg_match($pattern_password, $html)){
+         //okay
+      } else {
+         $msg = "Did not find input for password.";
+         $error[] = $msg;
+         $validForm = false;
+         $ok = false;
+      }
    }
    
    if($verbose && !$ok){
