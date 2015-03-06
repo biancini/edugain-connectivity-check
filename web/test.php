@@ -182,8 +182,15 @@ function refValues($arr){
 		elseif (!in_array("All", $params['f_id_status'])) {
 			if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 			else $sql_conditions .= " AND";
-			$sql_conditions .= " checkResult in (?)";
-			array_push($query_params, implode("','", $params['f_id_status']));
+			$sql_conditions .= " checkResult in (";
+			foreach ($params['f_id_status'] as $val) {
+				if (substr($sql_conditions, -1) != "(") {
+					$sql_conditions .= ", ";
+				}
+				$sql_conditions .= "?";
+				array_push($query_params, $val);
+			}
+			$sql_conditions .= ")";
 		}
 	}
         if ($params['f_entityID'] && $params['f_entityID'] != "All") {
