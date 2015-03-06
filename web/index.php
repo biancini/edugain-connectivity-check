@@ -181,7 +181,7 @@ function refValues($arr){
 		elseif (!in_array("All", $params['f_id_status'])) {
 			if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 			else $sql_conditions .= " AND";
-			$sql_condquery_itions .= " currentResult in (?)";
+			$sql_conditions .= " currentResult in (?)";
 			array_push($query_params, implode("','", $params['f_id_status']));
 		}
 	}
