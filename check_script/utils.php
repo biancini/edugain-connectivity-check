@@ -1,6 +1,6 @@
 <?php
 
-include ("PHPMailer/PHPMailerAutoload.php");
+include ("../PHPMailer/PHPMailerAutoload.php");
 
 /**
  Create a new DB connection and return its pointer.
