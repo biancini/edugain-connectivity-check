@@ -11,7 +11,7 @@
 # limitations under the License.
 
 
-include ("../PHPMailer/PHPMailerAutoload.php");
+include (dirname(__FILE__)."/../PHPMailer/PHPMailerAutoload.php");
 
 /**
  Create a new DB connection and return its pointer.
