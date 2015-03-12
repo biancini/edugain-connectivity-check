@@ -9,6 +9,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# This software was developed by Consortium GARR. The research leading to
+# these results has received funding from the European Community¹s Seventh
+# Framework Programme (FP7/2007-2013) under grant agreement nº 238875
+# (GÉANT).
 
 $conf_array = parse_ini_file('../properties.ini', true);
 $db_connection = $conf_array['db_connection'];
