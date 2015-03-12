@@ -3,6 +3,10 @@ Metadata Consumption Check Service
 
 # HOWTO Install the Service (on Debian architecture)
 
+0. Install the requiremets packages:
+
+        sudo apt-get install apache2 php5 php5-curl php5-json php5-mysql libapache2-mod-php5 php5-mysqlnd
+
 1. Be sure to have enabled mod_alias apache module: 
 
         sudo a2ensite alias
