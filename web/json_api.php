@@ -302,7 +302,7 @@ elseif ($action == 'checks') {
 			'checkTime' => $row['checkTime'],
 			'httpStatusCode' => $row['httpStatusCode'],
 			'checkResult' => substr($row['checkResult'], 4),
-			//'html' => $row['html'],
+			//'checkHtml' => $row['checkHtml'],
 		);
 		array_push($entities, $entity);
 	}
