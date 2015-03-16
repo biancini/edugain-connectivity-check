@@ -9,7 +9,7 @@ Metadata Consumption Check Service
 
 1. Install the requirements libraries:
       
-        sudo apt-get install php5-curl php5-json php5-mysql php5-mysqlnd
+        sudo apt-get install php5-curl php5-json php5-mysqlnd
 
 2. Be sure to have enabled mod_alias apache module: 
 
@@ -17,29 +17,29 @@ Metadata Consumption Check Service
 
 3. Retrieve the service code and put it into the `/opt` directory
 
-        git clone https://malavolti@bitbucket.org/biancini/mccs.git /opt/mccs
+        git clone --recursive https://malavolti@bitbucket.org/biancini/mccs.git /opt/mccs
 
 4. Create a new site for MCCS on the Apache instance:
 
         vim /etc/apache2/sites-available/mccs.conf
    
 
-          <IfModule mod_alias.c>
-              Alias /mccs /opt/mccs/web
+        <IfModule mod_alias.c>
+            Alias /mccs /opt/mccs/web
 
-              <Directory /opt/mccs/web>
-                  Options Indexes MultiViews FollowSymLinks
-                  Order deny,allow
-                  Allow from all
-                  Require all granted
-              </Directory>
-          </IfModule>
+            <Directory /opt/mccs/web>
+                Options Indexes MultiViews FollowSymLinks
+                Order deny,allow
+                Allow from all
+                Require all granted
+            </Directory>
+        </IfModule>
 
 5. Enable the new apache site:
 
-        sudo a2ensite mccs.conf
+        sudo a2ensite mccs.conf ; service apache2 reload
 
-6. Import the MCCS DB provided by database/mccs_db.sql
+6. Modify the "password_db_mccs" value inside the database/mccs_db.sql file and import it into your mysql server:
 
         mysql -u root -pPASSWORD < /opt/mccs/database/mccs_db.sql
 
