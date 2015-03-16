@@ -39,7 +39,7 @@ Metadata Consumption Check Service
 
         sudo a2ensite mccs.conf ; service apache2 reload
 
-6. Modify the "password_db_mccs" value inside the database/mccs_db.sql file and import it into your mysql server:
+6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
 
         mysql -u root -pPASSWORD < /opt/mccs/database/mccs_db.sql
 
