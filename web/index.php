@@ -33,7 +33,7 @@ if ($mysqli->connect_errno) {
 $mysqli->set_charset("utf8");
 
 function getParameter($key, $default_value, $array=false) {
-	$value = (array_key_exists($key, $_REQUEST) ? $_REQUEST[$key] : $default_value);
+	$value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $default_value);
 
 	if (!$value || trim($value) == '') {
 		$value = $default_value;
@@ -42,6 +42,7 @@ function getParameter($key, $default_value, $array=false) {
 	if ($array) {
 		$value = explode(",", $value);
 	}
+
 	return $value;
 }
 
