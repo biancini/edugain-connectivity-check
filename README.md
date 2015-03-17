@@ -1,9 +1,19 @@
 # MCCS
 Metadata Consumption Check Service
 
+# Requirements
+
+- **MySQL** any version (tested with 5.5.41)
+- **PHP5** any version (tested with 5.5.21 but should work even with different versions)
+- **php5-mysqlnd** package any version (tested with 5.5.22)
+- **php5-mysql** package any version (tested with 5.5.21)
+- **php5-curl** package any version (tested with 5.5.22)
+- **php5-json** package any version (tested with 1.3.6-1)
+- **Apache2** (with mod-php5) 
+
 # HOWTO Install the Service (on Ubuntu architecture)
 
-   0. Install the requiremets packages:
+0. Install the requiremets packages:
 
         sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
 
