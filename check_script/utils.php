@@ -463,8 +463,8 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    } else {
       //$pattern_username ='/.*<input[\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?(text|email).*/i';
       //$pattern_password = '/.*<input[\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?password.*/i';
-      $pattern_username ='/<input[\s]+.*type=[\'"](text|email)[\'"]/im';
-      $pattern_password = '/<input[\s]+.*type=[\'"]password[\'"]/im';
+      $pattern_username ='/<input[\s]+.*(type=\s*[\'"](text|email)[\'"]|user)/im';
+      $pattern_password = '/<input[\s]+.*type=\s*[\'"]password[\'"]/im';
       
       $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
       
