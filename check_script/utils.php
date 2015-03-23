@@ -341,6 +341,59 @@ function extractIdPfromXML ($metadata){
 		return $idps;
 }
 
+function clean_utf8_curl($html, $curl) {
+	if (!is_string($html)) return $html;
+
+	$content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
+
+	/* 1: HTTP Content-Type: header */
+	preg_match( '@([\w/+]+)(;\s*charset=(\S+))?@i', $content_type, $matches);
+	if (isset($matches[3])) {
+		$charset = $matches[3];
+	}
+
+	/* 2: <meta> element in the page */
+	if (!isset($charset)) {
+		preg_match('@<meta\s+http-equiv="Content-Type"\s+content="([\w/]+)(;\s*charset=([^\s"]+))?@i', $html, $matches);
+		if (isset( $matches[3])) {
+			$charset = $matches[3];
+		}
+	}
+
+	/* 3: <xml> element in the page */
+	if (!isset($charset)) {
+		preg_match( '@<\?xml.+encoding="([^\s"]+)@si', $html, $matches );
+		if (isset($matches[1])) {
+			$charset = $matches[1];
+		}
+	}
+
+	/* 4: PHP's heuristic detection */
+	if (!isset($charset)) {
+		$encoding = mb_detect_encoding($html);
+		if ($encoding) {
+			$charset = $encoding;
+		}
+	}
+
+	/* 5: Default for HTML */
+	if (!isset($charset)) {
+		if (strstr($content_type, "text/html") === 0) {
+			$charset = "ISO 8859-1";
+		}
+	}
+
+	/* Convert it if it is anything but UTF-8 */
+	/* You can change "UTF-8"  to "UTF-8//IGNORE" to 
+	ignore conversion errors and still output something reasonable */
+	if (isset($charset) && strtoupper($charset) != "UTF-8") {
+		$html = iconv($charset, 'UTF-8', $html);
+	}
+
+	return $html;
+}
+
+
 /**
    Generates an authentication request, sends it to the SAML2 
    HTTP-POST URL of an Provider Identity Provider and returns a result array.
@@ -350,7 +403,7 @@ function extractIdPfromXML ($metadata){
 
 */
 
-function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
+function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    global $verbose;
    
    date_default_timezone_set('UTC');
@@ -389,6 +442,9 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
      curl_setopt($curl, CURLOPT_SSLVERSION, 3);
      $html = curl_exec($curl);
    }
+
+   $html = clean_utf8_curl($html, $curl);
+
    $info = curl_getinfo($curl);
    $http_code = $info['http_code'];
    $error = array();
@@ -405,17 +461,18 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
          $error[] = "Status code: ".$info['http_code'];
       }
    } else {
-//       $pattern_username ='/<input.*[\n\r\s]+.*name=[\'"]?.*(username|otp|user)/i';
-//       $pattern_password = '/<input.*[\n\r\s]+.*name=[\'"]?.*(password|pass)/i';
-      $pattern_username ='/<input[\n\r\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?(text|email)/i';
-      $pattern_password = '/<input[\n\r\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?password/i';
+      //$pattern_username ='/.*<input[\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?(text|email).*/i';
+      //$pattern_password = '/.*<input[\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?password.*/i';
+      $pattern_username ='/.*<input[\s]+.*type=[\'"](text|email)[\'"]/im';
+      $pattern_password = '/.*<input[\s]+.*type=[\'"]password[\'"]/im';
       
       $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
       
       if(preg_match($pattern_username, $html)){
       	//okay
       } else {
-      	$msg = "Did not find input for username.";
+         print $html;
+       	 $msg = "Did not find input for username.";
          $error[] = $msg;
          $validForm = false;
 	    	$ok = false;
