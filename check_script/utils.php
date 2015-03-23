@@ -407,8 +407,8 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
    } else {
 //       $pattern_username ='/<input.*[\n\r\s]+.*name=[\'"]?.*(username|otp|user)/i';
 //       $pattern_password = '/<input.*[\n\r\s]+.*name=[\'"]?.*(password|pass)/i';
-      $pattern_username ='/<input.*[\S+\n\r\s]+type=[\n\r\s]?[\'"]?(text|email)/i';
-      $pattern_password = '/<input.*[\S+\n\r\s]+type=[\n\r\s]?[\'"]?password/i';
+      $pattern_username ='/<input[\n\r\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?(text|email)/i';
+      $pattern_password = '/<input[\n\r\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?password/i';
       
       $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
       
