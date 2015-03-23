@@ -405,9 +405,11 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl){
          $error[] = "Status code: ".$info['http_code'];
       }
    } else {
-      $pattern_username = '/<input.*name=[\'"]?(j_)?username/i';
-      $pattern_password = '/<input.*name=[\'"]?(j_)?password/i';
-
+//       $pattern_username ='/<input.*[\n\r\s]+.*name=[\'"]?.*(username|otp|user)/i';
+//       $pattern_password = '/<input.*[\n\r\s]+.*name=[\'"]?.*(password|pass)/i';
+      $pattern_username ='/<input.*[\n\r\s]+.*type=[\'"]?.*(text|email)/i';
+      $pattern_password = '/<input.*[\n\r\s]+.*type=[\'"]?.*password/i';
+      
       if(preg_match($pattern_username, $html)){
       	//okay
       } else {
