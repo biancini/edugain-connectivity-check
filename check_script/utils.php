@@ -471,7 +471,6 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       if(preg_match($pattern_username, $html)){
       	//okay
       } else {
-         print $html;
        	 $msg = "Did not find input for username.";
          $error[] = $msg;
          $validForm = false;
