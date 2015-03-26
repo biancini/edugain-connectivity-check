@@ -233,7 +233,7 @@ function refValues($arr){
 	}
 
 	if ($params['f_order']) {
-		$sql_conditions .= " ORDER BY " . mysqli_real_escape_string($mysqli, $params['f_order']);
+		$sql_conditions .= " ORDER BY EntityDescriptors." . mysqli_real_escape_string($mysqli, $params['f_order']);
 		$sql_conditions .= " " . mysqli_real_escape_string($mysqli, $params['f_order_direction']);
 	}
 
