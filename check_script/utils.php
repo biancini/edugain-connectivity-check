@@ -409,6 +409,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    date_default_timezone_set('UTC');
    $date = date('Y-m-d\TH:i:s\Z');
    $id = md5($date.rand(1, 1000000));
+   $html = false;
 
    $samlRequest = '
       <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
@@ -434,38 +435,38 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       CURLOPT_SSL_VERIFYHOST => false,
       CURLOPT_COOKIEJAR => "/dev/null",
       CURLOPT_RETURNTRANSFER => true,
-      CURLOPT_TIMEOUT => 30
+      CURLOPT_TIMEOUT => 45,
+      CURLOPT_CONNECTTIMEOUT => 20
    ));
    
-   $html = curl_exec($curl);
-   if ($html == false) {
-     curl_setopt($curl, CURLOPT_SSLVERSION, 3);
-     $html = curl_exec($curl);
+   for ($vers = 0; $vers <= 4; $vers++) {
+     if ($html == false) {
+       curl_setopt($curl, CURLOPT_SSLVERSION, $vers);
+       $html = curl_exec($curl);
+     }
    }
 
-   $html = clean_utf8_curl($html, $curl);
-
+   $curl_error = ($html === false) ? curl_error($curl) : false;
    $info = curl_getinfo($curl);
    $http_code = $info['http_code'];
    $error = array();
    $validForm = true;
    $ok = true;
 
-   if($html == false || $http_code != 200){
-      $ok = false;                  
-      if(curl_error($curl)){
-         if($verbose) echo "Curl error: ".curl_error($curl)."\n";
-         $error[] = curl_error($curl);
-      } else {
-         if($verbose) echo "Status code: ".$info['http_code']."\n";
-         $error[] = "Status code: ".$info['http_code'];
-      }
+   if($curl_error != false){
+      $ok = false;
+      if($verbose) echo "Curl error: ".$curl_error."\n";
+      $error[] = $curl_error;
+   } else if ($http_code != 200){
+     $ok = false;
+     if($verbose) echo "Status code: ".$info['http_code']."\n";
+     $error[] = "Status code: ".$info['http_code'];
    } else {
-      //$pattern_username ='/.*<input[\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?(text|email).*/i';
-      //$pattern_password = '/.*<input[\s]+[\S\n\r\s]*type=[\n\r\s]?[\'"]?password.*/i';
-      $pattern_username ='/<input[\s]+.*(type=\s*[\'"](text|email)[\'"]|user)/im';
-      $pattern_password = '/<input[\s]+.*type=\s*[\'"]password[\'"]/im';
-      
+      $pattern_username ='/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
+      $pattern_password = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
+
+      print("-->".$html."<--");
+      $html = clean_utf8_curl($html, $curl);
       $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
       
       if(preg_match($pattern_username, $html)){
@@ -474,7 +475,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
        	 $msg = "Did not find input for username.";
          $error[] = $msg;
          $validForm = false;
-	    	$ok = false;
+         $ok = false;
       }
          
       if(preg_match($pattern_password, $html)){
@@ -506,6 +507,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       $ret["html"] = "";
    }
    
+   curl_close($curl);
    return $ret;
 }
 
