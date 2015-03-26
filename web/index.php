@@ -51,6 +51,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 
 	$url .= "show=" . $params['show'];
 	if (!in_array("f_order", $excludeParam) && array_key_exists("f_order", $params)) $url .= "&f_order=" . $params['f_order'];
+	if (!in_array("f_order_direction", $excludeParam) && array_key_exists("f_order_direction", $params)) $url .= "&f_order_direction=" . $params['f_order_direction'];
 	if (!in_array("f_id_status", $excludeParam) && array_key_exists("f_id_status", $params)) $url .= "&f_id_status=" . implode(",", $params['f_id_status']);
 	if (!in_array("page", $excludeParam) && array_key_exists("page", $params)) $url .= "&page=" . $params['page'];
         if (!in_array("f_entityID", $excludeParam) && array_key_exists("f_entityID", $params)) $url .= "&f_entityID=" . $params['f_entityID'];
@@ -59,7 +60,6 @@ function getCurrentUrl($params, $excludeParam=array()) {
         if (!in_array("f_ignore_entity", $excludeParam) && array_key_exists("f_ignore_entity", $params)) $url .= "&f_ignore_entity=" . $params['f_ignore_entity'];
         if (!in_array("f_last_check", $excludeParam) && array_key_exists("f_last_check", $params)) $url .= "&f_last_check=" . $params['f_last_check'];
         if (!in_array("f_current_result", $excludeParam) && array_key_exists("f_current_result", $params)) $url .= "&f_current_result=" . $params['f_current_result'];
-        if (!in_array("f_previous_result", $excludeParam) && array_key_exists("f_previous_result", $params)) $url .= "&f_previous_result=" . $params['f_previous_result'];
 
 	return $url;
 }
@@ -98,7 +98,8 @@ function refValues($arr){
 			<td class="body">
 				<?php
 				$params["show"] = getParameter('show', 'list_idps');
-				$params["f_order"] = getParameter('f_order', 'entityID');
+				$params["f_order"] = getParameter('f_order', 'currentResult');
+				$params["f_order_direction"] = getParameter('f_order_direction', 'DESC');
 				$params["f_id_status"] = getParameter('f_id_status', 'All', true);
                                 $params["f_entityID"] = getParameter('f_entityID', 'All');
                                 $params["f_registrationAuthority"] = getParameter('f_registrationAuthority', 'All');
@@ -106,31 +107,36 @@ function refValues($arr){
                                 $params["f_ignore_entity"] = getParameter('f_ignore_entity', 'All');
                                 $params["f_last_check"] = getParameter('f_last_check', 'All');
                                 $params["f_current_result"] = getParameter('f_current_result', 'All');
-                                $params["f_previous_result"] = getParameter('f_previous_result', 'All');
 				//error_log(print_r($params, true));
 				?>
-				<div class="admin_naslov">Identity providers | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/Monitoring_tool_instructions" target="_blank">Instructions</a></div>
+				<div class="admin_naslov">Identity providers | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/index.php?title=Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
 				<div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">green</a> | 
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=NULL" title="No checks performed" style="color:black">white</a> | 
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:yellow">yellow</a> |
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">red</a> | 
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=">Show all records</a></div>
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:orange">Warning</a> |
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">OK</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=">Show all</a></div>
 <div class="message"></div>
 <form name="list_idpsFRM" action="<?=getCurrentUrl($params)?>" method="post">
 <table class="list_table">
 	<tr>
+        	<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=displayName&f_order_direction=<?= ($params["f_order"] == "displayName" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by display name.">Display Name</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=entityID&f_order_direction=<?= ($params["f_order"] == "entityID" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by entityID.">entityID</a></th>
+        	<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=registrationAuthority&f_order_direction=<?= ($params["f_order"] == "registrationAuthority" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by registration authority.">Registration Authority</a></th>
+		<th>Contacts</th>
+	        <th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=ignoreEntity&f_order_direction=<?= ($params["f_order"] == "ignoreEntity" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by ignore entity.">Ignore Entity</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=lastCheck&f_order_direction=<?= ($params["f_order"] == "lastTest" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by last test.">Last Test</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=currentResult&f_order_direction=<?= ($params["f_order"] == "currentResult" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by current result.">Current Result</a></th>
+		<th>Tests</th>
+	</tr>
+	<tr>
+	        <td class="filter_td">
+			<input type="text" name="f_displayName" value="<?= $params['f_displayName'] == "All" ? "" : $params['f_displayName'] ?>"/>
+		</td>
 		<td class="filter_td">
 			<input type="text" name="f_entityID" value="<?= $params['f_entityID'] == "All" ? "" : $params['f_entityID'] ?>" class="wide"/>
 		</td>
 	        <td class="filter_td">
 			<input type="text" name="f_registrationAuthority" value="<?= $params['f_registrationAuthority'] == "All" ? "" : $params['f_registrationAuthority'] ?>"/>
-		</td>
-	        <td class="filter_td">
-			<input type="text" name="f_displayName" value="<?= $params['f_displayName'] == "All" ? "" : $params['f_displayName'] ?>"/>
-		</td>
-	        <td class="filter_td">
-			&nbsp;
 		</td>
 	        <td class="filter_td">
 			&nbsp;
@@ -157,36 +163,15 @@ function refValues($arr){
 				<option value="3 - CURL-Error" <?= $params['f_current_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
 			</select>
 		</td>
-		<td class="filter_td">
-			<select name="f_previous_result">
-				<option value="All" <?= $params['f_previous_result'] == "All" ? "selected" : "" ?>>All</option>
-				<option value="1 - OK" <?= $params['f_previous_result'] == "1 - OK" ? "selected" : "" ?>>OK</option>
-				<option value="2 - FORM-Invalid" <?= $params['f_previous_result'] == "2 - FORM-Invalid" ? "selected" : "" ?>>FORM-Invalid</option>
-				<option value="3 - HTTP-Error" <?= $params['f_previous_result'] == "3 - HTTP-Error" ? "selected" : "" ?>>HTTP-Error</option>
-				<option value="3 - CURL-Error" <?= $params['f_previous_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
-			</select>
-		</td>
 		<td class="filter_td" colspan="3"><input type="submit" name="filter" value="Search"  class="filter_gumb"/></td>
 	</tr>
 	<tr>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=entityID" title="Sort by entityID.">entityID</a></th>
-        	<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=registrationAuthority" title="Sort by registration authority.">Registration authority</a></th>
-        	<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=displayName" title="Sort by display name.">Display name</a></th>
-		<th>technicalContacts</th>
-		<th>supportContacts</th>
-	        <th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=ignoreEntity" title="Sort by ignore entity.">Ignore entity</a></th>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=lastCheck" title="Sort by last test.">Last test</a></th>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=currentResult" title="Sort by current result.">Current result</a></th>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=previousResult" title="Sort by previous result.">Previous result</a></th>
-		<th>Tests</th>
-	</tr>
-	<tr>
-		<td class="filter_td" colspan="5">IdP data</td>
-		<td class="filter_td" colspan="5">Last test results</td>
+		<td class="filter_td" colspan="4">IdP data</td>
+		<td class="filter_td" colspan="4">Last test results</td>
 	</tr>
 	<?php
       	$sql_count = "SELECT COUNT(*) FROM EntityDescriptors";
-	$sql = "SELECT * FROM EntityDescriptors";
+	$sql = "SELECT * FROM EntityDescriptors LEFT JOIN Federations ON EntityDescriptors.registrationAuthority = Federations.registrationAuthority";
 	$sql_conditions = "";
 	$query_params = array();
 	if ($params['f_id_status']) {
@@ -209,6 +194,12 @@ function refValues($arr){
 			$sql_conditions .= ")";
 		}
 	}
+        if ($params['f_displayName'] && $params['f_displayName'] != "All") {
+		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
+		else $sql_conditions .= " AND";
+		$sql_conditions .= " displayName LIKE ?";
+		array_push($query_params, "%" . $params['f_displayName'] . "%");
+	}
         if ($params['f_entityID'] && $params['f_entityID'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
@@ -220,12 +211,6 @@ function refValues($arr){
 		else $sql_conditions .= " AND";
 		$sql_conditions .= " registrationAuthority LIKE ?";
 		array_push($query_params, "%" . $params['f_registrationAuthority'] . "%");
-	}
-        if ($params['f_displayName'] && $params['f_displayName'] != "All") {
-		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-		else $sql_conditions .= " AND";
-		$sql_conditions .= " displayName LIKE ?";
-		array_push($query_params, "%" . $params['f_displayName'] . "%");
 	}
         if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
@@ -246,15 +231,10 @@ function refValues($arr){
 		$sql_conditions .= " currentResult = ?";
 		array_push($query_params, $params['f_current_result']);
 	}
-        if ($params['f_previous_result'] && $params['f_previous_result'] != "All") {
-		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-		else $sql_conditions .= " AND";
-		$sql_conditions .= " previousResult = ?";
-		array_push($query_params, $params['f_previous_result']);
-	}
 
 	if ($params['f_order']) {
 		$sql_conditions .= " ORDER BY " . mysqli_real_escape_string($mysqli, $params['f_order']);
+		$sql_conditions .= " " . mysqli_real_escape_string($mysqli, $params['f_order_direction']);
 	}
 
 	$query_params = array_merge(array(str_repeat('s', count($query_params))), $query_params);
@@ -293,19 +273,22 @@ function refValues($arr){
 		else $color = "white";
 		?>
 		<tr class="<?=$color?>">
-        		<td><?=$row['entityID']?></td>
-	        	<td><?=$row['registrationAuthority']?></td>
 	        	<td><?=$row['displayName']?></td>
+        		<td><?=$row['entityID']?></td>
+	        	<td><?=$row['federationName']?><br/><?=$row['registrationAuthority']?></td>
         		<td><?php
 				$contacts = explode(",", $row['technicalContacts']);
 				foreach ($contacts as $contact) {
-					print "<a href=\"mailto:" . $contact . "\">" . $contact . "</a><br/>";
+					if (!empty($contact)) {
+						print "<b>T</b>: <a href=\"mailto:" . $contact . "\">" . $contact . "</a><br/>";
+					}
 				}
-			?></td>
-        		<td><?php
+
 				$contacts = explode(",", $row['supportContacts']);
 				foreach ($contacts as $contact) {
-					print "<a href=mailto:\"" . $contact . "\">" . $contact . "</a><br/>";
+					if (!empty($contact)) {
+						print "<b>S</b>: <a href=mailto:\"" . $contact . "\">" . $contact . "</a><br/>";
+					 }
 				}
 			?></td>
 	        	<td><!--div style="width: 110px"><?php
@@ -330,7 +313,6 @@ function refValues($arr){
                         ?></td>
         		<td><?=$row['lastCheck']?></td>
         		<td><?=substr($row['currentResult'], 4)?></td>
-	        	<td><?=substr($row['previousResult'], 4)?></td>
 			<td><a href="test.php?f_entityID=<?=$row['entityID']?>" title="View checks status for this entity.">View</a></td>
 		</tr>
 		<?php

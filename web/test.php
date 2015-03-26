@@ -46,13 +46,38 @@ function getParameter($key, $default_value, $array=false) {
 
 if (getParameter("show", "") == "html") {
 	$id = getParameter("id", "");
-	$sql = "SELECT checkHtml FROM EntityChecks WHERE id = " . $id;
+	$sql = "SELECT entityID, spEntityID, DATE_FORMAT(checkTime, '%d/%m/%Y at %H:%m:%s') as checkTime, checkHtml FROM EntityChecks WHERE id = " . $id;
 	$result = $mysqli->query($sql) or error_log("Error: " . $sql . ": " . mysqli_error($mysqli));
 
+	?>
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link media="screen" href="css/eduroam.css" type="text/css" rel="stylesheet"/>
+	<title>edugain - mccs</title>
+	</head>
+	<body><center>
+	<table class="container" cellpadding="5" cellspacing="0">
+	<tr><td><a title="edugain home" href="http://www.geant.net/service/edugain/pages/home.aspx"><img src="images/edugain.png"></a></td></tr>
+	<tr><td class="body">
+	<div class="admin_naslov"><a href="index.php">Identity providers</a> | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
+	<?php
 	while ($row = $result->fetch_assoc()) {
-		print $row['checkHtml'];
+		?>
+		<div class="admin_naslov" style="background-color: #e9e9e9;">The following HTML code was returned during the test when login from
+		the Identity Provider <i><?= $row['entityID'] ?></i> on the service <i><?= $row['spEntityID'] ?></i> on <?= $row['checkTime'] ?>:</div>
+		<hr>
+		<xmp>
+		<?=$row['checkHtml']?>
+		</xmp>
+		<?php
 	}
-
+	?>
+	</td></tr></table>
+	</center></body>
+	</html>
+	<?php
 	return;
 }
 
@@ -61,6 +86,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
 
 	$url .= "show=" . $params['show'];
 	if (!in_array("f_order", $excludeParam) && array_key_exists("f_order", $params)) $url .= "&f_order=" . $params['f_order'];
+	if (!in_array("f_order_direction", $excludeParam) && array_key_exists("f_order_direction", $params)) $url .= "&f_order_direction=" . $params['f_order_direction'];
 	if (!in_array("f_id_status", $excludeParam) && array_key_exists("f_id_status", $params)) $url .= "&f_id_status=" . implode(",", $params['f_id_status']);
 	if (!in_array("page", $excludeParam) && array_key_exists("page", $params)) $url .= "&page=" . $params['page'];
 
@@ -126,6 +152,7 @@ function refValues($arr){
 				<?php
 				$params["show"] = getParameter('show', 'list_idp_tests');
 				$params["f_order"] = getParameter('f_order', 'entityID');
+				$params["f_order_direction"] = getParameter('f_order_direction', 'DESC');
 				$params["f_id_status"] = getParameter('f_id_status', 'All', true);
                                 $params["f_entityID"] = getParameter('f_entityID', 'All');
                                 $params["f_spEntityID"] = getParameter('f_spEntityID', 'All');
@@ -134,16 +161,24 @@ function refValues($arr){
                                 $params["f_check_result"] = getParameter('f_check_result', 'All');
 				//error_log(print_r($params, true));
 				?>
-				<div class="admin_naslov"><a href="index.php">Identity providers</a> | All IdP test results | <a href="https://wiki.edugain.org/Monitoring_tool_instructions" target="_blank">Instructions</a></div>
+				<div class="admin_naslov"><a href="index.php">Identity providers</a> | All IdP test results | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
 				<div class="admin_naslov" style="background-color: #e9e9e9;">Show Tests with status:
-                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">green</a> |
-                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=NULL" title="No checks performed" style="color:black">white</a> |
-                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:yellow">yellow</a> |
-                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">red</a> |
-                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=">Show all records</a></div>
+                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> |
+                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:orange">Warning</a> |
+                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">OK</a> |
+                                <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=">Show all</a></div>
 <div class="message"></div>
 <form name="list_testsFRM" action="<?=getCurrentUrl($params)?>" method="post">
 <table class="list_table">
+	<tr>
+		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=entityID&f_order_direction=<?= ($params["f_order"] == "entityID" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by entityID.">entityID</a></th>
+        	<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=spEntityID&f_order_direction=<?= ($params["f_order"] == "spEntityID" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by SP EntityID.">SP entityID</a></th>
+	        <th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=checkTime&f_order_direction=<?= ($params["f_order"] == "checkTime" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by check time entity.">Test Time</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=httpStatusCode&f_order_direction=<?= ($params["f_order"] == "httpStatusCode" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by HTTP status code.">HTTP status code</a></th>
+		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=checkResult&f_order_direction=<?= ($params["f_order"] == "checkResult" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by test result.">Test result</a></th>
+		<th>Test</th>
+		<th>HTML</th>
+	</tr>
 	<tr>
 		<td class="filter_td">
 			<input type="text" name="f_entityID" value="<?= $params['f_entityID'] == "All" ? "" : $params['f_entityID'] ?>" class="wide"/>
@@ -171,15 +206,6 @@ function refValues($arr){
 		</td>
 		<td>&nbsp;</td>
 		<td class="filter_td"><input type="submit" name="filter" value="Search"  class="filter_gumb"/></td>
-	</tr>
-	<tr>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=entityID" title="Sort by entityID.">entityID</a></th>
-        	<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=spEntityID" title="Sort by SP EntityID.">SP EntityID</a></th>
-	        <th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=checkTime" title="Sort by check time entity.">Test time</a></th>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=httpStatusCode" title="Sort by HTTP status code.">HTTP status code</a></th>
-		<th><a href="<?=getCurrentUrl($params, ["f_order"])?>&f_order=checkResult" title="Sort by test result.">Test result</a></th>
-		<th>Test HTML</th>
-		<th>Repeat test</th>
 	</tr>
 	<tr>
 		<td class="filter_td" colspan="3">Test params</td>
@@ -244,6 +270,7 @@ function refValues($arr){
 
 	if ($params['f_order']) {
 		$sql_conditions .= " ORDER BY " . mysqli_real_escape_string($mysqli, $params['f_order']);
+		$sql_conditions .= " " . mysqli_real_escape_string($mysqli, $params['f_order_direction']);
 	}
 
 	$query_params = array_merge(array(str_repeat('s', count($query_params))), $query_params);
@@ -287,8 +314,8 @@ function refValues($arr){
         		<td><?=$row['checkTime']?></td>
         		<td><?=$row['httpStatusCode']?></td>
         		<td><?=substr($row['checkResult'], 4)?></td>
-        		<td><a href="<?=createCheckUrl($row['acsUrls'], $row['serviceLocation'], $row['spEntityID'])?>" target="_blank">Repeat test</a></td>
-        		<td><a href="test.php?show=html&id=<?=$row['id']?>" target="_blank">View HTML</a></td>
+        		<td><a href="<?=createCheckUrl($row['acsUrls'], $row['serviceLocation'], $row['spEntityID'])?>" target="_blank">Perform test yourself</a></td>
+        		<td><a href="test.php?show=html&id=<?=$row['id']?>" target="_blank">Show HTML returned for this test</a></td>
 		</tr>
 		<?php
 	}
