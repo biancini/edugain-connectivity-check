@@ -209,7 +209,7 @@ function refValues($arr){
         if ($params['f_registrationAuthority'] && $params['f_registrationAuthority'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " registrationAuthority LIKE ?";
+		$sql_conditions .= " EntityDescriptors.registrationAuthority LIKE ?";
 		array_push($query_params, "%" . $params['f_registrationAuthority'] . "%");
 	}
         if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
