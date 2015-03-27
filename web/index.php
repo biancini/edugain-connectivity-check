@@ -138,9 +138,7 @@ function refValues($arr){
 	        <td class="filter_td">
 			<input type="text" name="f_registrationAuthority" value="<?= $params['f_registrationAuthority'] == "All" ? "" : $params['f_registrationAuthority'] ?>"/>
 		</td>
-	        <td class="filter_td">
-			&nbsp;
-		</td>
+	        <td class="filter_td"><center><b>T</b>: Technical, <b>S</b>: Support</center></td>
 	        <td class="filter_td">
 			<select name="f_ignore_entity">
 				<option value="All" <?= $params['f_ignore_entity'] == "All" ? "selected" : "" ?>>All</option>

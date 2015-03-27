@@ -94,3 +94,9 @@ div.message{
   position: relative;
   top: 3px;
 }
+
+iframe {
+  width: 100%;
+  height: 700px;
+  border: #166A8F 1px solid;
+}

@@ -44,43 +44,6 @@ function getParameter($key, $default_value, $array=false) {
 	return $value;
 }
 
-if (getParameter("show", "") == "html") {
-	$id = getParameter("id", "");
-	$sql = "SELECT entityID, spEntityID, DATE_FORMAT(checkTime, '%d/%m/%Y at %H:%m:%s') as checkTime, checkHtml FROM EntityChecks WHERE id = " . $id;
-	$result = $mysqli->query($sql) or error_log("Error: " . $sql . ": " . mysqli_error($mysqli));
-
-	?>
-	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-	<html xmlns="http://www.w3.org/1999/xhtml">
-	<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<link media="screen" href="css/eduroam.css" type="text/css" rel="stylesheet"/>
-	<title>edugain - mccs</title>
-	</head>
-	<body><center>
-	<table class="container" cellpadding="5" cellspacing="0">
-	<tr><td><a title="edugain home" href="http://www.geant.net/service/edugain/pages/home.aspx"><img src="images/edugain.png"></a></td></tr>
-	<tr><td class="body">
-	<div class="admin_naslov"><a href="index.php">Identity providers</a> | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
-	<?php
-	while ($row = $result->fetch_assoc()) {
-		?>
-		<div class="admin_naslov" style="background-color: #e9e9e9;">The following HTML code was returned during the test when login from
-		the Identity Provider <i><?= $row['entityID'] ?></i> on the service <i><?= $row['spEntityID'] ?></i> on <?= $row['checkTime'] ?>:</div>
-		<hr>
-		<xmp>
-		<?=$row['checkHtml']?>
-		</xmp>
-		<?php
-	}
-	?>
-	</td></tr></table>
-	</center></body>
-	</html>
-	<?php
-	return;
-}
-
 function getCurrentUrl($params, $excludeParam=array()) {
 	$url = $_SERVER['PHP_SELF'] . "?";
 
@@ -315,7 +278,7 @@ function refValues($arr){
         		<td><?=$row['httpStatusCode']?></td>
         		<td><?=substr($row['checkResult'], 4)?></td>
         		<td><a href="<?=createCheckUrl($row['acsUrls'], $row['serviceLocation'], $row['spEntityID'])?>" target="_blank">Perform test yourself</a></td>
-        		<td><a href="test.php?show=html&id=<?=$row['id']?>" target="_blank">Show HTML returned for this test</a></td>
+        		<td><a href="html.php?id=<?=$row['id']?>" target="_blank">Show HTML returned for this test</a></td>
 		</tr>
 		<?php
 	}
