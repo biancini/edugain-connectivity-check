@@ -428,25 +428,29 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    $samlRequest = urlencode( base64_encode( gzdeflate( $samlRequest ) ) );
    $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
    $curl = curl_init($url);
-   curl_setopt_array($curl, array(
-      CURLOPT_FOLLOWLOCATION => true,
-      CURLOPT_FRESH_CONNECT => true,
-      CURLOPT_SSL_VERIFYPEER => false,
-      CURLOPT_SSL_VERIFYHOST => false,
-      CURLOPT_COOKIEJAR => "/dev/null",
-      CURLOPT_RETURNTRANSFER => true,
-      CURLOPT_TIMEOUT => 45,
-      CURLOPT_CONNECTTIMEOUT => 20
-   ));
    
+   $curl_error = false;
    for ($vers = 0; $vers <= 4; $vers++) {
-     if ($html == false) {
-       curl_setopt($curl, CURLOPT_SSLVERSION, $vers);
+     if ($html === false) {
+       curl_setopt_array($curl, array(
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_FRESH_CONNECT => true,
+          CURLOPT_SSL_VERIFYPEER => false,
+          CURLOPT_SSL_VERIFYHOST => false,
+          CURLOPT_COOKIEJAR => "/dev/null",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_TIMEOUT => 45,
+          CURLOPT_CONNECTTIMEOUT => 20,
+          CURLOPT_SSLVERSION => $vers
+       ));
        $html = curl_exec($curl);
+       if ($html === false) {
+         $curl_error = curl_error($curl);
+       }
      }
    }
 
-   $curl_error = ($html === false) ? curl_error($curl) : false;
+   print_r($curl_error);
    $info = curl_getinfo($curl);
    $http_code = $info['http_code'];
    $error = array();
