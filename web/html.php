@@ -84,7 +84,7 @@ else {
 		<div class="admin_naslov" style="background-color: #e9e9e9;">The following HTML code was returned during the test when login from
 		the Identity Provider <i><?= $row['entityID'] ?></i> on the service <i><?= $row['spEntityID'] ?></i> on <?= $row['checkTime'] ?>:</div>
 		<hr>
-		<iframe src="html.php?show=html&id=<?=$id?>"></iframe>
+		<iframe src="html.php?show=html&id=<?=$id?>" sandbox></iframe>
 		<?php
 	}
 	?>
