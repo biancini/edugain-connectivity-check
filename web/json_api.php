@@ -129,8 +129,8 @@ if ($action == 'entities') {
 	if ($params['f_current_result'] && $params['f_current_result'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
-		$sql_conditions .= " currentResult = ?";
-		array_push($query_params, $params['f_current_result']);
+		$sql_conditions .= " currentResult LIKE ?";
+		array_push($query_params, "%" . $params['f_current_result']);
 	}
 	if ($params['f_previous_result'] && $params['f_previous_result'] != "All") {
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
