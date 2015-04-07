@@ -450,8 +450,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
        }
      }
    }
-
-   print_r($curl_error);
+   
    $info = curl_getinfo($curl);
    $http_code = $info['http_code'];
    $error = array();
