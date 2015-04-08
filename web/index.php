@@ -114,6 +114,7 @@ function refValues($arr){
 				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> | 
 				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:orange">Warning</a> |
 				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">OK</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_ignore_entity"])?>&f_ignore_entity=true" style="color:grey" title="Show IdP disabled from MCCS checks">Disabled</a> |
 				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=">Show all</a></div>
 <div class="message"></div>
 <form name="list_idpsFRM" action="<?=getCurrentUrl($params)?>" method="post">
@@ -123,7 +124,6 @@ function refValues($arr){
 		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=entityID&f_order_direction=<?= ($params["f_order"] == "entityID" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by entityID.">entityID</a><img src="images/<?= ($params["f_order"] == "entityID") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
         	<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=registrationAuthority&f_order_direction=<?= ($params["f_order"] == "registrationAuthority" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by registration authority.">Registration Authority</a><img src="images/<?= ($params["f_order"] == "registrationAuthority") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
 		<th>Contacts</th>
-	        <th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=ignoreEntity&f_order_direction=<?= ($params["f_order"] == "ignoreEntity" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by ignore entity.">Ignore Entity</a><img src="images/<?= ($params["f_order"] == "ignoreEntity") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
 		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=lastCheck&f_order_direction=<?= ($params["f_order"] == "lastTest" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by last test.">Last Test</a><img src="images/<?= ($params["f_order"] == "lastTest") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
 		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=currentResult&f_order_direction=<?= ($params["f_order"] == "currentResult" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by current result.">Current Result</a><img src="images/<?= ($params["f_order"] == "currentResult") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
 		<th>Tests</th>
@@ -139,13 +139,6 @@ function refValues($arr){
 			<input type="text" name="f_registrationAuthority" value="<?= $params['f_registrationAuthority'] == "All" ? "" : $params['f_registrationAuthority'] ?>"/>
 		</td>
 	        <td class="filter_td"><center><b>T</b>: Technical, <b>S</b>: Support</center></td>
-	        <td class="filter_td">
-			<select name="f_ignore_entity">
-				<option value="All" <?= $params['f_ignore_entity'] == "All" ? "selected" : "" ?>>All</option>
-				<option value="True" <?= $params['f_ignore_entity'] == "True" ? "selected" : "" ?>>True</option>
-				<option value="False" <?= $params['f_ignore_entity'] == "False" ? "selected" : "" ?>>False</option>
-			</select>
-		</td>
 		<td class="filter_td">
 			<select name="f_last_check">
 				<option value="All" <?= $params['f_last_check'] == "All" ? "selected" : "" ?>>All</option>
@@ -165,7 +158,7 @@ function refValues($arr){
 	</tr>
 	<tr>
 		<td class="filter_td" colspan="4">IdP data</td>
-		<td class="filter_td" colspan="4">Last test results</td>
+		<td class="filter_td" colspan="3">Last test results</td>
 	</tr>
 	<?php
       	$sql_count = "SELECT COUNT(*) FROM EntityDescriptors";
@@ -264,7 +257,8 @@ function refValues($arr){
 	$count = 1;
 
 	while ($row = $result->fetch_assoc()) {
-		if ("1 - OK" == $row['currentResult']) $color = "green";
+      if ($row['ignoreEntity'] == 1) $color = "silver";
+		elseif ("1 - OK" == $row['currentResult']) $color = "green";
 		elseif ("2 - FORM-Invalid" == $row['currentResult']) $color = "yellow";
 		elseif ("3 - HTTP-Error" == $row['currentResult']) $color = "red";
 		elseif ("3 - CURL-Error" == $row['currentResult']) $color = "red";
@@ -289,26 +283,6 @@ function refValues($arr){
 					 }
 				}
 			?></td>
-	        	<td><!--div style="width: 110px"><?php
-				if ($row['ignoreEntity'] == 1) {
-					?><input type="checkbox" id="toggle_<?=$count?>" checked="checked" disabled="disabled"/><?php
-				} else {
-					?><input id="toggle_<?=$count?>" type="checkbox" disabled="disabled"/><?php
-				}
-			?></div><script>
-			$("#toggle_<?=$count?>").switchbutton({
-				checkedLabel: 'True',
-				uncheckedLabel: 'False'
-			}).change(function(){
-				console.log("Toggle for <?=$row['entityID']?> " + ($(this).prop("checked") ? "checked" : "unchecked"));
-			});
-			</script--><?php
-                                if ($row['ignoreEntity'] == 1) {
-                                        ?>True<?php
-                                } else {
-                                        ?>False<?php
-                                }
-                        ?></td>
         		<td><?=$row['lastCheck']?></td>
         		<td><?=substr($row['currentResult'], 4)?></td>
 			<td><a href="test.php?f_entityID=<?=$row['entityID']?>" title="View checks status for this entity.">View</a></td>
