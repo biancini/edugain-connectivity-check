@@ -440,7 +440,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
           CURLOPT_COOKIEJAR => "/dev/null",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_TIMEOUT => 45,
-          CURLOPT_CONNECTTIMEOUT => 20,
+          CURLOPT_CONNECTTIMEOUT => 60,
           CURLOPT_SSLVERSION => $vers,
           CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
        ));
@@ -461,7 +461,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       $ok = false;
       if($verbose) echo "Curl error: ".$curl_error."\n";
       $error[] = $curl_error;
-   } else if ($http_code != 200){
+   } else if ($http_code != 200 && $http_code != 401){
      $ok = false;
      if($verbose) echo "Status code: ".$info['http_code']."\n";
      $error[] = "Status code: ".$info['http_code'];

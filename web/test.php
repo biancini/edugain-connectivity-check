@@ -152,7 +152,8 @@ function refValues($arr){
 	        <td class="filter_td">
 			<select name="f_check_time">
 				<option value="All" <?= $params['f_check_time'] == "All" ? "selected" : "" ?>>All</option>
-				<option value="1" <?= $params['f_check_time'] == "1" ? "selected" : "" ?>>Last 30 days</option>
+				<option value="1" <?= $params['f_check_time'] == "1" ? "selected" : "" ?>>Today</option>
+				<option value="2" <?= $params['f_check_time'] == "2" ? "selected" : "" ?>>Yesterday</option>
 			</select>
 		</td>
 	        <td class="filter_td">
@@ -215,7 +216,10 @@ function refValues($arr){
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
 		if ($params['f_check_time'] == "1") {
-			$sql_conditions .= " checkTime >= DATE_FORMAT(curdate() - interval 30 day,'%m/%d/%Y')";
+			$sql_conditions .= " DATE(checkTime) = curdate()";
+		}
+		elseif ($params['f_check_time'] == "2") {
+			$sql_conditions .= " DATE(checkTime) = curdate() - interval 1 day";
 		}
 	}
         if ($params['f_http_status_code'] && $params['f_http_status_code'] != "All") {

@@ -111,11 +111,11 @@ function refValues($arr){
 				?>
 				<div class="admin_naslov">Identity providers | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/index.php?title=Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
 				<div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> | 
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:orange">Warning</a> |
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">OK</a> | 
-				<a href="<?=getCurrentUrl($params, ["f_ignore_entity"])?>&f_ignore_entity=true" style="color:grey" title="Show IdP disabled from MCCS checks">Disabled</a> |
-				<a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=">Show all</a></div>
+				<a href="<?=getCurrentUrl($params, ["f_id_status", "f_ignore_entity"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_id_status", "f_ignore_entity"])?>&f_id_status=2 - FORM-Invalid" title="Login form returned by IdP is invalid" style="color:orange">Warning</a> |
+				<a href="<?=getCurrentUrl($params, ["f_id_status", "f_ignore_entity"])?>&f_id_status=1 - OK" style="color:green" title="Parses correctly all eduGAIN metadata">OK</a> | 
+				<a href="<?=getCurrentUrl($params, ["f_id_status", "f_ignore_entity"])?>&f_ignore_entity=True" style="color:grey" title="Show IdP disabled from MCCS checks">Disabled</a> |
+				<a href="<?=getCurrentUrl($params, ["f_id_status", "f_ignore_entity"])?>&f_id_status=">Show all</a></div>
 <div class="message"></div>
 <form name="list_idpsFRM" action="<?=getCurrentUrl($params)?>" method="post">
 <table class="list_table">
@@ -124,7 +124,7 @@ function refValues($arr){
 		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=entityID&f_order_direction=<?= ($params["f_order"] == "entityID" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by entityID.">entityID</a><img src="images/<?= ($params["f_order"] == "entityID") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
         	<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=registrationAuthority&f_order_direction=<?= ($params["f_order"] == "registrationAuthority" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by registration authority.">Registration Authority</a><img src="images/<?= ($params["f_order"] == "registrationAuthority") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
 		<th>Contacts</th>
-		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=lastCheck&f_order_direction=<?= ($params["f_order"] == "lastTest" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by last test.">Last Test</a><img src="images/<?= ($params["f_order"] == "lastTest") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
+		<th style="min-width: 100px"><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=lastCheck&f_order_direction=<?= ($params["f_order"] == "lastCheck" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by last test.">Last Test</a><img src="images/<?= ($params["f_order"] == "lastCheck") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
 		<th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=currentResult&f_order_direction=<?= ($params["f_order"] == "currentResult" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by current result.">Current Result</a><img src="images/<?= ($params["f_order"] == "currentResult") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
 		<th>Tests</th>
 	</tr>
@@ -139,11 +139,13 @@ function refValues($arr){
 			<input type="text" name="f_registrationAuthority" value="<?= $params['f_registrationAuthority'] == "All" ? "" : $params['f_registrationAuthority'] ?>"/>
 		</td>
 	        <td class="filter_td"><center><b>T</b>: Technical, <b>S</b>: Support</center></td>
-		<td class="filter_td">
+		<td class="filter_td">&nbsp;<!--
 			<select name="f_last_check">
 				<option value="All" <?= $params['f_last_check'] == "All" ? "selected" : "" ?>>All</option>
-				<option value="1" <?= $params['f_last_check'] == "1" ? "selected" : "" ?>>Last 30 days</option>
+				<option value="1" <?= $params['f_last_check'] == "1" ? "selected" : "" ?>>Today</option>
+				<option value="2" <?= $params['f_last_check'] == "2" ? "selected" : "" ?>>Yesterday</option>
 			</select>
+         -->
 		</td>
 		<td class="filter_td">
 			<select name="f_current_result">
@@ -213,7 +215,10 @@ function refValues($arr){
 		if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
 		else $sql_conditions .= " AND";
 		if ($params['f_last_check'] == "1") {
-			$sql_conditions .= " lastCheck >= DATE_FORMAT(curdate() - interval 30 day,'%m/%d/%Y')";
+			$sql_conditions .= " DATE(lastCheck) = curdate()";
+		}
+		elseif ($params['f_last_check'] == "2") {
+			$sql_conditions .= " DATE(lastCheck) = curdate() - interval 1 day";
 		}
 	}
         if ($params['f_current_result'] && $params['f_current_result'] != "All") {
@@ -247,6 +252,7 @@ function refValues($arr){
 	if ($page < 1) $page = 1;
 	$offset = ($page - 1) * $rowsperpage;
 	
+	$stmt = $mysqli->prepare($sql . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
 	$sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
 	$stmt = $mysqli->prepare($sql . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
         if (count($query_params) > 1) {
@@ -293,13 +299,13 @@ function refValues($arr){
 	}
 	?>
 	<tr>
-		<td colspan="10" align="center">&nbsp;</td>
+		<td colspan="8" align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td colspan="10" align="center">Records found: <?=$numrows?></td>
+		<td colspan="8" align="center">Records found: <?=$numrows?></td>
 	</tr>
 	<tr>
-		<td colspan="10" align="center">
+		<td colspan="8" align="center">
 			<?php
 				$range = 3;
 				if ($page > 1) {
