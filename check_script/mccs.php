@@ -38,17 +38,17 @@ $regexp = "/^sp_\d/";
 $conf_array_keys = array_keys($conf_array);
 $sps_keys[] = preg_grep ($regexp, $conf_array_keys);
 foreach ($sps_keys as $key => $value) {
-	foreach($value as $sp => $val) {
-		$spEntityIDs[] = $conf_array[$val]['entityID'];
-		$spACSurls[] = $conf_array[$val]['acs_url'];
-	}
+    foreach($value as $sp => $val) {
+        $spEntityIDs[] = $conf_array[$val]['entityID'];
+        $spACSurls[] = $conf_array[$val]['acs_url'];
+    }
 }
 
 $parallel = intval($conf_array['check_script']['parallel']);
 $checkHistory = intval($conf_array['check_script']['check_history']);
 
 if (count($spEntityIDs) != count($spACSurls)) {
-	throw new Exception("Configuration error. Please check properties.ini.");
+    throw new Exception("Configuration error. Please check properties.ini.");
 }
 
 $db_connection = $conf_array['db_connection'];
@@ -57,118 +57,118 @@ $edugain_feds_url = $conf_array['edugain_db_json']['json_feds_url'];
 $edugain_idps_url = $conf_array['edugain_db_json']['json_idps_url'];
 
 $arrContextOptions=array(
-	"ssl"=>array(
-		"verify_peer"=>false,
-		"verify_peer_name"=>false,
-	),
+    "ssl"=>array(
+        "verify_peer"=>false,
+        "verify_peer_name"=>false,
+    ),
 );
 
 if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_context_create($arrContextOptions)))===false){
-	print "Error fetching JSON eduGAIN Federation members\n";
+    print "Error fetching JSON eduGAIN Federation members\n";
 } else {
-	$mysqli = get_db_connection($db_connection);
-	$stmt = $mysqli->prepare("UPDATE Federations SET updated = 0");
-	if (!$stmt) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	if (!$stmt->execute()) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	$mysqli->close();
+    $mysqli = get_db_connection($db_connection);
+    $stmt = $mysqli->prepare("UPDATE Federations SET updated = 0");
+    if (!$stmt) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    if (!$stmt->execute()) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    $mysqli->close();
 
-	store_feds_into_db($json_edugain_feds, $db_connection);
+    store_feds_into_db($json_edugain_feds, $db_connection);
 
-	$mysqli = get_db_connection($db_connection);
-	$stmt = $mysqli->prepare("DELETE FROM Federations WHERE updated = 0");
-	if (!$stmt) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	if (!$stmt->execute()) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	$mysqli->close();
+    $mysqli = get_db_connection($db_connection);
+    $stmt = $mysqli->prepare("DELETE FROM Federations WHERE updated = 0");
+    if (!$stmt) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    if (!$stmt->execute()) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    $mysqli->close();
 }
 
 if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_context_create($arrContextOptions)))===false){
-	print "Error fetching JSON eduGAIN IdPs\n";
+    print "Error fetching JSON eduGAIN IdPs\n";
 } else {
-	
-	$mysqli = get_db_connection($db_connection);
-	$stmt = $mysqli->prepare("DELETE FROM EntityChecks WHERE checkExec = 0");
-	if (!$stmt) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	if(!$stmt->execute()) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	
-	$stmt = $mysqli->prepare("UPDATE EntityChecks SET checkExec = checkExec - 1");
-	if (!$stmt) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	if (!$stmt->execute()) {
-		throw new Exception("Error: " . mysqli_error($mysqli));
-	}
-	$mysqli->close();
-	
-	$idpList = extractIdPfromJSON($json_edugain_idps);
-	
-	if (!$idpList) {
-		print "Error loading eduGAIN JSON IdPs\n";
-	} else {
-		$mysqli = get_db_connection($db_connection);
-		$stmt = $mysqli->prepare("UPDATE EntityDescriptors SET updated = 0");
-		if (!$stmt) {
-			throw new Exception("Error: " . mysqli_error($mysqli));
-		}
-		if (!$stmt->execute()) {
-			throw new Exception("Error: " . mysqli_error($mysqli));
-		}
-		$mysqli->close();
+    
+    $mysqli = get_db_connection($db_connection);
+    $stmt = $mysqli->prepare("DELETE FROM EntityChecks WHERE checkExec = 0");
+    if (!$stmt) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    if(!$stmt->execute()) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    
+    $stmt = $mysqli->prepare("UPDATE EntityChecks SET checkExec = checkExec - 1");
+    if (!$stmt) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    if (!$stmt->execute()) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    $mysqli->close();
+    
+    $idpList = extractIdPfromJSON($json_edugain_idps);
+    
+    if (!$idpList) {
+        print "Error loading eduGAIN JSON IdPs\n";
+    } else {
+        $mysqli = get_db_connection($db_connection);
+        $stmt = $mysqli->prepare("UPDATE EntityDescriptors SET updated = 0");
+        if (!$stmt) {
+            throw new Exception("Error: " . mysqli_error($mysqli));
+        }
+        if (!$stmt->execute()) {
+            throw new Exception("Error: " . mysqli_error($mysqli));
+        }
+        $mysqli->close();
 
-		$count = 1;
-		for ($i = 0; $i < $parallel; $i++) {
-			$pid = pcntl_fork();
-			if (!$pid) {
-				//In child
-				print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-				executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
-				exit(0);
-			}
-			$count++;
-		}
+        $count = 1;
+        for ($i = 0; $i < $parallel; $i++) {
+            $pid = pcntl_fork();
+            if (!$pid) {
+                //In child
+                print "Executing check for " . $idpList[$count]['entityID'] . "\n";
+                executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
+                throw new Exception();
+            }
+            $count++;
+        }
 
-		while (pcntl_waitpid(0, $status) != -1) { 
-			$status = pcntl_wexitstatus($status);
-			if ($count <= count($idpList)) {
-				$pid = pcntl_fork();
-				if (!$pid) {
-					//In child
-					print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-					executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
-					exit(0);
-				}
-				$count++;
-			} 
-		}
+        while (pcntl_waitpid(0, $status) != -1) { 
+            $status = pcntl_wexitstatus($status);
+            if ($count <= count($idpList)) {
+                $pid = pcntl_fork();
+                if (!$pid) {
+                    //In child
+                    print "Executing check for " . $idpList[$count]['entityID'] . "\n";
+                    executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
+                    throw new Exception();
+                }
+                $count++;
+            } 
+        }
 
-		$mysqli = get_db_connection($db_connection);
-		$stmt = $mysqli->prepare("DELETE FROM EntityDescriptors WHERE updated = 0");
-		if (!$stmt) {
-			throw new Exception("Error: " . mysqli_error($mysqli));
-		}
-		if (!$stmt->execute()) {
-			throw new Exception("Error: " . mysqli_error($mysqli));
-		}
-		$mysqli->close();
-	}
-	
-	$mic_time = microtime();
-	$mic_time = explode(" ",$mic_time);
-	$mic_time = $mic_time[1] + $mic_time[0];
-	$endtime = $mic_time;
-	$total_execution_time = ($endtime - $start_time);
-	print "\n\nTotal Executaion Time ".$total_execution_time." seconds.\n";
+        $mysqli = get_db_connection($db_connection);
+        $stmt = $mysqli->prepare("DELETE FROM EntityDescriptors WHERE updated = 0");
+        if (!$stmt) {
+            throw new Exception("Error: " . mysqli_error($mysqli));
+        }
+        if (!$stmt->execute()) {
+            throw new Exception("Error: " . mysqli_error($mysqli));
+        }
+        $mysqli->close();
+    }
+    
+    $mic_time = microtime();
+    $mic_time = explode(" ",$mic_time);
+    $mic_time = $mic_time[1] + $mic_time[0];
+    $endtime = $mic_time;
+    $total_execution_time = ($endtime - $start_time);
+    print "\n\nTotal Executaion Time ".$total_execution_time." seconds.\n";
 }
 
 ?>

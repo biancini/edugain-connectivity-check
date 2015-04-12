@@ -16,7 +16,7 @@
 # (GÉANT).
 
 if (count($argv) < 2) {
-	throw new Exception("Please specify IdP entityID as parameter to this script.");
+    throw new Exception("Please specify IdP entityID as parameter to this script.");
 }
 
 include ("utils.php");
@@ -58,12 +58,12 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
         if (!$idpList) {
                 throw new Exception("Error loading eduGAIN JSON IdPs.");
         } else {
-		foreach ($idpList as $curIdP) {
-			if ($curIdP['entityID'] == $argv[1]) {
-				print "Executing check for " . $curIdP['entityID'] . "\n";
-				executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
-			}
-		}
+        foreach ($idpList as $curIdP) {
+            if ($curIdP['entityID'] == $argv[1]) {
+                print "Executing check for " . $curIdP['entityID'] . "\n";
+                executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
+            }
+        }
         }
 }
 

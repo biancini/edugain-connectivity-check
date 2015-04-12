@@ -24,28 +24,46 @@ $email_properties = $conf_array['email'];
 
 $mysqli = get_db_connection($db_connection);
 
-$stmt = $mysqli->prepare("SELECT * FROM Federations") or throw new Exception("Error: " . mysqli_error($mysqli));
-$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
-$fed_result = $stmt->get_result() or throw new Exception("Error: " . mysqli_error($mysqli));
+$stmt = $mysqli->prepare("SELECT * FROM Federations");
+if (!$stmt) {
+    throw new Exception("Error: " . mysqli_error($mysqli));
+}
+if (!$stmt->execute()) {
+    throw new Exception("Error: " . mysqli_error($mysqli));
+}
+$fed_result = $stmt->get_result();
+if (!$fed_result) {
+    throw new Exception("Error: " . mysqli_error($mysqli));
+}
 
 while ($cur_federation = $fed_result->fetch_assoc()) { 
-	$stmt = $mysqli->prepare("SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'") or throw new Exception("Error: " . mysqli_error($mysqli));
-	$stmt->bind_param("s", $cur_federation['registrationAuthority']) or throw new Exception("Error: " . mysqli_error($mysqli));
-	$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
+    $stmt = $mysqli->prepare("SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'");
+    if (!$stmt) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    if (!$stmt->bind_param("s", $cur_federation['registrationAuthority'])) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    if (!$stmt->execute()) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
 
-	$result = $stmt->get_result() or throw new Exception("Error: " . mysqli_error($mysqli));
-	$idps = array();
-	while ($cur_idp = $result->fetch_assoc()) {
-		$idps[$cur_idp['entityID']] = array();
-		$idps[$cur_idp['entityID']]['name'] = $cur_idp['displayName'];
-		$idps[$cur_idp['entityID']]['current_status'] = substr($cur_idp['currentResult'], 4);
-		$idps[$cur_idp['entityID']]['previous_status'] = substr($cur_idp['previousResult'], 4);
-		$idps[$cur_idp['entityID']]['tech_contacts'] = explode(",", $cur_idp['technicalContacts']);
-	}
+    $result = $stmt->get_result();
+    if (!$result) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
+    }
+    $idps = array();
+    while ($cur_idp = $result->fetch_assoc()) {
+        $idps[$cur_idp['entityID']] = array();
+        $idps[$cur_idp['entityID']]['name'] = $cur_idp['displayName'];
+        $idps[$cur_idp['entityID']]['current_status'] = substr($cur_idp['currentResult'], 4);
+        $idps[$cur_idp['entityID']]['previous_status'] = substr($cur_idp['previousResult'], 4);
+        $idps[$cur_idp['entityID']]['tech_contacts'] = explode(",", $cur_idp['technicalContacts']);
+    }
 
-	if (!empty($cur_federation['emailAddress']) && count($idps) > 0) {
-		sendEmail($email_properties, $cur_federation['emailAddress'], $idps);
-	}
+    if (!empty($cur_federation['emailAddress']) && count($idps) > 0) {
+        sendEmail($email_properties, $cur_federation['emailAddress'], $idps);
+    }
 } 
 
 $mysqli->close();
