@@ -274,7 +274,7 @@ function refValues($arr){
         throw new Exception("Error: " . mysqli_error($mysqli));
     }
     $result = $stmt->get_result();
-    if ($result) {
+    if (!$result) {
         throw new Exception("Error: " . mysqli_error($mysqli));
     }
     $numrows = $result->fetch_row()[0];
