@@ -16,7 +16,7 @@
 # (GÉANT).
 
 if (count($argv) < 2) {
-	die("Please specify IdP entityID as parameter to this script.\n");
+	throw new Exception("Please specify IdP entityID as parameter to this script.");
 }
 
 include ("utils.php");
@@ -39,7 +39,7 @@ foreach ($sps_keys as $key => $value) {
 }
 
 if (count($spEntityIDs) != count($spACSurls)) {
-        die("Configuration error. Please check properties.ini.\n");
+        throw new Exception("Configuration error. Please check properties.ini.");
 }
 
 $edugain_idps_url = $conf_array['edugain_db_json']['json_idps_url'];
@@ -56,7 +56,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 } else {
         $idpList = extractIdPfromJSON($json_edugain_idps);
         if (!$idpList) {
-                die("Error loading eduGAIN JSON IdPs.\n");
+                throw new Exception("Error loading eduGAIN JSON IdPs.");
         } else {
 		foreach ($idpList as $curIdP) {
 			if ($curIdP['entityID'] == $argv[1]) {

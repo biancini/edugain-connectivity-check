@@ -243,12 +243,22 @@ function refValues($arr){
 	$query_params = array_merge(array(str_repeat('s', count($query_params))), $query_params);
 
 	// find out how many rows are in the table 
-	$stmt = $mysqli->prepare($sql_count . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
-	if (count($query_params) > 1) {
-		call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare($sql_count . $sql_conditions);
+	if (!$stmt) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
 	}
-	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
-	$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+	if (count($query_params) > 1) {
+		if (!call_user_func_array(array($stmt, 'bind_param'), refValues($query_params))) {
+			throw new Exception("Error: " . mysqli_error($mysqli));
+		}
+	}
+	if (!$stmt->execute()) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+	$result = $stmt->get_result();
+	if ($result) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
 	$numrows = $result->fetch_row()[0];
 
 	$rowsperpage = 30;
@@ -261,12 +271,22 @@ function refValues($arr){
 	
 	$sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
 	//error_log($sql . $sql_conditions);
-	$stmt = $mysqli->prepare($sql . $sql_conditions) or die("Error: " . mysqli_error($mysqli));
-	if (count($query_params) > 1) {
-		call_user_func_array(array($stmt, 'bind_param'), refValues($query_params)) or die("Error: " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare($sql . $sql_conditions);
+	if (!$stmt) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
 	}
-	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
-	$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+	if (count($query_params) > 1) {
+		if (!call_user_func_array(array($stmt, 'bind_param'), refValues($query_params))) {
+			throw new Exception("Error: " . mysqli_error($mysqli));
+		}
+	}
+	if (!$stmt->execute()) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+	$result = $stmt->get_result();
+	if (!$result) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
 
 	while ($row = $result->fetch_assoc()) {
 		if ("1 - OK" == $row['checkResult']) $color = "green";

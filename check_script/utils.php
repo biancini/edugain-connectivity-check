@@ -33,7 +33,7 @@ function get_db_connection($db_connection) {
 
 	$mysqli->set_charset("utf8");
 	if ($mysqli->connect_errno) {
-		die("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
+		throw new Exception("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
 	}
 
 	return $mysqli;
@@ -58,10 +58,10 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
 
 	if ($db_connection !== NULL) {
 		$mysqli = get_db_connection($db_connection);
-		$stmt = $mysqli->prepare("SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck") or die("Error: " . mysqli_error($mysqli));
-		$stmt->bind_param("s", $idp['entityID']) or die("Error: " . mysqli_error($mysqli));
-		$stmt->execute() or die("Error: " . mysqli_error($mysqli));
-		$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+		$stmt = $mysqli->prepare("SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck") or throw new Exception("Error: " . mysqli_error($mysqli));
+		$stmt->bind_param("s", $idp['entityID']) or throw new Exception("Error: " . mysqli_error($mysqli));
+		$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
+		$result = $stmt->get_result() or throw new Exception("Error: " . mysqli_error($mysqli));
 
 		if ($result->num_rows > 0) {
 			while ($row = $result->fetch_assoc()) {
@@ -69,10 +69,10 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
 				$ignore_entity = $row['ignoreEntity'];
 			}
 		} else {
-			$stmt = $mysqli->prepare("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)") or die("Error: " . mysqli_error($mysqli));
-			$stmt->bind_param("sssss", $idp['entityID'], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']) or die("Error: " . mysqli_error($mysqli));
+			$stmt = $mysqli->prepare("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)") or throw new Exception("Error: " . mysqli_error($mysqli));
+			$stmt->bind_param("sssss", $idp['entityID'], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']) or throw new Exception("Error: " . mysqli_error($mysqli));
 
-			$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+			$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
 		}
 	}
 
@@ -104,17 +104,17 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
 
 		// fai insert in tabella EntityChecks
 		if ($mysqli !== NULL) {
-			$stmt = $mysqli->prepare("INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") or die("Error: " . mysqli_error($mysqli));
-			$stmt->bind_param("sssssisi", $idp['entityID'], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $last_check_history) or die("Error: " . mysqli_error($mysqli));
-			$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+			$stmt = $mysqli->prepare("INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)") or throw new Exception("Error: " . mysqli_error($mysqli));
+			$stmt->bind_param("sssssisi", $idp['entityID'], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $last_check_history) or throw new Exception("Error: " . mysqli_error($mysqli));
+			$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
 		}
 	}
 
 	// update EntityDescriptors
 	if ($mysqli !== NULL) {
-		$stmt = $mysqli->prepare("UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?") or die("Error: " . mysqli_error($mysqli));
-		$stmt->bind_param("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previous_status, $idp['entityID']) or die("Error: " . mysqli_error($mysqli));
-		$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+		$stmt = $mysqli->prepare("UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?") or throw new Exception("Error: " . mysqli_error($mysqli));
+		$stmt->bind_param("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previous_status, $idp['entityID']) or throw new Exception("Error: " . mysqli_error($mysqli));
+		$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
 	}
 
 	if ($check_ok) {
@@ -136,36 +136,36 @@ function store_feds_into_db($json_edugain_feds, $db_connection){
 	foreach ($feds_list as $fed){ 
 		//If I find a registrationAuthority value for the federation
 		if ($fed['reg_auth'] !== null && $fed['reg_auth'] !== ''){
-			$stmt = $mysqli->prepare("SELECT * FROM Federations WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
-			$stmt->bind_param("s", $fed['reg_auth']) or die("Error: " . mysqli_error($mysqli));
-			$stmt->execute() or die("Error: " . mysqli_error($mysqli));
-			$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+			$stmt = $mysqli->prepare("SELECT * FROM Federations WHERE registrationAuthority = ?") or throw new Exception("Error: " . mysqli_error($mysqli));
+			$stmt->bind_param("s", $fed['reg_auth']) or throw new Exception("Error: " . mysqli_error($mysqli));
+			$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
+			$result = $stmt->get_result() or throw new Exception("Error: " . mysqli_error($mysqli));
 
 			if ($result->num_rows > 0) {
 				while ($row = $result->fetch_assoc()) {
 					
-					$stmt = $mysqli->prepare("UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
-					$stmt->bind_param("s", $fed['reg_auth']) or die("Error: " . mysqli_error($mysqli));
-					$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+					$stmt = $mysqli->prepare("UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?") or throw new Exception("Error: " . mysqli_error($mysqli));
+					$stmt->bind_param("s", $fed['reg_auth']) or throw new Exception("Error: " . mysqli_error($mysqli));
+					$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
 					
   					if ($fed['name'] !== $row['federationName']){
-						$stmt = $mysqli->prepare("UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
+						$stmt = $mysqli->prepare("UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?") or throw new Exception("Error: " . mysqli_error($mysqli));
 						$stmt->bind_param("ss", $fed['name'], $fed['reg_auth']);
-						$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+						$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
   					}
   						
   					if ($fed['email'] !== $row['emailAddress']){
-  						$mysqli->query($sql) or die("Error: " . $sql . ": " . mysqli_error($mysqli));
+  						$mysqli->query($sql) or throw new Exception("Error: " . $sql . ": " . mysqli_error($mysqli));
 
-						$stmt = $mysqli->prepare("UPDATE Federations SET emailAddress = ? ,  WHERE registrationAuthority = ?") or die("Error: " . mysqli_error($mysqli));
+						$stmt = $mysqli->prepare("UPDATE Federations SET emailAddress = ? ,  WHERE registrationAuthority = ?") or throw new Exception("Error: " . mysqli_error($mysqli));
 						$stmt->bind_param("ss", $fed['email'], $fed['reg_auth']);
-						$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+						$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
   					}
 				}
 			} else {
-				$stmt = $mysqli->prepare("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)") or die("Error: " . mysqli_error($mysqli));
+				$stmt = $mysqli->prepare("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)") or throw new Exception("Error: " . mysqli_error($mysqli));
 				$stmt->bind_param("sss", $fed['name'], $fed['email'], $fed['reg_auth']);
-				$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+				$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
 			}
 		}
 	}

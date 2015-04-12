@@ -48,10 +48,20 @@ $id = getParameter("id", "");
 
 if (getParameter("show", "") == "html") {
 	$sql = "SELECT checkHtml FROM EntityChecks WHERE id = ?";
-	$stmt = $mysqli->prepare($sql) or die("Error: " . mysqli_error($mysqli));
-	$stmt->bind_param("s", $id) or die("Error: " . mysqli_error($mysqli));
-        $stmt->execute() or die("Error: " . mysqli_error($mysqli));
-        $result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare($sql);
+	if (!$stmt) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+	if (!$stmt->bind_param("s", $id)) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+        if (!$stmt->execute()) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+        $result = $stmt->get_result();
+	if (!$result) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
         $stmt->close();
 
 	while ($row = $result->fetch_assoc()) {
@@ -60,10 +70,20 @@ if (getParameter("show", "") == "html") {
 }
 else {
 	$sql = "SELECT entityID, spEntityID, DATE_FORMAT(checkTime, '%d/%m/%Y at %H:%m:%s') as checkTime FROM EntityChecks WHERE id = ?";
-	$stmt = $mysqli->prepare($sql) or die("Error: " . mysqli_error($mysqli));
-	$stmt->bind_param("s", $id) or die("Error: " . mysqli_error($mysqli));
-        $stmt->execute() or die("Error: " . mysqli_error($mysqli));
-        $result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare($sql);
+	if (!$stmt) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+	if (!$stmt->bind_param("s", $id)) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+        if (!$stmt->execute()) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
+        $result = $stmt->get_result();
+	if (!$result) {
+		throw new Exception("Error: " . mysqli_error($mysqli));
+	}
         $stmt->close();
 	?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

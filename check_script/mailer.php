@@ -24,16 +24,16 @@ $email_properties = $conf_array['email'];
 
 $mysqli = get_db_connection($db_connection);
 
-$stmt = $mysqli->prepare("SELECT * FROM Federations") or die("Error: " . mysqli_error($mysqli));
-$stmt->execute() or die("Error: " . mysqli_error($mysqli));
-$fed_result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+$stmt = $mysqli->prepare("SELECT * FROM Federations") or throw new Exception("Error: " . mysqli_error($mysqli));
+$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
+$fed_result = $stmt->get_result() or throw new Exception("Error: " . mysqli_error($mysqli));
 
 while ($cur_federation = $fed_result->fetch_assoc()) { 
-	$stmt = $mysqli->prepare("SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'") or die("Error: " . mysqli_error($mysqli));
-	$stmt->bind_param("s", $cur_federation['registrationAuthority']) or die("Error: " . mysqli_error($mysqli));
-	$stmt->execute() or die("Error: " . mysqli_error($mysqli));
+	$stmt = $mysqli->prepare("SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'") or throw new Exception("Error: " . mysqli_error($mysqli));
+	$stmt->bind_param("s", $cur_federation['registrationAuthority']) or throw new Exception("Error: " . mysqli_error($mysqli));
+	$stmt->execute() or throw new Exception("Error: " . mysqli_error($mysqli));
 
-	$result = $stmt->get_result() or die("Error: " . mysqli_error($mysqli));
+	$result = $stmt->get_result() or throw new Exception("Error: " . mysqli_error($mysqli));
 	$idps = array();
 	while ($cur_idp = $result->fetch_assoc()) {
 		$idps[$cur_idp['entityID']] = array();
