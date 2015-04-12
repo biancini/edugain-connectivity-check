@@ -121,12 +121,12 @@ function refValues($arr){
                 $params["f_order"] = getParameter('f_order', 'currentResult');
                 $params["f_order_direction"] = getParameter('f_order_direction', 'DESC');
                 $params["f_id_status"] = getParameter('f_id_status', 'All', true);
-                                $params["f_entityID"] = getParameter('f_entityID', 'All');
-                                $params["f_registrationAuthority"] = getParameter('f_registrationAuthority', 'All');
-                                $params["f_displayName"] = getParameter('f_displayName', 'All');
-                                $params["f_ignore_entity"] = getParameter('f_ignore_entity', 'All');
-                                $params["f_last_check"] = getParameter('f_last_check', 'All');
-                                $params["f_current_result"] = getParameter('f_current_result', 'All');
+                $params["f_entityID"] = getParameter('f_entityID', 'All');
+                $params["f_registrationAuthority"] = getParameter('f_registrationAuthority', 'All');
+                $params["f_displayName"] = getParameter('f_displayName', 'All');
+                $params["f_ignore_entity"] = getParameter('f_ignore_entity', 'All');
+                $params["f_last_check"] = getParameter('f_last_check', 'All');
+                $params["f_current_result"] = getParameter('f_current_result', 'All');
                 //error_log(print_r($params, true));
                 ?>
                 <div class="admin_naslov">Identity providers | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/index.php?title=Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
@@ -183,7 +183,7 @@ function refValues($arr){
         <td class="filter_td" colspan="3">Last test results</td>
     </tr>
     <?php
-          $sql_count = "SELECT COUNT(*) FROM EntityDescriptors";
+    $sql_count = "SELECT COUNT(*) FROM EntityDescriptors";
     $sql = "SELECT * FROM EntityDescriptors LEFT JOIN Federations ON EntityDescriptors.registrationAuthority = Federations.registrationAuthority";
     $sql_conditions = "";
     $query_params = array();

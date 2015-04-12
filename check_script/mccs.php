@@ -67,25 +67,13 @@ if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_con
     print "Error fetching JSON eduGAIN Federation members\n";
 } else {
     $mysqli = get_db_connection($db_connection);
-    $stmt = $mysqli->prepare("UPDATE Federations SET updated = 0");
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
+    execute_statement($mysqli, false, "UPDATE Federations SET updated = 0", NULL);
     $mysqli->close();
 
     store_feds_into_db($json_edugain_feds, $db_connection);
 
     $mysqli = get_db_connection($db_connection);
-    $stmt = $mysqli->prepare("DELETE FROM Federations WHERE updated = 0");
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
+    execute_statement($mysqli, false, "DELETE FROM Federations WHERE updated = 0", NULL);
     $mysqli->close();
 }
 
@@ -94,21 +82,8 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
 } else {
     
     $mysqli = get_db_connection($db_connection);
-    $stmt = $mysqli->prepare("DELETE FROM EntityChecks WHERE checkExec = 0");
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if(!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    
-    $stmt = $mysqli->prepare("UPDATE EntityChecks SET checkExec = checkExec - 1");
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
+    execute_statement($mysqli, false, "DELETE FROM EntityChecks WHERE checkExec = 0", NULL);
+    execute_statement($mysqli, false, "UPDATE EntityChecks SET checkExec = checkExec - 1", NULL);
     $mysqli->close();
     
     $idpList = extractIdPfromJSON($json_edugain_idps);
@@ -117,13 +92,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
         print "Error loading eduGAIN JSON IdPs\n";
     } else {
         $mysqli = get_db_connection($db_connection);
-        $stmt = $mysqli->prepare("UPDATE EntityDescriptors SET updated = 0");
-        if (!$stmt) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
-        }
-        if (!$stmt->execute()) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
-        }
+        execute_statement($mysqli, false, "UPDATE EntityDescriptors SET updated = 0", NULL);
         $mysqli->close();
 
         $count = 1;
@@ -133,7 +102,7 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
                 //In child
                 print "Executing check for " . $idpList[$count]['entityID'] . "\n";
                 executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
-                throw new Exception();
+                exit(0);
             }
             $count++;
         }
@@ -146,20 +115,14 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
                     //In child
                     print "Executing check for " . $idpList[$count]['entityID'] . "\n";
                     executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
-                    throw new Exception();
+                    exit(0);
                 }
                 $count++;
             } 
         }
 
         $mysqli = get_db_connection($db_connection);
-        $stmt = $mysqli->prepare("DELETE FROM EntityDescriptors WHERE updated = 0");
-        if (!$stmt) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
-        }
-        if (!$stmt->execute()) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
-        }
+        execute_statement($mysqli, false, "DELETE FROM EntityDescriptors WHERE updated = 0", NULL);
         $mysqli->close();
     }
     
