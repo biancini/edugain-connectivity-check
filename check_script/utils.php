@@ -1,7 +1,7 @@
 <?php
 # Copyright 2015 Géant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License");
+# Licensed under the GÉANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -17,18 +17,21 @@
 
 include (dirname(__FILE__)."/../PHPMailer/PHPMailerAutoload.php");
 
+define('ENTITY_ID', 'entityID');
+define('ERROR', 'Error: ');
+
 /**
  Create a new DB connection and return its pointer.
 
- @param array $db_connection Array containing the datas for DB connection
- @return new mysqli($db_connection),
+ @param array $dbConnection Array containing the datas for DB connection
+ @return new mysqli($dbConnection),
  */
-function get_db_connection($db_connection) {
-    if (array_key_exists("db_sock", $db_connection) && !empty($db_connection['db_sock'])) {
-        $mysqli = new mysqli(null, $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], null, $db_connection['db_sock']);
+function getDbConnection($dbConnection) {
+    if (array_key_exists("db_sock", $dbConnection) && !empty($dbConnection['db_sock'])) {
+        $mysqli = new mysqli(null, $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], null, $dbConnection['db_sock']);
     }
     else {
-        $mysqli = new mysqli($db_connection['db_host'], $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], $db_connection['db_port']);
+        $mysqli = new mysqli($dbConnection['db_host'], $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], $dbConnection['db_port']);
     }
 
     $mysqli->set_charset("utf8");
@@ -54,29 +57,26 @@ function refValues($arr) {
 /**
  Execute a prepared satement on the DB and returns resultset
 
- @param array $db_connection Array containing the datas for DB connection
- @return new mysqli($db_connection),
+ @param array $dbConnection Array containing the datas for DB connection
+ @return new mysqli($dbConnection),
  */
-function execute_statement($mysqli, $r, $sql, $params) {
+function executeStatement($mysqli, $r, $sql, $params) {
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
+        throw new Exception(ERROR . mysqli_error($mysqli));
     }
 
-    if ($params != NULL) {
-        if (!call_user_func_array(array($stmt, "bind_param"), refValues($params))) {
-            //if (!$stmt->bind_param($types, $params)) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
-        }
+    if ($params != NULL && !call_user_func_array(array($stmt, "bind_param"), refValues($params))) {
+        throw new Exception(ERROR . mysqli_error($mysqli));
     }
     if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
+        throw new Exception(ERROR . mysqli_error($mysqli));
     }
 
     if ($r === true) {
         $result = $stmt->get_result();
         if (!$result) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
+            throw new Exception(ERROR . mysqli_error($mysqli));
         }
 
         return $result;
@@ -90,43 +90,45 @@ function execute_statement($mysqli, $r, $sql, $params) {
 
  @param array $idp Array containing the IdP entity
  @param array $spEntityIDs containing the SPs entityID
- @return new mysqli($db_connection),
+ @return new mysqli($dbConnection),
  */
-function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $checkHistory = 2) {
-    $ignore_entity = false;
-    $previous_status = NULL;
-    $check_ok = true;
+function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkHistory = 2) {
+    $ignoreEntity = false;
+    $previousStatus = NULL;
+    $checkOk = true;
     $reason = '1 - OK';
     $messages = array();
 
     $mysqli = null;
-    $last_check_history = $checkHistory - 1;
+    $lastCheckHistory = $checkHistory - 1;
 
-    if ($db_connection !== NULL) {
-        $mysqli = get_db_connection($db_connection);
-        $result = execute_statement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck", array("s", $idp['entityID']));
+    if ($dbConnection !== NULL) {
+        $mysqli = getDbConnection($dbConnection);
+        $result = executeStatement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck", array("s", $idp[ENTITY_ID]));
 
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                $previous_status = $row['currentResult'];
-                $ignore_entity = $row['ignoreEntity'];
+                $previousStatus = $row['currentResult'];
+                $ignoreEntity = $row['ignoreEntity'];
             }
         } else {
-            execute_statement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)", array("sssss", $idp['entityID'], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']));
+            executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)", array("sssss", $idp[ENTITY_ID], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']));
         }
     }
 
-    if ($ignore_entity == true) {
-        print "Entity " . $idp['entityID'] . " ignored.\n";
-        if ($mysqli !== NULL) $mysqli->close();
+    if ($ignoreEntity == true) {
+        print "Entity " . $idp[ENTITY_ID] . " ignored.\n";
+        if ($mysqli !== NULL) {
+		$mysqli->close();
+	}
         return;
     }
     
     for ($i = 0; $i < count($spEntityIDs); $i++) {
         $result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
 
-        $check_ok = array_key_exists('ok', $result) && $result['ok'];
-        if ($check_ok) {
+        $checkOk = array_key_exists('ok', $result) && $result['ok'];
+        if ($checkOk) {
             $reason = '1 - OK';
         } else {
             $messages = $result['messages'];
@@ -140,59 +142,60 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $db_connection, $check
             elseif ($result['curl_return'] != '') {
                 $reason = '3 - CURL-Error';
             }
+            else {
+               $reason = 'Unknown';
+            }
         }
 
         // fai insert in tabella EntityChecks
         if ($mysqli !== NULL) {
-            execute_statement($mysqli, false, "INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", array("sssssisi", $idp['entityID'], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $last_check_history));
+            executeStatement($mysqli, false, "INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", array("sssssisi", $idp[ENTITY_ID], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory));
         }
     }
 
     // update EntityDescriptors
     if ($mysqli !== NULL) {
-        execute_statement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previous_status, $idp['entityID']));
+        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp[ENTITY_ID]));
     }
 
-    if ($check_ok) {
-        print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
+    if ($checkOk) {
+        print "The IdP ".$idp[ENTITY_ID]." consumed metadata correctly\n";
     }
     else {
-        print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
+        print "The IdP ".$idp[ENTITY_ID]." did NOT consume metadata correctly.\n\n";
         print "Reason: " . $reason . "\n";
         print "Messages: " . print_r($messages, true) . "\n\n";
     }
 
-    if ($mysqli !== NULL) $mysqli->close();
+    if ($mysqli !== NULL) {
+        $mysqli->close();
+    }
 }
 
-function store_feds_into_db($json_edugain_feds, $db_connection){
-    $mysqli = get_db_connection($db_connection);
-    $feds_list = json_decode($json_edugain_feds, true, 10, JSON_UNESCAPED_UNICODE);
+function storeFedsIntoDb($jsonEdugainFeds, $dbConnection) {
+    $mysqli = getDbConnection($dbConnection);
+    $fedsList = json_decode($jsonEdugainFeds, true, 10, JSON_UNESCAPED_UNICODE);
     
-    foreach ($feds_list as $fed){ 
+    foreach ($fedsList as $fed) { 
         //If I find a registrationAuthority value for the federation
-        if ($fed['reg_auth'] !== null && $fed['reg_auth'] !== ''){
-            $result = execute_statement($mysqli, true, "SELECT * FROM Federations WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
+        if ($fed['reg_auth'] !== null && $fed['reg_auth'] !== '') {
+            $result = executeStatement($mysqli, true, "SELECT * FROM Federations WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
 
             if ($result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
-                    execute_statement($mysqli, false, "UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
+                    executeStatement($mysqli, false, "UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
                     
                     if ($fed['name'] !== $row['federationName']) {
-                        execute_statement($mysqli, false, "UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?", array("ss", $fed['name'], $fed['reg_auth']));
+                        executeStatement($mysqli, false, "UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?", array("ss", $fed['name'], $fed['reg_auth']));
                      }
                           
                      if ($fed['email'] !== $row['emailAddress']) {
-                        execute_statement($mysqli, false, $sql, NULL);
-                        //if (!$mysqli->query($sql)) {
-                        //    throw new Exception("Error: " . $sql . ": " . mysqli_error($mysqli));
-                        //}
-
-                        execute_statement($mysqli, false, "UPDATE Federations SET emailAddress = ? ,  WHERE registrationAuthority = ?", array("ss", $fed['email'], $fed['reg_auth']));
+                        executeStatement($mysqli, false, $sql, NULL);
+                        executeStatement($mysqli, false, "UPDATE Federations SET emailAddress = ? ,  WHERE registrationAuthority = ?", array("ss", $fed['email'], $fed['reg_auth']));
                       }
                 }
             } else {
-                execute_statement($mysqli, false, "INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)", array("sss", $fed['name'], $fed['email'], $fed['reg_auth']));
+                executeStatement($mysqli, false, "INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)", array("sss", $fed['name'], $fed['email'], $fed['reg_auth']));
             }
         }
     }
@@ -202,24 +205,23 @@ function store_feds_into_db($json_edugain_feds, $db_connection){
 /**
  Extract useful informations stored into a JSON UTF-8 file.
 
- @param String $json_idp_list The JSON file that contains the identity providers
+ @param String $jsonIdpList The JSON file that contains the identity providers
  @return array idps[]("entityID" => "value",
                              "registrationAuthority" => "value",
                              "SingleSignOnService" => "value",
                              "technicalContacts" => array(),
                              "supportContacts" => array()),
  */
-function extractIdPfromJSON($json_idp_list){
-    
+function extractIdPfromJSON($jsonIdpList) {
     $idps = array();
     
-    $idps_list = json_decode($json_idp_list, true, 10, JSON_UNESCAPED_UNICODE);
+    $idpsList = json_decode($jsonIdpList, true, 10, JSON_UNESCAPED_UNICODE);
     
     $count = 0;
-    foreach ($idps_list as $idp){
+    foreach ($idpsList as $idp) {
         $count++;
         
-        $idps[$count]['entityID'] = (string)$idp['entityID'];
+        $idps[$count][ENTITY_ID] = (string)$idp[ENTITY_ID];
         $idps[$count]['registrationAuthority'] = (string)$idp['registrationAuthority'];
         $idps[$count]['SingleSignOnService'] = (string)$idp['Location'];
         $idps[$count]['displayName'] = ""; 
@@ -228,7 +230,7 @@ function extractIdPfromJSON($json_idp_list){
         $aux2 = array();
         $aux3 = array();
         
-        if ($idp['displayname']){
+        if ($idp['displayname']) {
             $aux1 = explode("==", $idp['displayname']);
             foreach ($aux1 as $result) {
                 $aux2 = explode(';', $result);
@@ -240,7 +242,7 @@ function extractIdPfromJSON($json_idp_list){
             
             $idps[$count]['displayName'] = (array_key_exists('en', $aux3)) ? (string)$aux3['en'] : (string)$firstElement;
 
-        } elseif ($idp['role_display_name']){
+        } elseif ($idp['role_display_name']) {
             $aux1 = explode("==", $idp['role_display_name']);
             
             foreach ($aux1 as $result) {
@@ -252,12 +254,12 @@ function extractIdPfromJSON($json_idp_list){
             $firstElement = $aux3[$keys[0]];
                 
             $idps[$count]['displayName'] = (array_key_exists('en', $aux3)) ? (string)$aux3['en'] : (string)$firstElement;
-            echo "idp ".(string)$idp['entityID']."displayName = ".$idp[$count]['displayName'];
+            echo "idp ".(string)$idp[ENTITY_ID]."displayName = ".$idp[$count]['displayName'];
         } else{
             $idp[$count]['displayName'] = "";
         }
         
-        if (!array_key_exists('technical', $idp['contacts'])){
+        if (!array_key_exists('technical', $idp['contacts'])) {
             $idps[$count]['technicalContacts'] = "Technical Contact missing";
         }
         else{
@@ -265,10 +267,10 @@ function extractIdPfromJSON($json_idp_list){
             
             $idps[$count]['technicalContacts'] = "";
             
-            foreach ($idp['contacts']['technical'] as $techContact){
+            foreach ($idp['contacts']['technical'] as $techContact) {
                 
-                if (array_key_exists('EmailAddress', $techContact['e_p'])){
-                    foreach ($techContact['e_p']['EmailAddress'] as $emailAddress){
+                if (array_key_exists('EmailAddress', $techContact['e_p'])) {
+                    foreach ($techContact['e_p']['EmailAddress'] as $emailAddress) {
                         if (0 === strpos($emailAddress, 'mailto:')) {
                             $techContacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
                         } else{
@@ -280,7 +282,7 @@ function extractIdPfromJSON($json_idp_list){
             $idps[$count]['technicalContacts'] = implode(",", $techContacts);
         }
         
-        if (!array_key_exists('support', $idp['contacts'])){
+        if (!array_key_exists('support', $idp['contacts'])) {
             $idps[$count]['supportContacts'] = "";
         }
         else{
@@ -288,10 +290,10 @@ function extractIdPfromJSON($json_idp_list){
             
             $idps[$count]['supportContacts'] = array();
             
-            foreach ($idp['contacts']['support'] as $suppContact){
+            foreach ($idp['contacts']['support'] as $suppContact) {
                 
-                if (array_key_exists('EmailAddress', $suppContact['e_p'])){
-                    foreach ($suppContact['e_p']['EmailAddress'] as $emailAddress){
+                if (array_key_exists('EmailAddress', $suppContact['e_p'])) {
+                    foreach ($suppContact['e_p']['EmailAddress'] as $emailAddress) {
                         if (0 === strpos($emailAddress, 'mailto:')) {
                             $suppContacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
                         } else{
@@ -317,9 +319,7 @@ function extractIdPfromJSON($json_idp_list){
                               "supportContacts" => array()),
  */
 
-function extractIdPfromXML ($metadata){
-    
-        //$xml = simplexml_load_string($metadata, null, LIBXML_COMPACT, "md", TRUE);
+function extractIdPfromXML ($metadata) {
         $xml = simplexml_load_string($metadata, null, LIBXML_COMPACT);
     
         // Register the used namespaced into the SimpleXMLElement
@@ -331,50 +331,54 @@ function extractIdPfromXML ($metadata){
          // Extract the entityID, the registrationAuthority, the SingleSignOnService (HTTP-Redirect), the technicalContacts and the supportContacts
          $idps = array();
          $count = 0;
-         foreach($items as $idp){    
+         foreach($items as $idp) {    
              $count++;
 
-             $idps[$count]['entityID'] = (string)$idp['entityID'];
+             $idps[$count][ENTITY_ID] = (string)$idp[ENTITY_ID];
 
              $idps[$count]['registrationAuthority'] = (string)$idp->xpath("./*[local-name()='Extensions']/*[local-name()='RegistrationInfo']/@registrationAuthority")[0];
              
              $idps[$count]['SingleSignOnService'] = (string)$idp->xpath("./*[local-name()='IDPSSODescriptor']/*[local-name()='SingleSignOnService'][@Binding='urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']/@Location")[0];
              
-             $idp_technicalContacts = $idp->xpath("./*[local-name()='ContactPerson'][@contactType='technical']");
+             $idpTechnicalContacts = $idp->xpath("./*[local-name()='ContactPerson'][@contactType='technical']");
 
-             if (!$idp_technicalContacts) $idps[$count]['technicalContacts'] = "Technical Contact is missing";
+             if (!$idpTechnicalContacts) {
+                 $idps[$count]['technicalContacts'] = "Technical Contact is missing";
+             }
              
-            $idps[$count]['technicalContacts'] = array();
+             $idps[$count]['technicalContacts'] = array();
              $techContacts = array();
-             foreach ($idp_technicalContacts as $techContact){
+             foreach ($idpTechnicalContacts as $techContact) {
                  $techContacts[] = ($ns['md']) ? $techContact->children($ns['md'])->EmailAddress : $techContact->children->EmailAddress;
              }
              
-             foreach ($techContacts as $tcCnt){
+             foreach ($techContacts as $tcCnt) {
                  $idps[$count]['technicalContacts'][] = (string)$tcCnt;
              }
                           
-             $idp_supportContacts = $idp->xpath("./*[local-name()='ContactPerson'][@contactType='support']");
+             $idpSupportContacts = $idp->xpath("./*[local-name()='ContactPerson'][@contactType='support']");
              
-            $idps[$count]['supportContacts'] = array();
+             $idps[$count]['supportContacts'] = array();
              $suppContacts = array();
-             foreach ($idp_supportContacts as $suppContact){
+             foreach ($idpSupportContacts as $suppContact) {
                  $suppContacts[] = ($ns['md']) ? $suppContact->children($ns['md'])->EmailAddress : $suppContact->children->EmailAddress;
              }
-             foreach ($suppContacts as $spCnt){
+             foreach ($suppContacts as $spCnt) {
                  $idps[$count]['supportContacts'][] = (string)$spCnt;
              }
          }
         return $idps;
 }
 
-function clean_utf8_curl($html, $curl) {
-    if (!is_string($html)) return $html;
+function cleanUtf8Curl($html, $curl) {
+    if (!is_string($html)) {
+        return $html;
+    }
 
-    $content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
+    $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
 
     /* 1: HTTP Content-Type: header */
-    preg_match( '@([\w/+]+)(;\s*charset=(\S+))?@i', $content_type, $matches);
+    preg_match( '@([\w/+]+)(;\s*charset=(\S+))?@i', $contentType, $matches);
     if (isset($matches[3])) {
         $charset = $matches[3];
     }
@@ -389,7 +393,7 @@ function clean_utf8_curl($html, $curl) {
 
     /* 3: <xml> element in the page */
     if (!isset($charset)) {
-        preg_match( '@<\?xml.+encoding="([^\s"]+)@si', $html, $matches );
+        preg_match('@<\?xml.+encoding="([^\s"]+)@si', $html, $matches);
         if (isset($matches[1])) {
             $charset = $matches[1];
         }
@@ -404,10 +408,8 @@ function clean_utf8_curl($html, $curl) {
     }
 
     /* 5: Default for HTML */
-    if (!isset($charset)) {
-        if (strstr($content_type, "text/html") === 0) {
-            $charset = "ISO 8859-1";
-        }
+    if (!isset($charset) && strstr($contentType, "text/html") === 0) {
+        $charset = "ISO 8859-1";
     }
 
     /* Convert it if it is anything but UTF-8 */
@@ -456,7 +458,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
    $curl = curl_init($url);
    
-   $curl_error = false;
+   $curlError = false;
    for ($vers = 0; $vers <= 4; $vers++) {
      if ($html === false) {
        curl_setopt_array($curl, array(
@@ -473,7 +475,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
        ));
        $html = curl_exec($curl);
        if ($html === false) {
-         $curl_error = curl_error($curl);
+         $curlError = curl_error($curl);
        }
      }
    }
@@ -484,33 +486,33 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    $validForm = true;
    $ok = true;
 
-   if($curl_error != false){
+   if ($curlError != false) {
       $ok = false;
-      if($verbose) echo "Curl error: ".$curl_error."\n";
-      $error[] = $curl_error;
-   } else if ($http_code != 200 && $http_code != 401){
+      if ($verbose) {
+          echo "Curl error: ".$curlError."\n";
+      }
+      $error[] = $curlError;
+   } else if ($http_code != 200 && $http_code != 401) {
      $ok = false;
-     if($verbose) echo "Status code: ".$info['http_code']."\n";
+     if($verbose) {
+         echo "Status code: ".$info['http_code']."\n";
+     }
      $error[] = "Status code: ".$info['http_code'];
    } else {
       $pattern_username ='/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
       $pattern_password = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
 
-      $html = clean_utf8_curl($html, $curl);
+      $html = cleanUtf8Curl($html, $curl);
       $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
       
-      if(preg_match($pattern_username, $html)){
-          //okay
-      } else {
+      if (!preg_match($pattern_username, $html)) {
             $msg = "Did not find input for username.";
          $error[] = $msg;
          $validForm = false;
          $ok = false;
       }
          
-      if(preg_match($pattern_password, $html)){
-         //okay
-      } else {
+      if (!preg_match($pattern_password, $html)) {
          $msg = "Did not find input for password.";
          $error[] = $msg;
          $validForm = false;
@@ -518,9 +520,8 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       }
    }
    
-   if($verbose && !$ok){
+   if($verbose && !$ok) {
       echo $httpRedirectServiceLocation." ERROR \n";
-      //if($html) var_dump($html);
    }
 
    $ret = array(
@@ -531,7 +532,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       "messages" => $error
    );
    
-   if($html){
+   if($html) {
       $ret["html"] = $html;
    } else {
       $ret["html"] = "";
@@ -582,7 +583,7 @@ function sendEmail($emailProperties, $recipient, $idps) {
     $altBody .= '\n\n';
     $body .= '<table border="1">';
     $body .= '<thead><td><b>IdP name</b></td><td><b>Current Status</b></td><td><b>Previous Status</b></td><td><b>Technical Concact</b></td><td><b>Link</b></td></thead>';
-    foreach ($idps as $entityID => $vals) {
+    foreach ($idps as $curEntityID => $vals) {
         $altBody .= $vals['name'] . '('.$vals['current_status'].')\n';
         $body .= '<tr>';
         $body .= '<td>' . $vals['name'] . '</td>';
@@ -593,7 +594,7 @@ function sendEmail($emailProperties, $recipient, $idps) {
             $body .=  '<a href="mailto:' . $contact . '">' . $contact . '</a><br/>';
         }
         $body .= '</td>';
-        $body .= '<td><a href="'.$emailProperties['baseurl'].'/test.php?f_entityID='.$entityID.'">View last checks</a></td>';
+        $body .= '<td><a href="'.$emailProperties['baseurl'].'/test.php?f_entityID='.$curEntityID.'">View last checks</a></td>';
         $body .= '</tr>';
     }
     $altBody .= '\nVisit MCCS at ' . $emailProperties['baseurl'] . ' to understand more.\nThank you for your cooperation.\nRegards.';

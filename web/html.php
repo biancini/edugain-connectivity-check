@@ -1,7 +1,7 @@
 <?php
 # Copyright 2015 Géant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License");
+# Licensed under the GÉANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -15,14 +15,14 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-$conf_array = parse_ini_file('../properties.ini', true);
-$db_connection = $conf_array['db_connection'];
+$confArray = parse_ini_file('../properties.ini', true);
+$dbConnection = $confArray['db_connection'];
 
-if (array_key_exists("db_sock", $db_connection) && !empty($db_connection['db_sock'])) {
-        $mysqli = new mysqli(null, $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], null, $db_connection['db_sock']);
+if (array_key_exists("db_sock", $dbConnection) && !empty($dbConnection['db_sock'])) {
+        $mysqli = new mysqli(null, $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], null, $dbConnection['db_sock']);
 }       
 else {  
-        $mysqli = new mysqli($db_connection['db_host'], $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], $db_connection['db_port']);
+        $mysqli = new mysqli($dbConnection['db_host'], $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], $dbConnection['db_port']);
 } 
 
 if ($mysqli->connect_errno) {
@@ -30,11 +30,11 @@ if ($mysqli->connect_errno) {
     error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
 }
 
-function getParameter($key, $default_value, $array=false) {
-    $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $default_value);
+function getParameter($key, $defaultValue, $array=false) {
+    $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $defaultValue);
 
     if (!$value || trim($value) == '') {
-        $value = $default_value;
+        $value = $defaultValue;
     }
 
     if ($array) {
@@ -102,7 +102,9 @@ else {
     while ($row = $result->fetch_assoc()) {
         ?>
         <div class="admin_naslov" style="background-color: #e9e9e9;">The following HTML code was returned during the test when login from
-        the Identity Provider <i><?= $row['entityID'] ?></i> on the service <i><?= $row['spEntityID'] ?></i> on <?= $row['checkTime'] ?>:</div>
+        the Identity Provider <i><?= $row['entityID'] ?></i>
+        on the service <i><?= $row['spEntityID'] ?></i>
+        on <?= $row['checkTime'] ?>:</div>
         <hr>
         <iframe src="html.php?show=html&id=<?=$id?>" sandbox></iframe>
         <?php

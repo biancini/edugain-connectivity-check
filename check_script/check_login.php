@@ -1,7 +1,7 @@
 <?php
 # Copyright 2015 Géant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License");
+# Licensed under the GÉANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -33,7 +33,7 @@ $conf_array_keys = array_keys($conf_array);
 $sps_keys[] = preg_grep ($regexp, $conf_array_keys);
 foreach ($sps_keys as $key => $value) {
         foreach($value as $sp => $val) {
-                $spEntityIDs[] = $conf_array[$val]['entityID'];
+                $spEntityIDs[] = $conf_array[$val][$ENTITY_ID];
                 $spACSurls[] = $conf_array[$val]['acs_url'];
         }
 }
@@ -52,19 +52,19 @@ $arrContextOptions=array(
 );
 
 if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_context_create($arrContextOptions)))===false){
-        print "Error fetching JSON eduGAIN IdPs\n";
-} else {
-        $idpList = extractIdPfromJSON($json_edugain_idps);
-        if (!$idpList) {
-                throw new Exception("Error loading eduGAIN JSON IdPs.");
-        } else {
-        foreach ($idpList as $curIdP) {
-            if ($curIdP['entityID'] == $argv[1]) {
-                print "Executing check for " . $curIdP['entityID'] . "\n";
-                executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
-            }
-        }
-        }
+        throw new Exception("Error fetching JSON eduGAIN IdPs");
+}
+
+$idpList = extractIdPfromJSON($json_edugain_idps);
+if (!$idpList) {
+    throw new Exception("Error loading eduGAIN JSON IdPs.");
+}
+
+foreach ($idpList as $curIdP) {
+    if ($curIdP[$ENTITY_ID] == $argv[1]) {
+        print "Executing check for " . $curIdP[$ENTITY_ID] . "\n";
+        executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
+    }
 }
 
 

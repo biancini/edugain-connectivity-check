@@ -1,7 +1,7 @@
 <?php
 # Copyright 2015 Géant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License");
+# Licensed under the GÉANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -22,18 +22,18 @@ $conf_array = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
 $db_connection = $conf_array['db_connection'];
 $email_properties = $conf_array['email'];
 
-$mysqli = get_db_connection($db_connection);
-$fed_result = execute_statement($mysqli, true, "SELECT * FROM Federations", NULL);
+$mysqli = getDbConnection($db_connection);
+$fed_result = executeStatement($mysqli, true, "SELECT * FROM Federations", NULL);
 
 while ($cur_federation = $fed_result->fetch_assoc()) { 
-    $result = execute_statement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'", array("s", $cur_federation['registrationAuthority']));
+    $result = executeStatement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'", array("s", $cur_federation['registrationAuthority']));
     $idps = array();
     while ($cur_idp = $result->fetch_assoc()) {
-        $idps[$cur_idp['entityID']] = array();
-        $idps[$cur_idp['entityID']]['name'] = $cur_idp['displayName'];
-        $idps[$cur_idp['entityID']]['current_status'] = substr($cur_idp['currentResult'], 4);
-        $idps[$cur_idp['entityID']]['previous_status'] = substr($cur_idp['previousResult'], 4);
-        $idps[$cur_idp['entityID']]['tech_contacts'] = explode(",", $cur_idp['technicalContacts']);
+        $idps[$cur_idp[$ENTITY_ID]] = array();
+        $idps[$cur_idp[$ENTITY_ID]]['name'] = $cur_idp['displayName'];
+        $idps[$cur_idp[$ENTITY_ID]]['current_status'] = substr($cur_idp['currentResult'], 4);
+        $idps[$cur_idp[$ENTITY_ID]]['previous_status'] = substr($cur_idp['previousResult'], 4);
+        $idps[$cur_idp[$ENTITY_ID]]['tech_contacts'] = explode(",", $cur_idp['technicalContacts']);
     }
 
     if (!empty($cur_federation['emailAddress']) && count($idps) > 0) {

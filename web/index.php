@@ -1,7 +1,7 @@
 <?php
 # Copyright 2015 Géant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License");
+# Licensed under the GÉANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -16,13 +16,13 @@
 # (GÉANT).
 
 $conf_array = parse_ini_file('../properties.ini', true);
-$db_connection = $conf_array['db_connection'];
+$dbConnection = $conf_array['db_connection'];
 
-if (array_key_exists("db_sock", $db_connection) && !empty($db_connection['db_sock'])) {
-    $mysqli = new mysqli(null, $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], null, $db_connection['db_sock']);
+if (array_key_exists("db_sock", $dbConnection) && !empty($dbConnection['db_sock'])) {
+    $mysqli = new mysqli(null, $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], null, $dbConnection['db_sock']);
 }
 else {
-    $mysqli = new mysqli($db_connection['db_host'], $db_connection['db_user'], $db_connection['db_password'], $db_connection['db_name'], $db_connection['db_port']);
+    $mysqli = new mysqli($dbConnection['db_host'], $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], $dbConnection['db_port']);
 }
 
 if ($mysqli->connect_errno) {
@@ -32,11 +32,11 @@ if ($mysqli->connect_errno) {
 
 $mysqli->set_charset("utf8");
 
-function getParameter($key, $default_value, $array=false) {
-    $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $default_value);
+function getParameter($key, $defaultValue, $array=false) {
+    $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $defaultValue);
 
     if (!$value || trim($value) == '') {
-        $value = $default_value;
+        $value = $defaultValue;
     }
 
     if ($array) {
@@ -84,15 +84,38 @@ function getCurrentUrl($params, $excludeParam=array()) {
     return $url;
 }
 
+function getUrlDirection($params, $field) {
+    $ret  = getCurrentUrl($params, ["f_order", "f_order_direction"]);
+    $ret .= "&f_order=$field&f_order_direction=";
+    if ($params["f_order"] == $field && $params["f_order_direction"] == "ASC") {
+        $ret .= "DESC";
+    }
+    else {
+        $ret .= "ASC";
+    }
+    return $ret;
+}
+
 function refValues($arr){
     if (strnatcmp(phpversion(),'5.3') >= 0) {
         $refs = array();
-        foreach($arr as $key => $value)
+        foreach($arr as $key => $value) {
             $refs[$key] = &$arr[$key];
+        }
         return $refs;
     }
     return $arr;
 }
+
+function concatenateWhere($sqlConditions) {
+    if (!strstr($sqlConditions, "WHERE")) {
+        return " WHERE";
+    }
+    else {
+        return " AND";
+    }
+}
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -127,7 +150,6 @@ function refValues($arr){
                 $params["f_ignore_entity"] = getParameter('f_ignore_entity', 'All');
                 $params["f_last_check"] = getParameter('f_last_check', 'All');
                 $params["f_current_result"] = getParameter('f_current_result', 'All');
-                //error_log(print_r($params, true));
                 ?>
                 <div class="admin_naslov">Identity providers | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/index.php?title=Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
                 <div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
@@ -140,16 +162,21 @@ function refValues($arr){
 <form name="list_idpsFRM" action="<?=getCurrentUrl($params)?>" method="post">
 <table class="list_table">
     <tr>
-            <th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=displayName&f_order_direction=<?= ($params["f_order"] == "displayName" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by display name.">Display Name</a><img src="images/<?= ($params["f_order"] == "displayName") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
-        <th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=entityID&f_order_direction=<?= ($params["f_order"] == "entityID" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by entityID.">entityID</a><img src="images/<?= ($params["f_order"] == "entityID") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
-            <th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=registrationAuthority&f_order_direction=<?= ($params["f_order"] == "registrationAuthority" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by registration authority.">Registration Authority</a><img src="images/<?= ($params["f_order"] == "registrationAuthority") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
+        <th><a href="<?=getUrlDirection($params, "displayName")?>" title="Sort by display name.">Display Name</a>
+        <img src="images/<?= ($params["f_order"] == "displayName") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
+        <th><a href="<?=getUrlDirection($params, "entityID")?>" title="Sort by entityID.">entityID</a>
+        <img src="images/<?= ($params["f_order"] == "entityID") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
+        <th><a href="<?=getUrlDirection($params, "registrationAuthority")?>" title="Sort by registration authority.">Registration Authority</a>
+        <img src="images/<?= ($params["f_order"] == "registrationAuthority") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
         <th>Contacts</th>
-        <th style="min-width: 100px"><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=lastCheck&f_order_direction=<?= ($params["f_order"] == "lastCheck" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by last test.">Last Test</a><img src="images/<?= ($params["f_order"] == "lastCheck") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
-        <th><a href="<?=getCurrentUrl($params, ["f_order", "f_order_direction"])?>&f_order=currentResult&f_order_direction=<?= ($params["f_order"] == "currentResult" && $params["f_order_direction"] == "ASC") ? "DESC" : "ASC" ?>" title="Sort by current result.">Current Result</a><img src="images/<?= ($params["f_order"] == "currentResult") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
+        <th style="min-width: 100px"><a href="<?=getUrlDirection($params, "lastCheck")?>" title="Sort by last test.">Last Test</a>
+        <img src="images/<?= ($params["f_order"] == "lastCheck") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
+        <th><a href="<?=getUrlDirection($params, "currentResult")?>" title="Sort by current result.">Current Result</a>
+        <img src="images/<?= ($params["f_order"] == "currentResult") ? strtolower($params["f_order_direction"]) : "sort" ?>.gif"/></th>
         <th>Tests</th>
     </tr>
     <tr>
-            <td class="filter_td">
+        <td class="filter_td">
             <input type="text" name="f_displayName" value="<?= $params['f_displayName'] == "All" ? "" : $params['f_displayName'] ?>"/>
         </td>
         <td class="filter_td">
@@ -183,87 +210,83 @@ function refValues($arr){
         <td class="filter_td" colspan="3">Last test results</td>
     </tr>
     <?php
-    $sql_count = "SELECT COUNT(*) FROM EntityDescriptors";
+    $sqlCount = "SELECT COUNT(*) FROM EntityDescriptors";
     $sql = "SELECT * FROM EntityDescriptors LEFT JOIN Federations ON EntityDescriptors.registrationAuthority = Federations.registrationAuthority";
-    $sql_conditions = "";
-    $query_params = array();
+    $sqlConditions = "";
+    $queryParams = array();
     if ($params['f_id_status']) {
         if (in_array("NULL", $params['f_id_status'])) {
-            if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-            else $sql_conditions .= " AND";
-            $sql_conditions .= " currentResult IS NULL";
+            $sqlConditions .= concatenateWhere($sqlConditions);
+            $sqlConditions .= " currentResult IS NULL";
         }
         elseif (!in_array("All", $params['f_id_status'])) {
-            if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-            else $sql_conditions .= " AND";
-            $sql_conditions .= " currentResult in (";
+            $sqlConditions .= concatenateWhere($sqlConditions);
+            $sqlConditions .= " currentResult in (";
             foreach ($params['f_id_status'] as $val) {
-                if (substr($sql_conditions, -1) != "(") {
-                    $sql_conditions .= ", ";
+                if (substr($sqlConditions, -1) != "(") {
+                    $sqlConditions .= ", ";
                 }
-                $sql_conditions .= "?";
-                array_push($query_params, $val);
+                $sqlConditions .= "?";
+                array_push($queryParams, $val);
             }
-            $sql_conditions .= ")";
+            $sqlConditions .= ")";
+        }
+        else {
+            // do nothing
         }
     }
-        if ($params['f_displayName'] && $params['f_displayName'] != "All") {
-        if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-        else $sql_conditions .= " AND";
-        $sql_conditions .= " displayName LIKE ?";
-        array_push($query_params, "%" . $params['f_displayName'] . "%");
+    if ($params ['f_displayName'] && $params['f_displayName'] != "All") {
+        $sqlConditions .= concatenateWhere($sqlConditions);
+        $sqlConditions .= " displayName LIKE ?";
+        array_push($queryParams, "%" . $params['f_displayName'] . "%");
     }
-        if ($params['f_entityID'] && $params['f_entityID'] != "All") {
-        if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-        else $sql_conditions .= " AND";
-        $sql_conditions .= " entityID LIKE ?";
-        array_push($query_params, "%" . $params['f_entityID'] . "%");
+    if ($params['f_entityID'] && $params['f_entityID'] != "All") {
+        $sqlConditions .= concatenateWhere($sqlConditions);
+        $sqlConditions .= " entityID LIKE ?";
+        array_push($queryParams, "%" . $params['f_entityID'] . "%");
     }
-        if ($params['f_registrationAuthority'] && $params['f_registrationAuthority'] != "All") {
-        if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-        else $sql_conditions .= " AND";
-        $sql_conditions .= " EntityDescriptors.registrationAuthority LIKE ?";
-        array_push($query_params, "%" . $params['f_registrationAuthority'] . "%");
+    if ($params['f_registrationAuthority'] && $params['f_registrationAuthority'] != "All") {
+        $sqlConditions .= concatenateWhere($sqlConditions);
+        $sqlConditions .= " EntityDescriptors.registrationAuthority LIKE ?";
+        array_push($queryParams, "%" . $params['f_registrationAuthority'] . "%");
     }
-        if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
-        if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-        else $sql_conditions .= " AND";
-        $sql_conditions .= " ignoreEntity = ?";
-        array_push($query_params, ($params['f_ignore_entity'] == "True" ? 1 : 0));
+    if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
+        $sqlConditions .= concatenateWhere($sqlConditions);
+        $sqlConditions .= " ignoreEntity = ?";
+        array_push($queryParams, ($params['f_ignore_entity'] == "True" ? 1 : 0));
     }
-        if ($params['f_last_check'] && $params['f_last_check'] != "All") {
-        if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-        else $sql_conditions .= " AND";
+    if ($params['f_last_check'] && $params['f_last_check'] != "All") {
+        $sqlConditions .= concatenateWhere($sqlConditions);
         if ($params['f_last_check'] == "1") {
-            $sql_conditions .= " DATE(lastCheck) = curdate()";
+            $sqlConditions .= " DATE(lastCheck) = curdate()";
         }
         elseif ($params['f_last_check'] == "2") {
-            $sql_conditions .= " DATE(lastCheck) = curdate() - interval 1 day";
+            $sqlConditions .= " DATE(lastCheck) = curdate() - interval 1 day";
+        }
+	else {
+            // Do nothing
         }
     }
-        if ($params['f_current_result'] && $params['f_current_result'] != "All") {
-        if (!strstr($sql_conditions, "WHERE")) $sql_conditions .= " WHERE";
-        else $sql_conditions .= " AND";
-        $sql_conditions .= " currentResult = ?";
-        array_push($query_params, $params['f_current_result']);
+    if ($params['f_current_result'] && $params['f_current_result'] != "All") {
+        $sqlConditions .= concatenateWhere($sqlConditions);
+        $sqlConditions .= " currentResult = ?";
+        array_push($queryParams, $params['f_current_result']);
     }
 
     if ($params['f_order']) {
-        $sql_conditions .= " ORDER BY EntityDescriptors." . mysqli_real_escape_string($mysqli, $params['f_order']);
-        $sql_conditions .= " " . mysqli_real_escape_string($mysqli, $params['f_order_direction']);
+        $sqlConditions .= " ORDER BY EntityDescriptors." . mysqli_real_escape_string($mysqli, $params['f_order']);
+        $sqlConditions .= " " . mysqli_real_escape_string($mysqli, $params['f_order_direction']);
     }
 
-    $query_params = array_merge(array(str_repeat('s', count($query_params))), $query_params);
+    $queryParams = array_merge(array(str_repeat('s', count($queryParams))), $queryParams);
 
     // find out how many rows are in the table
-    $stmt = $mysqli->prepare($sql_count . $sql_conditions);
+    $stmt = $mysqli->prepare($sqlCount . $sqlConditions);
     if (!$stmt) {
         throw new Exception("Error: " . mysqli_error($mysqli));
     }
-        if (count($query_params) > 1) {
-        if (!call_user_func_array(array($stmt, 'bind_param'), refValues($query_params))) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
-        }
+    if (count($queryParams) > 1 && !call_user_func_array(array($stmt, 'bind_param'), refValues($queryParams))) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
     }
     if (!$stmt->execute()) {
         throw new Exception("Error: " . mysqli_error($mysqli));
@@ -278,23 +301,25 @@ function refValues($arr){
     $totalpages = ceil($numrows / $rowsperpage);
     $page = getParameter('page', '1');
     $page = is_numeric($page) ? (int) $page : 1;
-    if ($page > $totalpages) $page = $totalpages;
-    if ($page < 1) $page = 1;
+    if ($page > $totalpages) {
+        $page = $totalpages;
+    }
+    if ($page < 1) {
+        $page = 1;
+    }
     $offset = ($page - 1) * $rowsperpage;
     
-    $stmt = $mysqli->prepare($sql . $sql_conditions);
+    $stmt = $mysqli->prepare($sql . $sqlConditions);
     if (!$stmt) {
         throw new Exception("Error: " . mysqli_error($mysqli));
     }
-    $sql_conditions .= " LIMIT " . $offset . " , " . $rowsperpage;
-    $stmt = $mysqli->prepare($sql . $sql_conditions);
+    $sqlConditions .= " LIMIT " . $offset . " , " . $rowsperpage;
+    $stmt = $mysqli->prepare($sql . $sqlConditions);
     if (!$stmt) {
         throw new Exception("Error: " . mysqli_error($mysqli));
     }
-        if (count($query_params) > 1) {
-        if (!call_user_func_array(array($stmt, 'bind_param'), refValues($query_params))) {
-            throw new Exception("Error: " . mysqli_error($mysqli));
-        }
+    if (count($queryParams) > 1 && !call_user_func_array(array($stmt, 'bind_param'), refValues($queryParams))) {
+        throw new Exception("Error: " . mysqli_error($mysqli));
     }
     if (!$stmt->execute()) {
         throw new Exception("Error: " . mysqli_error($mysqli));
@@ -306,17 +331,30 @@ function refValues($arr){
     $count = 1;
 
     while ($row = $result->fetch_assoc()) {
-      if ($row['ignoreEntity'] == 1) $color = "silver";
-        elseif ("1 - OK" == $row['currentResult']) $color = "green";
-        elseif ("2 - FORM-Invalid" == $row['currentResult']) $color = "yellow";
-        elseif ("3 - HTTP-Error" == $row['currentResult']) $color = "red";
-        elseif ("3 - CURL-Error" == $row['currentResult']) $color = "red";
-        else $color = "white";
+        if ($row['ignoreEntity'] == 1) {
+            $color = "silver";
+        }
+        elseif ("1 - OK" == $row['currentResult']) {
+            $color = "green";
+        }
+        elseif ("2 - FORM-Invalid" == $row['currentResult']) {
+            $color = "yellow";
+        }
+        elseif ("3 - HTTP-Error" == $row['currentResult']) {
+            $color = "red";
+        }
+        elseif ("3 - CURL-Error" == $row['currentResult']) {
+            $color = "red";
+        }
+        else {
+            $color = "white";
+        }
         ?>
         <tr class="<?=$color?>">
                 <td><?=$row['displayName']?></td>
                 <td><?=$row['entityID']?></td>
-                <td><?=$row['federationName']?><br/><?=$row['registrationAuthority']?></td>
+                <td><?=$row['federationName']?><br/>
+                    <?=$row['registrationAuthority']?></td>
                 <td><?php
                 $contacts = explode(",", $row['technicalContacts']);
                 foreach ($contacts as $contact) {

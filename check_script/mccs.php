@@ -1,7 +1,7 @@
 <?php
 # Copyright 2015 Géant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License");
+# Licensed under the GÉANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -14,95 +14,77 @@
 # these results has received funding from the European Community¹s Seventh
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
-            
+
 include ("utils.php");
 
-//Calcolo Tempo di Esecuzione
+class IdpChecks {
+    public function __construct() {
+        $this->arrContextOptions=array(
+            "ssl"=>array(
+                "verify_peer"=>false,
+                "verify_peer_name"=>false,
+            ),
+        );
 
-$mic_time = microtime();
-$mic_time = explode(" ",$mic_time);
-$mic_time = $mic_time[1] + $mic_time[0];
-$start_time = $mic_time;
+        $this->spEntityIDs = array();
+        $this->spACSurls = array();
 
-// --------------------------
-            
-$conf_array = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
+        $regexp = "/^sp_\d/";
 
-$map_url = $conf_array['check_script']['map_url'];
+        $this->confArray = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
+        $this->dbConnection = $this->confArray['db_connection'];
+        $this->confArrayKeys = array_keys($this->confArray);
+        $this->spsKeys[] = preg_grep($regexp, $this->confArrayKeys);
+        foreach ($this->spsKeys as $key => $value) {
+            foreach($value as $sp => $val) {
+                $this->spEntityIDs[] = $this->confArray[$val][ENTITY_ID];
+                $this->spACSurls[] = $this->confArray[$val]['acs_url'];
+            }
+        }
 
-$spEntityIDs = array();
-$spACSurls = array();
+        $this->parallel = intval($this->confArray['check_script']['parallel']);
+        $this->checkHistory = intval($this->confArray['check_script']['check_history']);
 
-$regexp = "/^sp_\d/";
-
-$conf_array_keys = array_keys($conf_array);
-$sps_keys[] = preg_grep ($regexp, $conf_array_keys);
-foreach ($sps_keys as $key => $value) {
-    foreach($value as $sp => $val) {
-        $spEntityIDs[] = $conf_array[$val]['entityID'];
-        $spACSurls[] = $conf_array[$val]['acs_url'];
+        if (count($this->spEntityIDs) != count($this->spACSurls)) {
+            throw new Exception("Configuration error. Please check properties.ini.");
+        }
     }
-}
 
-$parallel = intval($conf_array['check_script']['parallel']);
-$checkHistory = intval($conf_array['check_script']['check_history']);
+    function cleanOldEntityChecks() {
+        $mysqli = getDbConnection($this->dbConnection);
+        executeStatement($mysqli, false, "DELETE FROM EntityChecks WHERE checkExec = 0", NULL);
+        executeStatement($mysqli, false, "UPDATE EntityChecks SET checkExec = checkExec - 1", NULL);
+        $mysqli->close();
+    }
 
-if (count($spEntityIDs) != count($spACSurls)) {
-    throw new Exception("Configuration error. Please check properties.ini.");
-}
+    function executeAllChecks() {
+        $this->cleanOldEntityChecks();
 
-$db_connection = $conf_array['db_connection'];
+        $edugainIdpsUrl = $this->confArray['edugain_db_json']['json_idps_url'];
+        $idpList = false;
+        $jsonEdugainIdps = file_get_contents($edugainIdpsUrl, false, stream_context_create($this->arrContextOptions));
 
-$edugain_feds_url = $conf_array['edugain_db_json']['json_feds_url'];
-$edugain_idps_url = $conf_array['edugain_db_json']['json_idps_url'];
-
-$arrContextOptions=array(
-    "ssl"=>array(
-        "verify_peer"=>false,
-        "verify_peer_name"=>false,
-    ),
-);
-
-if (($json_edugain_feds = file_get_contents($edugain_feds_url, false, stream_context_create($arrContextOptions)))===false){
-    print "Error fetching JSON eduGAIN Federation members\n";
-} else {
-    $mysqli = get_db_connection($db_connection);
-    execute_statement($mysqli, false, "UPDATE Federations SET updated = 0", NULL);
-    $mysqli->close();
-
-    store_feds_into_db($json_edugain_feds, $db_connection);
-
-    $mysqli = get_db_connection($db_connection);
-    execute_statement($mysqli, false, "DELETE FROM Federations WHERE updated = 0", NULL);
-    $mysqli->close();
-}
-
-if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_context_create($arrContextOptions)))===false){
-    print "Error fetching JSON eduGAIN IdPs\n";
-} else {
+        if ($jsonEdugainIdps !== false) {
+            $idpList = extractIdPfromJSON($jsonEdugainIdps);
+        }
     
-    $mysqli = get_db_connection($db_connection);
-    execute_statement($mysqli, false, "DELETE FROM EntityChecks WHERE checkExec = 0", NULL);
-    execute_statement($mysqli, false, "UPDATE EntityChecks SET checkExec = checkExec - 1", NULL);
-    $mysqli->close();
-    
-    $idpList = extractIdPfromJSON($json_edugain_idps);
-    
-    if (!$idpList) {
-        print "Error loading eduGAIN JSON IdPs\n";
-    } else {
-        $mysqli = get_db_connection($db_connection);
-        execute_statement($mysqli, false, "UPDATE EntityDescriptors SET updated = 0", NULL);
+        if ($idpList === false) {
+            print "Error loading eduGAIN JSON IdPs\n";
+            return;
+        }
+
+        $mysqli = getDbConnection($this->dbConnection);
+        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET updated = 0", NULL);
         $mysqli->close();
 
         $count = 1;
-        for ($i = 0; $i < $parallel; $i++) {
+        for ($i = 0; $i < $this->parallel; $i++) {
             $pid = pcntl_fork();
             if (!$pid) {
                 //In child
-                print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-                executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
-                exit(0);
+                print "Executing check for " . $idpList[$count][ENTITY_ID] . "\n";
+                executeIdPchecks($idpList[$count], $this->spEntityIDs, $this->spACSurls, $this->dbConnection, $this->checkHistory);
+                return false;
             }
             $count++;
         }
@@ -113,25 +95,58 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
                 $pid = pcntl_fork();
                 if (!$pid) {
                     //In child
-                    print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-                    executeIdPchecks($idpList[$count], $spEntityIDs, $spACSurls, $db_connection, $checkHistory);
-                    exit(0);
+                    print "Executing check for " . $idpList[$count][ENTITY_ID] . "\n";
+                    executeIdPchecks($idpList[$count], $this->spEntityIDs, $this->spACSurls, $this->dbConnection, $this->checkHistory);
+                    return false;
                 }
                 $count++;
             } 
         }
 
-        $mysqli = get_db_connection($db_connection);
-        execute_statement($mysqli, false, "DELETE FROM EntityDescriptors WHERE updated = 0", NULL);
+        $mysqli = getDbConnection($dbConnection);
+        executeStatement($mysqli, false, "DELETE FROM EntityDescriptors WHERE updated = 0", NULL);
         $mysqli->close();
+
+        return true;
     }
-    
-    $mic_time = microtime();
-    $mic_time = explode(" ",$mic_time);
-    $mic_time = $mic_time[1] + $mic_time[0];
-    $endtime = $mic_time;
-    $total_execution_time = ($endtime - $start_time);
-    print "\n\nTotal Executaion Time ".$total_execution_time." seconds.\n";
+
+    function updateFederations() {
+        $edugainFedsUrl = $this->confArray['edugain_db_json']['json_feds_url'];
+
+        if (($jsonEdugainFeds = file_get_contents($edugainFedsUrl, false, stream_context_create($this->arrContextOptions)))===false){
+            print "Error fetching JSON eduGAIN Federation members\n";
+        } else {
+            $dbConnection = $this->dbConnection;
+
+            $mysqli = getDbConnection($dbConnection);
+            executeStatement($mysqli, false, "UPDATE Federations SET updated = 0", NULL);
+            $mysqli->close();
+
+            storeFedsIntoDb($jsonEdugainFeds, $dbConnection);
+
+            $mysqli = getDbConnection($dbConnection);
+            executeStatement($mysqli, false, "DELETE FROM Federations WHERE updated = 0", NULL);
+            $mysqli->close();
+        }
+    }
+}
+
+$micTime = microtime();
+$micTime = explode(" ", $micTime);
+$micTime = $micTime[1] + $micTime[0];
+$startTime = $micTime;
+
+$worker = new IdpChecks;
+$worker->updateFederations();
+$terminated = $worker->executeAllChecks();
+
+if ($terminated) {
+    $micTime = microtime();
+    $micTime = explode(" ",$micTime);
+    $micTime = $micTime[1] + $micTime[0];
+    $endtime = $micTime;
+    $totalExecutionTime = ($endtime - $startTime);
+    print "\n\nTotal Executaion Time ".$totalExecutionTime." seconds.\n";
 }
 
 ?>
