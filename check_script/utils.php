@@ -178,24 +178,26 @@ function storeFedsIntoDb($jsonEdugainFeds, $dbConnection) {
     
     foreach ($fedsList as $fed) { 
         //If I find a registrationAuthority value for the federation
-        if ($fed['reg_auth'] !== null && $fed['reg_auth'] !== '') {
-            $result = executeStatement($mysqli, true, "SELECT * FROM Federations WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
+        if ($fed['reg_auth'] === null || $fed['reg_auth'] === '') {
+            continue;
+        }
+        $result = executeStatement($mysqli, true, "SELECT * FROM Federations WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
 
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    executeStatement($mysqli, false, "UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
+        if ($result->num_rows <= 0) {
+            executeStatement($mysqli, false, "INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)", array("sss", $fed['name'], $fed['email'], $fed['reg_auth']));
+            continue;
+        }
+
+        while ($row = $result->fetch_assoc()) {
+            executeStatement($mysqli, false, "UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?", array("s", $fed['reg_auth']));
                     
-                    if ($fed['name'] !== $row['federationName']) {
-                        executeStatement($mysqli, false, "UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?", array("ss", $fed['name'], $fed['reg_auth']));
-                     }
+            if ($fed['name'] !== $row['federationName']) {
+                executeStatement($mysqli, false, "UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?", array("ss", $fed['name'], $fed['reg_auth']));
+            }
                           
-                     if ($fed['email'] !== $row['emailAddress']) {
-                        executeStatement($mysqli, false, $sql, NULL);
-                        executeStatement($mysqli, false, "UPDATE Federations SET emailAddress = ? ,  WHERE registrationAuthority = ?", array("ss", $fed['email'], $fed['reg_auth']));
-                      }
-                }
-            } else {
-                executeStatement($mysqli, false, "INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)", array("sss", $fed['name'], $fed['email'], $fed['reg_auth']));
+            if ($fed['email'] !== $row['emailAddress']) {
+                executeStatement($mysqli, false, $sql, NULL);
+                executeStatement($mysqli, false, "UPDATE Federations SET emailAddress = ? ,  WHERE registrationAuthority = ?", array("ss", $fed['email'], $fed['reg_auth']));
             }
         }
     }
@@ -268,7 +270,6 @@ function extractIdPfromJSON($jsonIdpList) {
             $idps[$count]['technicalContacts'] = "";
             
             foreach ($idp['contacts']['technical'] as $techContact) {
-                
                 if (array_key_exists('EmailAddress', $techContact['e_p'])) {
                     foreach ($techContact['e_p']['EmailAddress'] as $emailAddress) {
                         if (0 === strpos($emailAddress, 'mailto:')) {
@@ -291,7 +292,6 @@ function extractIdPfromJSON($jsonIdpList) {
             $idps[$count]['supportContacts'] = array();
             
             foreach ($idp['contacts']['support'] as $suppContact) {
-                
                 if (array_key_exists('EmailAddress', $suppContact['e_p'])) {
                     foreach ($suppContact['e_p']['EmailAddress'] as $emailAddress) {
                         if (0 === strpos($emailAddress, 'mailto:')) {
@@ -423,23 +423,7 @@ function cleanUtf8Curl($html, $curl) {
 }
 
 
-/**
-   Generates an authentication request, sends it to the SAML2 
-   HTTP-POST URL of an Provider Identity Provider and returns a result array.
-   
-   @param String $httpRedirectServiceLocation the HTTP-Redirect service location URL of an identity provider
-   @return array("ok", "http_code", "curl_return", "messages", "form_valid")
-
-*/
-
-function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
-   global $verbose;
-   
-   date_default_timezone_set('UTC');
-   $date = date('Y-m-d\TH:i:s\Z');
-   $id = md5($date.rand(1, 1000000));
-   $html = false;
-
+function generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID) {
    $samlRequest = '
       <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
          AssertionConsumerServiceURL="'.$spACSurl.'"
@@ -453,8 +437,29 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
          <samlp:NameIDPolicy AllowCreate="1"/>
       </samlp:AuthnRequest>';
 
-   $samlRequest = preg_replace('/[\s]+/',' ',$samlRequest);
-   $samlRequest = urlencode( base64_encode( gzdeflate( $samlRequest ) ) );
+   $samlRequest = preg_replace('/[\s]+/', ' ', $samlRequest);
+   $samlRequest = urlencode( base64_encode(gzdeflate($samlRequest)));
+
+   return $samlRequest;
+}
+
+/**
+   Generates an authentication request, sends it to the SAML2 
+   HTTP-POST URL of an Provider Identity Provider and returns a result array.
+   
+   @param String $httpRedirectServiceLocation the HTTP-Redirect service location URL of an identity provider
+   @return array("ok", "http_code", "curl_return", "messages", "form_valid")
+
+*/
+function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
+   global $verbose;
+   
+   date_default_timezone_set('UTC');
+   $date = date('Y-m-d\TH:i:s\Z');
+   $id = md5($date.rand(1, 1000000));
+   $html = false;
+
+   $samlRequest = generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
    $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
    $curl = curl_init($url);
    
@@ -481,7 +486,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    }
    
    $info = curl_getinfo($curl);
-   $http_code = $info['http_code'];
+   $httpCode = $info['http_code'];
    $error = array();
    $validForm = true;
    $ok = true;
@@ -492,27 +497,27 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
           echo "Curl error: ".$curlError."\n";
       }
       $error[] = $curlError;
-   } else if ($http_code != 200 && $http_code != 401) {
+   } else if ($httpCode != 200 && $httpCode != 401) {
      $ok = false;
      if($verbose) {
          echo "Status code: ".$info['http_code']."\n";
      }
      $error[] = "Status code: ".$info['http_code'];
    } else {
-      $pattern_username ='/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
-      $pattern_password = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
+      $patternUsername ='/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
+      $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
 
       $html = cleanUtf8Curl($html, $curl);
       $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
       
-      if (!preg_match($pattern_username, $html)) {
+      if (!preg_match($patternUsername, $html)) {
             $msg = "Did not find input for username.";
          $error[] = $msg;
          $validForm = false;
          $ok = false;
       }
          
-      if (!preg_match($pattern_password, $html)) {
+      if (!preg_match($patternPassword, $html)) {
          $msg = "Did not find input for password.";
          $error[] = $msg;
          $validForm = false;
@@ -527,7 +532,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    $ret = array(
       "ok" => $ok,
       "form_valid" => $validForm,
-      "http_code" => $http_code,
+      "http_code" => $httpCode,
       "curl_return" => curl_errno($curl),
       "messages" => $error
    );

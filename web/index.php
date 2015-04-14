@@ -46,40 +46,30 @@ function getParameter($key, $defaultValue, $array=false) {
     return $value;
 }
 
+function addParameterToQuery($params, $name, $excludeParam) {
+    if (!in_array($name, $excludeParam) && array_key_exists("f_order", $params)) {
+        if (is_array($params[$name])) {
+            return "&" . $name . "=" . implode(",", $params[$name]);
+        }
+        return "&" . $name . "=" . $params[$name];
+    }
+    return "";
+}
+
 function getCurrentUrl($params, $excludeParam=array()) {
     $url = $_SERVER['PHP_SELF'] . "?";
 
     $url .= "show=" . $params['show'];
-    if (!in_array("f_order", $excludeParam) && array_key_exists("f_order", $params)) {
-        $url .= "&f_order=" . $params['f_order'];
-    }
-    if (!in_array("f_order_direction", $excludeParam) && array_key_exists("f_order_direction", $params)) {
-        $url .= "&f_order_direction=" . $params['f_order_direction'];
-    }
-    if (!in_array("f_id_status", $excludeParam) && array_key_exists("f_id_status", $params)) {
-        $url .= "&f_id_status=" . implode(",", $params['f_id_status']);
-    }
-    if (!in_array("page", $excludeParam) && array_key_exists("page", $params)) {
-        $url .= "&page=" . $params['page'];
-    }
-    if (!in_array("f_entityID", $excludeParam) && array_key_exists("f_entityID", $params)) {
-        $url .= "&f_entityID=" . $params['f_entityID'];
-    }
-    if (!in_array("f_registrationAuthority", $excludeParam) && array_key_exists("f_registrationAuthority", $params)) {
-        $url .= "&f_registrationAuthority=" . $params['f_registrationAuthority'];
-    }
-    if (!in_array("f_displayName", $excludeParam) && array_key_exists("f_displayName", $params)) {
-        $url .= "&f_displayName=" . $params['f_displayName'];
-    }
-    if (!in_array("f_ignore_entity", $excludeParam) && array_key_exists("f_ignore_entity", $params)) {
-        $url .= "&f_ignore_entity=" . $params['f_ignore_entity'];
-    }
-    if (!in_array("f_last_check", $excludeParam) && array_key_exists("f_last_check", $params)) {
-        $url .= "&f_last_check=" . $params['f_last_check'];
-    }
-    if (!in_array("f_current_result", $excludeParam) && array_key_exists("f_current_result", $params)) {
-        $url .= "&f_current_result=" . $params['f_current_result'];
-    }
+    $url .= addParameterToQuery($params, 'f_order', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_order_direction', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_id_status', $excludeParam);
+    $url .= addParameterToQuery($params, 'page', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_entityID', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_registrationAuthority', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_displayName', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_ignore_entity', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_last_check', $excludeParam);
+    $url .= addParameterToQuery($params, 'f_current_result', $excludeParam);
 
     return $url;
 }
@@ -219,20 +209,15 @@ function concatenateWhere($sqlConditions) {
             $sqlConditions .= concatenateWhere($sqlConditions);
             $sqlConditions .= " currentResult IS NULL";
         }
-        elseif (!in_array("All", $params['f_id_status'])) {
+        if (!in_array("All", $params['f_id_status'])) {
             $sqlConditions .= concatenateWhere($sqlConditions);
             $sqlConditions .= " currentResult in (";
             foreach ($params['f_id_status'] as $val) {
-                if (substr($sqlConditions, -1) != "(") {
-                    $sqlConditions .= ", ";
-                }
+                $sqlConditions .= (substr($sqlConditions, -1) != "(") ? ", ": "";
                 $sqlConditions .= "?";
                 array_push($queryParams, $val);
             }
             $sqlConditions .= ")";
-        }
-        else {
-            // do nothing
         }
     }
     if ($params ['f_displayName'] && $params['f_displayName'] != "All") {

@@ -69,8 +69,7 @@ class IdpChecks {
         }
     
         if ($idpList === false) {
-            print "Error loading eduGAIN JSON IdPs\n";
-            return;
+            throw new Exception("Error loading eduGAIN JSON IdPs");
         }
 
         $mysqli = getDbConnection($this->dbConnection);
