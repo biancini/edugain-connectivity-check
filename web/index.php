@@ -15,46 +15,11 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-$conf_array = parse_ini_file('../properties.ini', true);
-$dbConnection = $conf_array['db_connection'];
+include("utils.php");
 
-if (array_key_exists("db_sock", $dbConnection) && !empty($dbConnection['db_sock'])) {
-    $mysqli = new mysqli(null, $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], null, $dbConnection['db_sock']);
-}
-else {
-    $mysqli = new mysqli($dbConnection['db_host'], $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], $dbConnection['db_port']);
-}
-
-if ($mysqli->connect_errno) {
-    header('HTTP/1.1 500 Internal Server Error');
-    error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
-}
-
-$mysqli->set_charset("utf8");
-
-function getParameter($key, $defaultValue, $array=false) {
-    $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $defaultValue);
-
-    if (!$value || trim($value) == '') {
-        $value = $defaultValue;
-    }
-
-    if ($array) {
-        $value = explode(",", $value);
-    }
-
-    return $value;
-}
-
-function addParameterToQuery($params, $name, $excludeParam) {
-    if (!in_array($name, $excludeParam) && array_key_exists("f_order", $params)) {
-        if (is_array($params[$name])) {
-            return "&" . $name . "=" . implode(",", $params[$name]);
-        }
-        return "&" . $name . "=" . $params[$name];
-    }
-    return "";
-}
+$confArray = parse_ini_file('../properties.ini', true);
+$dbConnection = $confArray['db_connection'];
+$mysqli = getDbConnection($dbConnection);
 
 function getCurrentUrl($params, $excludeParam=array()) {
     $url = $_SERVER['PHP_SELF'] . "?";
@@ -72,38 +37,6 @@ function getCurrentUrl($params, $excludeParam=array()) {
     $url .= addParameterToQuery($params, 'f_current_result', $excludeParam);
 
     return $url;
-}
-
-function getUrlDirection($params, $field) {
-    $ret  = getCurrentUrl($params, ["f_order", "f_order_direction"]);
-    $ret .= "&f_order=$field&f_order_direction=";
-    if ($params["f_order"] == $field && $params["f_order_direction"] == "ASC") {
-        $ret .= "DESC";
-    }
-    else {
-        $ret .= "ASC";
-    }
-    return $ret;
-}
-
-function refValues($arr){
-    if (strnatcmp(phpversion(),'5.3') >= 0) {
-        $refs = array();
-        foreach($arr as $key => $value) {
-            $refs[$key] = &$arr[$key];
-        }
-        return $refs;
-    }
-    return $arr;
-}
-
-function concatenateWhere($sqlConditions) {
-    if (!strstr($sqlConditions, "WHERE")) {
-        return " WHERE";
-    }
-    else {
-        return " AND";
-    }
 }
 
 ?>
@@ -130,16 +63,18 @@ function concatenateWhere($sqlConditions) {
         <tr>
             <td class="body">
                 <?php
-                $params["show"] = getParameter('show', 'list_idps');
-                $params["f_order"] = getParameter('f_order', 'currentResult');
-                $params["f_order_direction"] = getParameter('f_order_direction', 'DESC');
-                $params["f_id_status"] = getParameter('f_id_status', 'All', true);
-                $params["f_entityID"] = getParameter('f_entityID', 'All');
-                $params["f_registrationAuthority"] = getParameter('f_registrationAuthority', 'All');
-                $params["f_displayName"] = getParameter('f_displayName', 'All');
-                $params["f_ignore_entity"] = getParameter('f_ignore_entity', 'All');
-                $params["f_last_check"] = getParameter('f_last_check', 'All');
-                $params["f_current_result"] = getParameter('f_current_result', 'All');
+                $params = getAllParameters(array(
+                    array('show', 'list_idps', false),
+                    array('f_order', 'currentResult', false),
+                    array('f_order_direction', 'DESC', false),
+                    array('f_id_status', 'All', true),
+                    array('f_entityID', 'All', false),
+                    array('f_registrationAuthority', 'All', false),
+                    array('f_displayName', 'All', false),
+                    array('f_ignore_entity', 'All', false),
+                    array('f_last_check', 'All', false),
+                    array('f_current_result', 'All', false),
+                ));
                 ?>
                 <div class="admin_naslov">Identity providers | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/index.php?title=Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
                 <div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
@@ -202,61 +137,18 @@ function concatenateWhere($sqlConditions) {
     <?php
     $sqlCount = "SELECT COUNT(*) FROM EntityDescriptors";
     $sql = "SELECT * FROM EntityDescriptors LEFT JOIN Federations ON EntityDescriptors.registrationAuthority = Federations.registrationAuthority";
+
     $sqlConditions = "";
     $queryParams = array();
-    if ($params['f_id_status']) {
-        if (in_array("NULL", $params['f_id_status'])) {
-            $sqlConditions .= concatenateWhere($sqlConditions);
-            $sqlConditions .= " currentResult IS NULL";
-        }
-        if (!in_array("All", $params['f_id_status'])) {
-            $sqlConditions .= concatenateWhere($sqlConditions);
-            $sqlConditions .= " currentResult in (";
-            foreach ($params['f_id_status'] as $val) {
-                $sqlConditions .= (substr($sqlConditions, -1) != "(") ? ", ": "";
-                $sqlConditions .= "?";
-                array_push($queryParams, $val);
-            }
-            $sqlConditions .= ")";
-        }
-    }
-    if ($params ['f_displayName'] && $params['f_displayName'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " displayName LIKE ?";
-        array_push($queryParams, "%" . $params['f_displayName'] . "%");
-    }
-    if ($params['f_entityID'] && $params['f_entityID'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " entityID LIKE ?";
-        array_push($queryParams, "%" . $params['f_entityID'] . "%");
-    }
-    if ($params['f_registrationAuthority'] && $params['f_registrationAuthority'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " EntityDescriptors.registrationAuthority LIKE ?";
-        array_push($queryParams, "%" . $params['f_registrationAuthority'] . "%");
-    }
-    if ($params['f_ignore_entity'] && $params['f_ignore_entity'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " ignoreEntity = ?";
-        array_push($queryParams, ($params['f_ignore_entity'] == "True" ? 1 : 0));
-    }
-    if ($params['f_last_check'] && $params['f_last_check'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        if ($params['f_last_check'] == "1") {
-            $sqlConditions .= " DATE(lastCheck) = curdate()";
-        }
-        elseif ($params['f_last_check'] == "2") {
-            $sqlConditions .= " DATE(lastCheck) = curdate() - interval 1 day";
-        }
-	else {
-            // Do nothing
-        }
-    }
-    if ($params['f_current_result'] && $params['f_current_result'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " currentResult = ?";
-        array_push($queryParams, $params['f_current_result']);
-    }
+    addAllSqlConditions($sqlConditions, $queryParams, $params, array(
+        array('f_id_status', 'currentResult', false, NULL),
+        array('f_displayName', 'displayName', true, NULL),
+        array('f_entityID', 'entityID', true, NULL),
+        array('f_registrationAuthority', 'EntityDescriptors.registrationAUthority', true, NULL),
+        array('f_ignore_entity', 'ignoreEntity', false, array("True" => 1, "False" => 0)),
+        array('f_last_check', 'lastCheck', false, array('1' => 'DATE(lastCheck) = curdate()', '2' => 'DATE(lastCheck) = curdate() - interval 1 day')),
+        array('f_current_result', 'currentResult', true, NULL),
+    ));
 
     if ($params['f_order']) {
         $sqlConditions .= " ORDER BY EntityDescriptors." . mysqli_real_escape_string($mysqli, $params['f_order']);
@@ -266,20 +158,7 @@ function concatenateWhere($sqlConditions) {
     $queryParams = array_merge(array(str_repeat('s', count($queryParams))), $queryParams);
 
     // find out how many rows are in the table
-    $stmt = $mysqli->prepare($sqlCount . $sqlConditions);
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (count($queryParams) > 1 && !call_user_func_array(array($stmt, 'bind_param'), refValues($queryParams))) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
+    $result = executeStatement($mysqli, true, $sqlCount . $sqlConditions, $queryParams);
     $numrows = $result->fetch_row()[0];
 
     $rowsperpage = 30;
@@ -294,27 +173,8 @@ function concatenateWhere($sqlConditions) {
     }
     $offset = ($page - 1) * $rowsperpage;
     
-    $stmt = $mysqli->prepare($sql . $sqlConditions);
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    $sqlConditions .= " LIMIT " . $offset . " , " . $rowsperpage;
-    $stmt = $mysqli->prepare($sql . $sqlConditions);
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (count($queryParams) > 1 && !call_user_func_array(array($stmt, 'bind_param'), refValues($queryParams))) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
+    $result = executeStatement($mysqli, true, $sql . $sqlConditions, $queryParams);
     $count = 1;
-
     while ($row = $result->fetch_assoc()) {
         if ($row['ignoreEntity'] == 1) {
             $color = "silver";
@@ -407,3 +267,6 @@ function concatenateWhere($sqlConditions) {
 </body>
 </html>
 
+<?
+$mysqli->close();
+?>

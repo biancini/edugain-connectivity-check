@@ -15,76 +15,27 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
+include("utils.php");
+
 $confArray = parse_ini_file('../properties.ini', true);
 $dbConnection = $confArray['db_connection'];
+$mysqli = getDbConnection($dbConnection);
 
-if (array_key_exists("db_sock", $dbConnection) && !empty($dbConnection['db_sock'])) {
-        $mysqli = new mysqli(null, $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], null, $dbConnection['db_sock']);
-}       
-else {  
-        $mysqli = new mysqli($dbConnection['db_host'], $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], $dbConnection['db_port']);
-} 
-
-if ($mysqli->connect_errno) {
-    header('HTTP/1.1 500 Internal Server Error');
-    error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
-}
-
-function getParameter($key, $defaultValue, $array=false) {
-    $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $defaultValue);
-
-    if (!$value || trim($value) == '') {
-        $value = $defaultValue;
-    }
-
-    if ($array) {
-        $value = explode(",", $value);
-    }
-
-    return $value;
-}
+$confArray = parse_ini_file('../properties.ini', true);
+$dbConnection = $confArray['db_connection'];
 
 $id = getParameter("id", "");
 
 if (getParameter("show", "") == "html") {
     $sql = "SELECT checkHtml FROM EntityChecks WHERE id = ?";
-    $stmt = $mysqli->prepare($sql);
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->bind_param("s", $id)) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-        if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-        $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-        $stmt->close();
-
+    $result = executeStatement($mysqli, true, $sql, array("s", $id));
     while ($row = $result->fetch_assoc()) {
         print $row['checkHtml'];
     }
 }
 else {
     $sql = "SELECT entityID, spEntityID, DATE_FORMAT(checkTime, '%d/%m/%Y at %H:%m:%s') as checkTime FROM EntityChecks WHERE id = ?";
-    $stmt = $mysqli->prepare($sql);
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->bind_param("s", $id)) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-        if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-        $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-        $stmt->close();
+    $result = executeStatement($mysqli, true, $sql, array("s", $id));
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">

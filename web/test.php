@@ -15,44 +15,11 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
+include("utils.php");
+
 $confArray = parse_ini_file('../properties.ini', true);
 $dbConnection = $confArray['db_connection'];
-
-if (array_key_exists("db_sock", $dbConnection) && !empty($dbConnection['db_sock'])) {
-        $mysqli = new mysqli(null, $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], null, $dbConnection['db_sock']);
-}       
-else {  
-        $mysqli = new mysqli($dbConnection['db_host'], $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], $dbConnection['db_port']);
-} 
-
-if ($mysqli->connect_errno) {
-    header('HTTP/1.1 500 Internal Server Error');
-    error_log("Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error);
-}
-
-function getParameter($key, $defaultValue, $array=false) {
-    $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $defaultValue);
-
-    if (!$value || trim($value) == '') {
-        $value = $defaultValue;
-    }
-
-    if ($array) {
-        $value = explode(",", $value);
-    }
-
-    return $value;
-}
-
-function addParameterToQuery($params, $name, $excludeParam) {
-    if (!in_array($name, $excludeParam) && array_key_exists("f_order", $params)) {
-        if (is_array($params[$name])) {
-            return "&" . $name . "=" . implode(",", $params[$name]);
-        }
-        return "&" . $name . "=" . $params[$name];
-    }
-    return "";
-}
+$mysqli = getDbConnection($dbConnection);
 
 function getCurrentUrl($params, $excludeParam=array()) {
     $url = $_SERVER['PHP_SELF'] . "?";
@@ -95,38 +62,6 @@ function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {
     return $url;
 }
 
-function refValues($arr){
-    if (strnatcmp(phpversion(),'5.3') >= 0) {
-        $refs = array();
-        foreach($arr as $key => $value) {
-            $refs[$key] = &$arr[$key];
-        }
-        return $refs;
-    }
-    return $arr;
-}
-
-function getUrlDirection($params, $field) {
-    $ret  = getCurrentUrl($params, ["f_order", "f_order_direction"]);
-    $ret .= "&f_order=$field&f_order_direction=";
-    if ($params["f_order"] == $field && $params["f_order_direction"] == "ASC") {
-        $ret .= "DESC";
-    }
-    else {
-        $ret .= "ASC";
-    }
-    return $ret;
-}
-
-function concatenateWhere($sqlConditions) {
-    if (!strstr($sqlConditions, "WHERE")) {
-        return " WHERE";
-    }
-    else {
-        return " AND";
-    }
-}
-
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -146,15 +81,17 @@ function concatenateWhere($sqlConditions) {
         <tr>
             <td class="body">
                 <?php
-                $params["show"] = getParameter('show', 'list_idp_tests');
-                $params["f_order"] = getParameter('f_order', 'entityID');
-                $params["f_order_direction"] = getParameter('f_order_direction', 'DESC');
-                $params["f_id_status"] = getParameter('f_id_status', 'All', true);
-                $params["f_entityID"] = getParameter('f_entityID', 'All');
-                $params["f_spEntityID"] = getParameter('f_spEntityID', 'All');
-                $params["f_check_time"] = getParameter('f_check_time', 'All');
-                $params["f_http_status_code"] = getParameter('f_http_status_code', 'All');
-                $params["f_check_result"] = getParameter('f_check_result', 'All');
+                $params = getAllParameters(array(
+                    array('show', 'list_idp_tests', false),
+                    array('f_order', 'entityID', false),
+                    array('f_order_direction', 'DESC', false),
+                    array('f_id_status', 'All', true),
+                    array('f_entityID', 'All', false),
+                    array('f_spEntityID', 'All', false),
+                    array('f_check_time', 'All', false),
+                    array('f_http_status_code', 'All', false),
+                    array('f_check_result', 'All', false),
+                ));
                 ?>
                 <div class="admin_naslov"><a href="index.php">Identity providers</a> | All IdP test results | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
                 <div class="admin_naslov" style="background-color: #e9e9e9;">Show Tests with status:
@@ -213,81 +150,29 @@ function concatenateWhere($sqlConditions) {
         <td class="filter_td" colspan="4">Test results</td>
     </tr>
     <?php
-          $sql_count = "SELECT COUNT(*) FROM EntityChecks";
+    $sqlCount = "SELECT COUNT(*) FROM EntityChecks";
     $sql = "SELECT * FROM EntityChecks";
+
     $sqlConditions = "";
-    $query_params = array();
-    if ($params['f_id_status']) {
-        if (in_array("NULL", $params['f_id_status'])) {
-            $sqlConditions .= concatenateWhere($sqlConditions);
-            $sqlConditions .= " checkResult IS NULL";
-        }
-        if (!in_array("All", $params['f_id_status'])) {
-            $sqlConditions .= concatenateWhere($sqlConditions);
-            $sqlConditions .= " checkResult in (";
-            foreach ($params['f_id_status'] as $val) {
-                $sqlConditions .= (substr($sqlConditions, -1) != "(") ? ", " : "";
-                $sqlConditions .= "?";
-                array_push($query_params, $val);
-            }
-            $sqlConditions .= ")";
-        }
-    }
-    if ($params['f_entityID'] && $params['f_entityID'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " entityID LIKE ?";
-        array_push($query_params, "%" . $params['f_entityID'] . "%");
-    }
-    if ($params['f_spEntityID'] && $params['f_spEntityID'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " spEntityID LIKE ?";
-        array_push($query_params, "%" . $params['f_spEntityID'] . "%");
-    }
-    if ($params['f_check_time'] && $params['f_check_time'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        if ($params['f_check_time'] == "1") {
-            $sqlConditions .= " DATE(checkTime) = curdate()";
-        }
-        elseif ($params['f_check_time'] == "2") {
-            $sqlConditions .= " DATE(checkTime) = curdate() - interval 1 day";
-        }
-        else {
-            // Do nothing
-        }
-    }
-    if ($params['f_http_status_code'] && $params['f_http_status_code'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " httpStatusCode = ?";
-        array_push($query_params, $params['f_http_status_code']);
-    }
-    if ($params['f_check_result'] && $params['f_check_result'] != "All") {
-        $sqlConditions .= concatenateWhere($sqlConditions);
-        $sqlConditions .= " checkResult = ?";
-        array_push($query_params, $params['f_check_result']);
-    }
+    $queryParams = array();
+    addAllSqlConditions($sqlConditions, $queryParams, $params, array(
+        array('f_id_status', 'checkResult', false, NULL),
+        array('f_entityID', 'entityID', true, NULL),
+        array('f_spEntityID', 'spEntityID', true, NULL),
+        array('f_check_time', 'checkTime', false, array('1' => 'DATE(checkTime) = curdate()', '2' => 'DATE(checkTime) = curdate() - interval 1 day')),
+        array('f_http_status_code', 'httpStatusCode', false, NULL),
+        array('f_check_result', 'checkResult', true, NULL),
+    ));
 
     if ($params['f_order']) {
         $sqlConditions .= " ORDER BY " . mysqli_real_escape_string($mysqli, $params['f_order']);
         $sqlConditions .= " " . mysqli_real_escape_string($mysqli, $params['f_order_direction']);
     }
 
-    $query_params = array_merge(array(str_repeat('s', count($query_params))), $query_params);
+    $queryParams = array_merge(array(str_repeat('s', count($queryParams))), $queryParams);
 
     // find out how many rows are in the table 
-    $stmt = $mysqli->prepare($sql_count . $sqlConditions);
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (count($query_params) > 1 && !call_user_func_array(array($stmt, 'bind_param'), refValues($query_params))) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
+    $result = executeStatement($mysqli, true, $sqlCount . $sqlConditions, $queryParams);
     $numrows = $result->fetch_row()[0];
 
     $rowsperpage = 30;
@@ -303,20 +188,7 @@ function concatenateWhere($sqlConditions) {
     $offset = ($page - 1) * $rowsperpage;
     
     $sqlConditions .= " LIMIT " . $offset . " , " . $rowsperpage;
-    $stmt = $mysqli->prepare($sql . $sqlConditions);
-    if (!$stmt) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (count($query_params) > 1 && !call_user_func_array(array($stmt, 'bind_param'), refValues($query_params))) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    if (!$stmt->execute()) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
-    $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception("Error: " . mysqli_error($mysqli));
-    }
+    $result = executeStatement($mysqli, true, $sql . $sqlConditions, $queryParams);
 
     while ($row = $result->fetch_assoc()) {
         if ("1 - OK" == $row['checkResult']) {
