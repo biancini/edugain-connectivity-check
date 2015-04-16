@@ -139,11 +139,8 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
             elseif ($result['http_code'] != 200) {
                 $reason = '3 - HTTP-Error';
             }
-            elseif ($result['curl_return'] != '') {
-                $reason = '3 - CURL-Error';
-            }
             else {
-               // Do nothing
+                $reason = '3 - CURL-Error';
             }
         }
 
