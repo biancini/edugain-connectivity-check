@@ -62,16 +62,12 @@ function refValues($arr) {
  */
 function executeStatement($mysqli, $r, $sql, $params) {
     $stmt = $mysqli->prepare($sql);
-    if (!$stmt) {
-        throw new Exception(ERROR . mysqli_error($mysqli));
-    }
 
     if ($params != NULL && !call_user_func_array(array($stmt, "bind_param"), refValues($params))) {
         throw new Exception(ERROR . mysqli_error($mysqli));
     }
-    if (!$stmt->execute()) {
-        throw new Exception(ERROR . mysqli_error($mysqli));
-    }
+
+    $stmt->execute();
 
     if ($r === true) {
         $result = $stmt->get_result();
@@ -95,9 +91,7 @@ function executeStatement($mysqli, $r, $sql, $params) {
 function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkHistory = 2) {
     $ignoreEntity = false;
     $previousStatus = NULL;
-    $checkOk = true;
     $reason = '1 - OK';
-    $messages = array();
 
     $mysqli = null;
     $lastCheckHistory = $checkHistory - 1;
@@ -126,23 +120,8 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
     
     for ($i = 0; $i < count($spEntityIDs); $i++) {
         $result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
-
-        $checkOk = array_key_exists('ok', $result) && $result['ok'];
-        if ($checkOk) {
-            $reason = '1 - OK';
-        } else {
-            $messages = $result['messages'];
-
-            if (!$result['form_valid']) {
-                $reason = '2 - FORM-Invalid';
-            }
-            elseif ($result['http_code'] != 200) {
-                $reason = '3 - HTTP-Error';
-            }
-            else {
-                $reason = '3 - CURL-Error';
-            }
-        }
+        $status = array_key_exists('status', $result) ? $result['status'] : -1;
+        $reason = array_key_exists('message', $result) ? $result['message'] : '0 - UNKNOWN-Error';
 
         // fai insert in tabella EntityChecks
         if ($mysqli !== NULL) {
@@ -155,13 +134,13 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
         executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp[ENTITY_ID]));
     }
 
-    if ($checkOk) {
+    if ($status === 0) {
         print "The IdP ".$idp[ENTITY_ID]." consumed metadata correctly\n";
     }
     else {
         print "The IdP ".$idp[ENTITY_ID]." did NOT consume metadata correctly.\n\n";
         print "Reason: " . $reason . "\n";
-        print "Messages: " . print_r($messages, true) . "\n\n";
+        print "Messages: " . print_r($result['error'], true) . "\n\n";
     }
 
     if ($mysqli !== NULL) {
@@ -213,7 +192,6 @@ function storeFedsIntoDb($jsonEdugainFeds, $dbConnection) {
  */
 function extractIdPfromJSON($jsonIdpList) {
     $idps = array();
-    
     $idpsList = json_decode($jsonIdpList, true, 10, JSON_UNESCAPED_UNICODE);
     
     $count = 0;
@@ -440,26 +418,10 @@ function generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date
    return $samlRequest;
 }
 
-/**
-   Generates an authentication request, sends it to the SAML2 
-   HTTP-POST URL of an Provider Identity Provider and returns a result array.
-   
-   @param String $httpRedirectServiceLocation the HTTP-Redirect service location URL of an identity provider
-   @return array("ok", "http_code", "curl_return", "messages", "form_valid")
-
-*/
-function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
-   global $verbose;
-   
-   date_default_timezone_set('UTC');
-   $date = date('Y-m-d\TH:i:s\Z');
-   $id = md5($date.rand(1, 1000000));
-   $html = false;
-
-   $samlRequest = generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
-   $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
+function getUrlWithCurl($url) {
    $curl = curl_init($url);
-   
+
+   $html = false;
    $curlError = false;
    for ($vers = 0; $vers <= 4; $vers++) {
      if ($html === false) {
@@ -476,6 +438,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
           CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
        ));
        $html = curl_exec($curl);
+
        if ($html === false) {
          $curlError = curl_error($curl);
        }
@@ -483,65 +446,83 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    }
    
    $info = curl_getinfo($curl);
-   $httpCode = $info['http_code'];
+
+   $html = cleanUtf8Curl($html, $curl);
+   $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
+
+   curl_close($curl);
+   return array($curlError, $info, $html);
+}
+
+/**
+   Generates an authentication request, sends it to the SAML2 
+   HTTP-POST URL of an Provider Identity Provider and returns a result array.
+   
+   @param String $httpRedirectServiceLocation the HTTP-Redirect service location URL of an identity provider
+   @return array("status", "http_code", "error", "html")
+*/
+function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
+   global $verbose;
+   
+   date_default_timezone_set('UTC');
+   $date = date('Y-m-d\TH:i:s\Z');
+   $id = md5($date.rand(1, 1000000));
+   $samlRequest = generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
+   $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
+   list($curlError, $info, $html) = getUrlWithCurl($url);
+
    $error = array();
-   $validForm = true;
-   $ok = true;
+   $status = 0;
+   $message = '1 - OK';
 
    if ($curlError != false) {
-      $ok = false;
+      $status = 3;
+      $message = '3 - CURL-Error';
       if ($verbose) {
           echo "Curl error: ".$curlError."\n";
       }
       $error[] = $curlError;
-   } else if ($httpCode != 200 && $httpCode != 401) {
-     $ok = false;
-     if($verbose) {
-         echo "Status code: ".$info['http_code']."\n";
-     }
-     $error[] = "Status code: ".$info['http_code'];
+   } else if ($info['http_code'] != 200 && $info['http_code'] != 401) {
+      $status = 3;
+      $message = '3 - HTTP-Error';
+      if ($verbose) {
+          echo "Status code: ".$info['http_code']."\n";
+      }
+      $error[] = "Status code: ".$info['http_code'];
    } else {
-      $patternUsername ='/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
+      $patternUsername = '/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
       $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
 
-      $html = cleanUtf8Curl($html, $curl);
-      $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
-      
       if (!preg_match($patternUsername, $html)) {
-            $msg = "Did not find input for username.";
-         $error[] = $msg;
-         $validForm = false;
-         $ok = false;
+         $status = 2;
+         $message = '2 - FORM-Invalid';
+         if($verbose) {
+             echo "Did not find input for username.\n";
+         }
+         $error[] = "Did not find input for username.";
       }
          
       if (!preg_match($patternPassword, $html)) {
-         $msg = "Did not find input for password.";
-         $error[] = $msg;
-         $validForm = false;
-         $ok = false;
+         $status = 2;
+         $message = '2 - FORM-Invalid';
+         if ($verbose) {
+             echo "Did not find input for password.\n";
+         }
+         $error[] = "Did not find input for password.";
       }
    }
    
-   if($verbose && !$ok) {
+   if ($verbose && $status !== 0) {
       echo $httpRedirectServiceLocation." ERROR \n";
    }
 
-   $ret = array(
-      "ok" => $ok,
-      "form_valid" => $validForm,
-      "http_code" => $httpCode,
-      "curl_return" => curl_errno($curl),
-      "messages" => $error
+   return array(
+      "status" => $status,
+      "message" => $message,
+      "http_code" => $info['http_code'],
+      "error" => $error,
+      "html" => ($html) ? $html : "",
    );
-   
-   if($html) {
-      $ret["html"] = $html;
-   } else {
-      $ret["html"] = "";
-   }
-   
-   curl_close($curl);
-   return $ret;
 }
 
 function sendEmail($emailProperties, $recipient, $idps) {

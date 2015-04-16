@@ -154,9 +154,6 @@ function getDbConnection($dbConnection) {
  */
 function executeStatement($mysqli, $r, $sql, $params) {
     $stmt = $mysqli->prepare($sql);
-    if (!$stmt) {
-        throw new Exception(ERROR . mysqli_error($mysqli));
-    }
 
     if ($params != NULL && count($params) > 1 && !call_user_func_array(array($stmt, "bind_param"), refValues($params))) {
         throw new Exception(ERROR . mysqli_error($mysqli));
@@ -166,12 +163,7 @@ function executeStatement($mysqli, $r, $sql, $params) {
     }
 
     if ($r === true) {
-        $result = $stmt->get_result();
-        if (!$result) {
-            throw new Exception(ERROR . mysqli_error($mysqli));
-        }
-
-        return $result;
+        return $stmt->get_result();
     }
 
     return true;

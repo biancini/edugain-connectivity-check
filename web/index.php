@@ -145,7 +145,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
         array('f_displayName', 'displayName', true, NULL),
         array('f_entityID', 'entityID', true, NULL),
         array('f_registrationAuthority', 'EntityDescriptors.registrationAUthority', true, NULL),
-        array('f_ignore_entity', 'ignoreEntity', false, array("True" => 1, "False" => 0)),
+        array('f_ignore_entity', 'ignoreEntity', false, array("True" => 0, "False" => 1)),
         array('f_last_check', 'lastCheck', false, array('1' => 'DATE(lastCheck) = curdate()', '2' => 'DATE(lastCheck) = curdate() - interval 1 day')),
         array('f_current_result', 'currentResult', true, NULL),
     ));
@@ -173,6 +173,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
     }
     $offset = ($page - 1) * $rowsperpage;
     
+    $sqlConditions .= " LIMIT " . $offset . " , " . $rowsperpage;
     $result = executeStatement($mysqli, true, $sql . $sqlConditions, $queryParams);
     $count = 1;
     while ($row = $result->fetch_assoc()) {
@@ -267,6 +268,6 @@ function getCurrentUrl($params, $excludeParam=array()) {
 </body>
 </html>
 
-<?
+<?php
 $mysqli->close();
 ?>

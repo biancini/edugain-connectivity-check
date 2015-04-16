@@ -102,7 +102,7 @@ class IdpChecks {
             } 
         }
 
-        $mysqli = getDbConnection($dbConnection);
+        $mysqli = getDbConnection($this->dbConnection);
         executeStatement($mysqli, false, "DELETE FROM EntityDescriptors WHERE updated = 0", NULL);
         $mysqli->close();
 
@@ -111,19 +111,18 @@ class IdpChecks {
 
     function updateFederations() {
         $edugainFedsUrl = $this->confArray['edugain_db_json']['json_feds_url'];
+        $jsonEdugainFeds = file_get_contents($edugainFedsUrl, false, stream_context_create($this->arrContextOptions));
 
-        if (($jsonEdugainFeds = file_get_contents($edugainFedsUrl, false, stream_context_create($this->arrContextOptions)))===false){
+        if ($jsonEdugainFeds === false){
             print "Error fetching JSON eduGAIN Federation members\n";
         } else {
-            $dbConnection = $this->dbConnection;
-
-            $mysqli = getDbConnection($dbConnection);
+            $mysqli = getDbConnection($this->dbConnection);
             executeStatement($mysqli, false, "UPDATE Federations SET updated = 0", NULL);
             $mysqli->close();
 
-            storeFedsIntoDb($jsonEdugainFeds, $dbConnection);
+            storeFedsIntoDb($jsonEdugainFeds, $this->dbConnection);
 
-            $mysqli = getDbConnection($dbConnection);
+            $mysqli = getDbConnection($this->dbConnection);
             executeStatement($mysqli, false, "DELETE FROM Federations WHERE updated = 0", NULL);
             $mysqli->close();
         }
