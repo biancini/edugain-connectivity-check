@@ -61,6 +61,10 @@ function refValues($arr) {
  @return new mysqli($dbConnection),
  */
 function executeStatement($mysqli, $r, $sql, $params) {
+    if ($mysqli === NULL) {
+        return;
+    }
+
     $stmt = $mysqli->prepare($sql);
 
     if ($params != NULL && !call_user_func_array(array($stmt, "bind_param"), refValues($params))) {
@@ -81,6 +85,25 @@ function executeStatement($mysqli, $r, $sql, $params) {
     return true;
 }
 
+function getEntityPreviousStatus($mysqli, $idp) {
+    if ($mysqli === NULL) {
+        return array(false, NULL);
+    }
+
+    $result = executeStatement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck", array("s", $idp[ENTITY_ID]));
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $previousStatus = $row['currentResult'];
+            $ignoreEntity = $row['ignoreEntity'];
+        }
+
+        return array($ignoreEntity, $previousStatus);
+    } else {
+        executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)", array("sssss", $idp[ENTITY_ID], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']));
+        return array(false, NULL);
+    }
+}
+
 /**
  Execute checks on each input IdP.
 
@@ -89,50 +112,29 @@ function executeStatement($mysqli, $r, $sql, $params) {
  @return new mysqli($dbConnection),
  */
 function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkHistory = 2) {
-    $ignoreEntity = false;
-    $previousStatus = NULL;
-    $reason = '1 - OK';
-
-    $mysqli = null;
-    $lastCheckHistory = $checkHistory - 1;
-
-    if ($dbConnection !== NULL) {
-        $mysqli = getDbConnection($dbConnection);
-        $result = executeStatement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck", array("s", $idp[ENTITY_ID]));
-
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $previousStatus = $row['currentResult'];
-                $ignoreEntity = $row['ignoreEntity'];
-            }
-        } else {
-            executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)", array("sssss", $idp[ENTITY_ID], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']));
-        }
-    }
+    $mysqli = ($dbConnection !== NULL) ? getDbConnection($dbConnection) : null;
+    list($ignoreEntity, $previousStatus) = getEntityPreviousStatus($mysqli, $idp);
 
     if ($ignoreEntity == true) {
         print "Entity " . $idp[ENTITY_ID] . " ignored.\n";
-        if ($mysqli !== NULL) {
-		$mysqli->close();
-	}
+	$mysqli->close();
         return;
     }
     
+    $reason = '1 - OK';
+    $lastCheckHistory = $checkHistory - 1;
+
     for ($i = 0; $i < count($spEntityIDs); $i++) {
         $result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
         $status = array_key_exists('status', $result) ? $result['status'] : -1;
         $reason = array_key_exists('message', $result) ? $result['message'] : '0 - UNKNOWN-Error';
 
         // fai insert in tabella EntityChecks
-        if ($mysqli !== NULL) {
-            executeStatement($mysqli, false, "INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", array("sssssisi", $idp[ENTITY_ID], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory));
-        }
+        executeStatement($mysqli, false, "INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", array("sssssisi", $idp[ENTITY_ID], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory));
     }
 
     // update EntityDescriptors
-    if ($mysqli !== NULL) {
-        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp[ENTITY_ID]));
-    }
+    executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp[ENTITY_ID]));
 
     if ($status === 0) {
         print "The IdP ".$idp[ENTITY_ID]." consumed metadata correctly\n";
@@ -180,6 +182,60 @@ function storeFedsIntoDb($jsonEdugainFeds, $dbConnection) {
     $mysqli->close();
 }
 
+function getDisplayName($idp) {
+    if ($idp['displayname']) {
+        $aux1 = explode("==", $idp['displayname']);
+        foreach ($aux1 as $result) {
+            $aux2 = explode(';', $result);
+            $aux3[$aux2[0]] = $aux2[1];
+        }
+           
+        $keys = array_keys($aux3);
+        $firstElement = $aux3[$keys[0]];
+            
+        return (array_key_exists('en', $aux3)) ? (string) $aux3['en'] : (string) $firstElement;
+    }
+
+    if ($idp['role_display_name']) {
+        $aux1 = explode("==", $idp['role_display_name']);
+        
+        foreach ($aux1 as $result) {
+            $aux2 = explode(';', $result);
+            $aux3[$aux2[0]] = $aux2[1];
+        }
+
+        $keys = array_keys($aux3);
+        $firstElement = $aux3[$keys[0]];
+            
+        return (array_key_exists('en', $aux3)) ? (string)$aux3['en'] : (string)$firstElement;
+    }
+
+    return "";
+}
+
+function getIdpMailContact($idp, $type) {
+    if (!array_key_exists($type, $idp['contacts'])) {
+        return "";
+    }
+
+    $contacts = array();
+    foreach ($idp['contacts'][$type] as $contact) {
+        if (!array_key_exists('EmailAddress', $contact['e_p'])) {
+            continue;
+        }
+
+        foreach ($contact['e_p']['EmailAddress'] as $emailAddress) {
+            if (0 === strpos($emailAddress, 'mailto:')) {
+                $contacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
+            } else{
+                $contacts[] = $emailAddress;
+            }
+        }
+    }
+
+    return implode(",", $contacts);
+}
+
 /**
  Extract useful informations stored into a JSON UTF-8 file.
 
@@ -191,95 +247,20 @@ function storeFedsIntoDb($jsonEdugainFeds, $dbConnection) {
                              "supportContacts" => array()),
  */
 function extractIdPfromJSON($jsonIdpList) {
-    $idps = array();
     $idpsList = json_decode($jsonIdpList, true, 10, JSON_UNESCAPED_UNICODE);
-    
-    $count = 0;
+    $idps = array();
+
     foreach ($idpsList as $idp) {
-        $count++;
-        
-        $idps[$count][ENTITY_ID] = (string)$idp[ENTITY_ID];
-        $idps[$count]['registrationAuthority'] = (string)$idp['registrationAuthority'];
-        $idps[$count]['SingleSignOnService'] = (string)$idp['Location'];
-        $idps[$count]['displayName'] = ""; 
-
-        $aux1 = array();
-        $aux2 = array();
-        $aux3 = array();
-        
-        if ($idp['displayname']) {
-            $aux1 = explode("==", $idp['displayname']);
-            foreach ($aux1 as $result) {
-                $aux2 = explode(';', $result);
-                $aux3[$aux2[0]] = $aux2[1];
-            }
-            
-            $keys = array_keys($aux3);
-            $firstElement = $aux3[$keys[0]];
-            
-            $idps[$count]['displayName'] = (array_key_exists('en', $aux3)) ? (string)$aux3['en'] : (string)$firstElement;
-
-        } elseif ($idp['role_display_name']) {
-            $aux1 = explode("==", $idp['role_display_name']);
-            
-            foreach ($aux1 as $result) {
-                $aux2 = explode(';', $result);
-                $aux3[$aux2[0]] = $aux2[1];
-            }
-
-            $keys = array_keys($aux3);
-            $firstElement = $aux3[$keys[0]];
-                
-            $idps[$count]['displayName'] = (array_key_exists('en', $aux3)) ? (string)$aux3['en'] : (string)$firstElement;
-            echo "idp ".(string)$idp[ENTITY_ID]."displayName = ".$idp[$count]['displayName'];
-        } else{
-            $idp[$count]['displayName'] = "";
-        }
-        
-        if (!array_key_exists('technical', $idp['contacts'])) {
-            $idps[$count]['technicalContacts'] = "Technical Contact missing";
-        }
-        else{
-            $techContacts = array ();
-            
-            $idps[$count]['technicalContacts'] = "";
-            
-            foreach ($idp['contacts']['technical'] as $techContact) {
-                if (array_key_exists('EmailAddress', $techContact['e_p'])) {
-                    foreach ($techContact['e_p']['EmailAddress'] as $emailAddress) {
-                        if (0 === strpos($emailAddress, 'mailto:')) {
-                            $techContacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
-                        } else{
-                            $techContacts[] = $emailAddress;                            
-                        }
-                    }
-                }
-            }
-            $idps[$count]['technicalContacts'] = implode(",", $techContacts);
-        }
-        
-        if (!array_key_exists('support', $idp['contacts'])) {
-            $idps[$count]['supportContacts'] = "";
-        }
-        else{
-            $suppContacts = array();
-            
-            $idps[$count]['supportContacts'] = array();
-            
-            foreach ($idp['contacts']['support'] as $suppContact) {
-                if (array_key_exists('EmailAddress', $suppContact['e_p'])) {
-                    foreach ($suppContact['e_p']['EmailAddress'] as $emailAddress) {
-                        if (0 === strpos($emailAddress, 'mailto:')) {
-                            $suppContacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
-                        } else{
-                            $suppContacts[] = $emailAddress;
-                        }
-                    }
-                }
-            }
-            $idps[$count]['supportContacts'] = implode(",", $suppContacts);
-        }
+        $idps[] = array(
+            ENTITY_ID => (string) $idp[ENTITY_ID],
+            'registrationAuthority' => (string) $idp['registrationAuthority'],
+            'SingleSignOnService' => (string) $idp['Location'],
+            'displayName' => getDisplayName($idp),
+            'technicalContacts' => getIdpMailContact($idp, 'technical'),
+            'supportContacts' => getIdpMailContact($idp, 'support'),
+        );
     }
+
     return $idps;
 }
 
@@ -345,47 +326,47 @@ function extractIdPfromXML ($metadata) {
         return $idps;
 }
 
+function obtainCharset($contentType, $html) {
+    $charset = NULL;
+
+    /* 1: HTTP Content-Type: header */
+    preg_match('@([\w/+]+)(;\s*charset=(\S+))?@i', $contentType, $matches);
+    if (!$charset && isset($matches[3])) {
+        $charset = $matches[3];
+    }
+
+    /* 2: <meta> element in the page */
+    preg_match('@<meta\s+http-equiv="Content-Type"\s+content="([\w/]+)(;\s*charset=([^\s"]+))?@i', $html, $matches);
+    if (!$charset && isset($matches[3])) {
+        $charset = $matches[3];
+    }
+
+    /* 3: <xml> element in the page */
+    preg_match('@<\?xml.+encoding="([^\s"]+)@si', $html, $matches);
+    if (!$charset && isset($matches[1])) {
+        $charset = $matches[1];
+    }
+
+    /* 4: PHP's heuristic detection */
+    $encoding = mb_detect_encoding($html);
+    if (!$charset && $encoding) {
+        $charset = $encoding;
+    }
+
+    /* 5: Default for HTML */
+    $charset = "ISO 8859-1";
+
+    return $charset;
+}
+
+
 function cleanUtf8Curl($html, $curl) {
     if (!is_string($html)) {
         return $html;
     }
 
     $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-
-    /* 1: HTTP Content-Type: header */
-    preg_match( '@([\w/+]+)(;\s*charset=(\S+))?@i', $contentType, $matches);
-    if (isset($matches[3])) {
-        $charset = $matches[3];
-    }
-
-    /* 2: <meta> element in the page */
-    if (!isset($charset)) {
-        preg_match('@<meta\s+http-equiv="Content-Type"\s+content="([\w/]+)(;\s*charset=([^\s"]+))?@i', $html, $matches);
-        if (isset( $matches[3])) {
-            $charset = $matches[3];
-        }
-    }
-
-    /* 3: <xml> element in the page */
-    if (!isset($charset)) {
-        preg_match('@<\?xml.+encoding="([^\s"]+)@si', $html, $matches);
-        if (isset($matches[1])) {
-            $charset = $matches[1];
-        }
-    }
-
-    /* 4: PHP's heuristic detection */
-    if (!isset($charset)) {
-        $encoding = mb_detect_encoding($html);
-        if ($encoding) {
-            $charset = $encoding;
-        }
-    }
-
-    /* 5: Default for HTML */
-    if (!isset($charset) && strstr($contentType, "text/html") === 0) {
-        $charset = "ISO 8859-1";
-    }
+    $charset = obtainCharset($contentType, $html);
 
     /* Convert it if it is anything but UTF-8 */
     /* You can change "UTF-8"  to "UTF-8//IGNORE" to 
@@ -475,7 +456,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    $status = 0;
    $message = '1 - OK';
 
-   if ($curlError != false) {
+   if ($curlError !== false) {
       $status = 3;
       $message = '3 - CURL-Error';
       if ($verbose) {
@@ -493,29 +474,16 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       $patternUsername = '/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
       $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
 
-      if (!preg_match($patternUsername, $html)) {
-         $status = 2;
-         $message = '2 - FORM-Invalid';
-         if($verbose) {
-             echo "Did not find input for username.\n";
-         }
-         $error[] = "Did not find input for username.";
-      }
-         
-      if (!preg_match($patternPassword, $html)) {
+      if (!preg_match($patternUsername, $html) || !preg_match($patternPassword, $html)) {
          $status = 2;
          $message = '2 - FORM-Invalid';
          if ($verbose) {
-             echo "Did not find input for password.\n";
+             echo "Did not find input for username or password.\n";
          }
-         $error[] = "Did not find input for password.";
+         $error[] = "Did not find input for username or password.";
       }
    }
    
-   if ($verbose && $status !== 0) {
-      echo $httpRedirectServiceLocation." ERROR \n";
-   }
-
    return array(
       "status" => $status,
       "message" => $message,

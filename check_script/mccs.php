@@ -57,9 +57,7 @@ class IdpChecks {
         $mysqli->close();
     }
 
-    function executeAllChecks() {
-        $this->cleanOldEntityChecks();
-
+    function obtainIdPList() {
         $edugainIdpsUrl = $this->confArray['edugain_db_json']['json_idps_url'];
         $idpList = false;
         $jsonEdugainIdps = file_get_contents($edugainIdpsUrl, false, stream_context_create($this->arrContextOptions));
@@ -71,6 +69,13 @@ class IdpChecks {
         if ($idpList === false) {
             throw new Exception("Error loading eduGAIN JSON IdPs");
         }
+
+        return $idpList;
+    }
+
+    function executeAllChecks() {
+        $this->cleanOldEntityChecks();
+        $idpList = $this->obtainIdPList();
 
         $mysqli = getDbConnection($this->dbConnection);
         executeStatement($mysqli, false, "UPDATE EntityDescriptors SET updated = 0", NULL);
