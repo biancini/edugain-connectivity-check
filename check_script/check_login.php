@@ -33,7 +33,7 @@ $conf_array_keys = array_keys($conf_array);
 $sps_keys[] = preg_grep ($regexp, $conf_array_keys);
 foreach ($sps_keys as $key => $value) {
         foreach($value as $sp => $val) {
-                $spEntityIDs[] = $conf_array[$val][$ENTITY_ID];
+                $spEntityIDs[] = $conf_array[$val][ENTITY_ID];
                 $spACSurls[] = $conf_array[$val]['acs_url'];
         }
 }
@@ -61,8 +61,8 @@ if (!$idpList) {
 }
 
 foreach ($idpList as $curIdP) {
-    if ($curIdP[$ENTITY_ID] == $argv[1]) {
-        print "Executing check for " . $curIdP[$ENTITY_ID] . "\n";
+    if ($curIdP[ENTITY_ID] == $argv[1]) {
+        print "Executing check for " . $curIdP[ENTITY_ID] . "\n";
         executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
     }
 }

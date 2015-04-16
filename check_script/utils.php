@@ -143,7 +143,7 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
                 $reason = '3 - CURL-Error';
             }
             else {
-               $reason = 'Unknown';
+               // Do nothing
             }
         }
 
