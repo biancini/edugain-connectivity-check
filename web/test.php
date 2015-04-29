@@ -69,6 +69,17 @@ function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link media="screen" href="css/eduroam.css" type="text/css" rel="stylesheet"/>
 <title>edugain - mccs</title>
+<script type="text/javascript">
+function changeItemsPerPage(new_rpp) {
+    var url = window.location.href;
+    if (url.indexOf('?') > -1){
+        url += '&rpp=' + new_rpp
+    } else {
+        url += '?rpp=' + new_rpp
+    }
+    window.location.href = url;
+}
+</script>
 </head>
 <body>
 <center>
@@ -175,7 +186,9 @@ function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {
     $result = executeStatement($mysqli, true, $sqlCount . $sqlConditions, $queryParams);
     $numrows = $result->fetch_row()[0];
 
-    $rowsperpage = 30;
+    $rowsperpage = getParameter('rpp', '30');
+    if ($rowsperpage == 'All') $rowsperpage = $numrows;
+    $rowsperpage = is_numeric($rowsperpage) ? (int) $rowsperpage : 30;
     $totalpages = ceil($numrows / $rowsperpage);
     $page = getParameter('page', '1');
     $page = is_numeric($page) ? (int) $page : 1;
@@ -223,7 +236,18 @@ function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {
         <td colspan="9" align="center">&nbsp;</td>
     </tr>
     <tr>
-        <td colspan="9" align="center">Records found: <?=$numrows?></td>
+        <td colspan="9" align="center">
+        Records found: <?=$numrows?>
+        (showing pages of <select id="rpp" name="rpp" onchange="changeItemsPerPage(this.value)">
+        <?php
+        foreach (array(10, 20, 30, 40, 50, 100) as $rpp) {
+            ?>
+            <option value="<?=$rpp?>" <?php if ($rpp == $rowsperpage) { ?> selected <?php } ?>><?=$rpp?></option>
+            <?php
+        } ?>
+        <option value="All" <?php if ($numrows == $rowsperpage) { ?> selected <?php } ?>>All</option>
+        </select> elements)
+        </td>
     </tr>
     <tr>
         <td colspan="9" align="center">
