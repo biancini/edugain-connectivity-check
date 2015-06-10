@@ -34,6 +34,7 @@ function getCurrentUrl($params, $excludeParam=array()) {
     $url .= addParameterToQuery($params, 'f_check_time', $excludeParam);
     $url .= addParameterToQuery($params, 'f_http_status_code', $excludeParam);
     $url .= addParameterToQuery($params, 'f_check_result', $excludeParam);
+    $url .= addParameterToQuery($params, 'rpp', $excludeParam);
 
     return $url;
 }
@@ -102,6 +103,7 @@ function changeItemsPerPage(new_rpp) {
                     array('f_check_time', 'All', false),
                     array('f_http_status_code', 'All', false),
                     array('f_check_result', 'All', false),
+                    array('rpp', 'All', false),
                 ));
                 ?>
                 <div class="admin_naslov"><a href="index.php">Identity providers</a> | All IdP test results | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
