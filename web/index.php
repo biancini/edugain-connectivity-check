@@ -17,6 +17,20 @@
 
 include("utils.php");
 
+$params = getAllParameters(array(
+    array('show', 'list_idps', false),
+    array('f_order', 'currentResult', false),
+    array('f_order_direction', 'DESC', false),
+    array('f_id_status', 'All', true),
+    array('f_entityID', 'All', false),
+    array('f_registrationAuthority', 'All', false),
+    array('f_displayName', 'All', false),
+    array('f_ignore_entity', 'All', false),
+    array('f_last_check', 'All', false),
+    array('f_current_result', 'All', false),
+    array('rpp', 'All', false),
+));
+
 $confArray = parse_ini_file('../properties.ini', true);
 $dbConnection = $confArray['db_connection'];
 $mysqli = getDbConnection($dbConnection);
@@ -53,8 +67,8 @@ function getCurrentUrl($params, $excludeParam=array()) {
 <script type="text/javascript" src="js/jquery.switchbutton.min.js"></script>
 <script type="text/javascript">
 function changeItemsPerPage(new_rpp) {
-    var url = window.location.href;    
-    if (url.indexOf('?') > -1){
+    var url = "<?=getCurrentUrl($params, ["rpp"])?>";
+    if (url.indexOf('?') > -1) {
         url += '&rpp=' + new_rpp
     } else {
         url += '?rpp=' + new_rpp
@@ -74,21 +88,6 @@ function changeItemsPerPage(new_rpp) {
         </tr>
         <tr>
             <td class="body">
-                <?php
-                $params = getAllParameters(array(
-                    array('show', 'list_idps', false),
-                    array('f_order', 'currentResult', false),
-                    array('f_order_direction', 'DESC', false),
-                    array('f_id_status', 'All', true),
-                    array('f_entityID', 'All', false),
-                    array('f_registrationAuthority', 'All', false),
-                    array('f_displayName', 'All', false),
-                    array('f_ignore_entity', 'All', false),
-                    array('f_last_check', 'All', false),
-                    array('f_current_result', 'All', false),
-                    array('rpp', 'All', false),
-                ));
-                ?>
                 <div class="admin_naslov">Identity providers | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/index.php?title=Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
                 <div class="admin_naslov" style="background-color: #e9e9e9;">Show IdPs with status:
                 <a href="<?=getCurrentUrl($params, ["f_id_status", "f_ignore_entity"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> | 

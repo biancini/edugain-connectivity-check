@@ -17,6 +17,19 @@
 
 include("utils.php");
 
+$params = getAllParameters(array(
+    array('show', 'list_idp_tests', false),
+    array('f_order', 'entityID', false),
+    array('f_order_direction', 'DESC', false),
+    array('f_id_status', 'All', true),
+    array('f_entityID', 'All', false),
+    array('f_spEntityID', 'All', false),
+    array('f_check_time', 'All', false),
+    array('f_http_status_code', 'All', false),
+    array('f_check_result', 'All', false),
+    array('rpp', 'All', false),
+));
+
 $confArray = parse_ini_file('../properties.ini', true);
 $dbConnection = $confArray['db_connection'];
 $mysqli = getDbConnection($dbConnection);
@@ -72,7 +85,7 @@ function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {
 <title>edugain - mccs</title>
 <script type="text/javascript">
 function changeItemsPerPage(new_rpp) {
-    var url = window.location.href;
+    var url = "<?=getCurrentUrl($params, ["rpp"])?>";
     if (url.indexOf('?') > -1){
         url += '&rpp=' + new_rpp
     } else {
@@ -92,20 +105,6 @@ function changeItemsPerPage(new_rpp) {
         </tr>
         <tr>
             <td class="body">
-                <?php
-                $params = getAllParameters(array(
-                    array('show', 'list_idp_tests', false),
-                    array('f_order', 'entityID', false),
-                    array('f_order_direction', 'DESC', false),
-                    array('f_id_status', 'All', true),
-                    array('f_entityID', 'All', false),
-                    array('f_spEntityID', 'All', false),
-                    array('f_check_time', 'All', false),
-                    array('f_http_status_code', 'All', false),
-                    array('f_check_result', 'All', false),
-                    array('rpp', 'All', false),
-                ));
-                ?>
                 <div class="admin_naslov"><a href="index.php">Identity providers</a> | All IdP test results | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
                 <div class="admin_naslov" style="background-color: #e9e9e9;">Show Tests with status:
                     <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> |
