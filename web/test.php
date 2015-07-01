@@ -105,6 +105,7 @@ function changeItemsPerPage(new_rpp) {
         </tr>
         <tr>
             <td class="body">
+                <div class="admin_naslov"><h2>eduGAIN Connectivity Check service</h2></div>
                 <div class="admin_naslov"><a href="index.php">Identity providers</a> | All IdP test results | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
                 <div class="admin_naslov" style="background-color: #e9e9e9;">Show Tests with status:
                     <a href="<?=getCurrentUrl($params, ["f_id_status"])?>&f_id_status=3 - HTTP-Error,3 - CURL-Error" title="HTTP or CURL error while accessing IdP login page from check script" style="color:red">Error</a> |

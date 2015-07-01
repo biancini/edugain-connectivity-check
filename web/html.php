@@ -48,6 +48,7 @@ else {
     <table class="container" cellpadding="5" cellspacing="0">
     <tr><td><a title="edugain home" href="http://www.geant.net/service/edugain/pages/home.aspx"><img src="images/edugain.png"></a></td></tr>
     <tr><td class="body">
+    <div class="admin_naslov"><h2>eduGAIN Connectivity Check service</h2></div>
     <div class="admin_naslov"><a href="index.php">Identity providers</a> | <a href="test.php">All IdP test results</a> | <a href="https://wiki.edugain.org/Metadata_Consumption_Check_Service" target="_blank">Instructions</a></div>
     <?php
     while ($row = $result->fetch_assoc()) {
