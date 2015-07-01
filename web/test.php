@@ -82,7 +82,7 @@ function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link media="screen" href="css/eduroam.css" type="text/css" rel="stylesheet"/>
-<title>edugain - mccs</title>
+<title>eduGAIN Connectivity Check</title>
 <script type="text/javascript">
 function changeItemsPerPage(new_rpp) {
     var url = "<?=getCurrentUrl($params, ["rpp"])?>";

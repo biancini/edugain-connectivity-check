@@ -76,7 +76,7 @@ function changeItemsPerPage(new_rpp) {
     window.location.href = url;
 }
 </script>
-<title>edugain - mccs</title>
+<title>eduGAIN Connectivity Check</title>
 </head>
 <body>
 <center>
