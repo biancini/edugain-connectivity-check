@@ -106,7 +106,8 @@ function addSqlCondition(&$sqlConditions, &$queryParams, $params, $paramName, $s
             array_push($queryParams, "%" . $params[$paramName] . "%");
         }
         elseif ($map !== NULL) {
-            $sqlConditions .= " " .$map[$params[$paramName]];
+            $sqlConditions .= " $sqlName = ?";
+            array_push($queryParams, $map[$params[$paramName]]);
         }
         else{ 
             $sqlConditions .= " $sqlName = ?";

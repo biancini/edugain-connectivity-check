@@ -158,7 +158,7 @@ function changeItemsPerPage(new_rpp) {
         array('f_displayName', 'displayName', true, NULL),
         array('f_entityID', 'entityID', true, NULL),
         array('f_registrationAuthority', 'EntityDescriptors.registrationAUthority', true, NULL),
-        array('f_ignore_entity', 'ignoreEntity', false, array("True" => 0, "False" => 1)),
+        array('f_ignore_entity', 'ignoreEntity', false, array("True" => 1, "False" => 0)),
         array('f_last_check', 'lastCheck', false, array('1' => 'DATE(lastCheck) = curdate()', '2' => 'DATE(lastCheck) = curdate() - interval 1 day')),
         array('f_current_result', 'currentResult', true, NULL),
     ));
@@ -231,9 +231,21 @@ function changeItemsPerPage(new_rpp) {
                      }
                 }
             ?></td>
+            <?php
+            if ($row['ignoreEntity'] == 0) {
+            ?>
                 <td><?=$row['lastCheck']?></td>
                 <td><?=substr($row['currentResult'], 4)?></td>
-            <td><a href="test.php?f_entityID=<?=$row['entityID']?>" title="View checks status for this entity.">View</a></td>
+                <td><a href="test.php?f_entityID=<?=$row['entityID']?>" title="View checks status for this entity.">View</a></td>
+            <?php
+            } else {
+            ?>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            <?php
+            } 
+            ?>
         </tr>
         <?php
 

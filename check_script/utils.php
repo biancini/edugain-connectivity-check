@@ -87,6 +87,7 @@ function executeStatement($mysqli, $r, $sql, $params) {
 
 function getEntityPreviousStatus($mysqli, $idp) {
     if ($mysqli === NULL) {
+        print "mysqli è NULL";
         return array(false, NULL);
     }
 
@@ -96,7 +97,6 @@ function getEntityPreviousStatus($mysqli, $idp) {
             $previousStatus = $row['currentResult'];
             $ignoreEntity = $row['ignoreEntity'];
         }
-
         return array($ignoreEntity, $previousStatus);
     } else {
         executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)", array("sssss", $idp[ENTITY_ID], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']));
@@ -252,7 +252,8 @@ function extractIdPfromJSON($jsonIdpList) {
 
     foreach ($idpsList as $idp) {
         $idps[] = array(
-            ENTITY_ID => (string) $idp[ENTITY_ID],
+            /*ENTITY_ID => (string) $idp[ENTITY_ID],*/
+            ENTITY_ID => (string) $idp['entityID'],
             'registrationAuthority' => (string) $idp['registrationAuthority'],
             'SingleSignOnService' => (string) $idp['Location'],
             'displayName' => getDisplayName($idp),
