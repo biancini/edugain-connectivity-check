@@ -78,7 +78,7 @@ class IdpChecks {
         $idpList = $this->obtainIdPList();
 
         $mysqli = getDbConnection($this->dbConnection);
-        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET updated = 0", NULL);
+        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET updated = 0 WHERE ignoreEntity = 0", NULL);
         $mysqli->close();
 
         $count = 1;
