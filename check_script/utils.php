@@ -443,7 +443,6 @@ function getUrlWithCurl($url) {
 */
 function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    global $verbose;
-   //$verbose = True;
    
    date_default_timezone_set('UTC');
    $date = date('Y-m-d\TH:i:s\Z');
