@@ -175,7 +175,9 @@ function changeItemsPerPage(new_rpp) {
     $numrows = $result->fetch_row()[0];
 
     $rowsperpage = getParameter('rpp', '30');
-    if ($rowsperpage == 'All') $rowsperpage = $numrows;
+    if ($rowsperpage == 'All') {
+        $rowsperpage = $numrows;
+    }
     $rowsperpage = is_numeric($rowsperpage) ? (int) $rowsperpage : 30;
     $totalpages = ceil($numrows / $rowsperpage);
     $page = getParameter('page', '1');
@@ -260,9 +262,11 @@ function changeItemsPerPage(new_rpp) {
         (showing pages of <select id="rpp" name="rpp" onchange="changeItemsPerPage(this.value)">
         <?php
         foreach (array(10, 20, 30, 40, 50, 100) as $rpp) {
-            ?>
-            <option value="<?=$rpp?>" <?php if ($rpp == $rowsperpage) { ?> selected <?php } ?>><?=$rpp?></option>
-            <?php
+            print "<option value=\"$rpp\"";
+            if ($rpp == $rowsperpage) {
+                print " selected ";
+            }
+            print ">$rpp</option>"
         } ?>
         <option value="All" <?php if ($numrows == $rowsperpage) { ?> selected <?php } ?>>All</option>
         </select> elements)

@@ -173,7 +173,6 @@ function storeFedsIntoDb($jsonEdugainFeds, $dbConnection) {
             }
                           
             if ($fed['email'] !== $row['emailAddress']) {
-                #executeStatement($mysqli, false, $sql, NULL);
                 executeStatement($mysqli, false, "UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?", array("ss", $fed['email'], $fed['reg_auth']));
             }
         }
