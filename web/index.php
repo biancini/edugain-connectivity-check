@@ -266,7 +266,7 @@ function changeItemsPerPage(new_rpp) {
             if ($rpp == $rowsperpage) {
                 print " selected ";
             }
-            print ">$rpp</option>"
+            print ">$rpp</option>";
         } ?>
         <option value="All" <?php if ($numrows == $rowsperpage) { ?> selected <?php } ?>>All</option>
         </select> elements)
