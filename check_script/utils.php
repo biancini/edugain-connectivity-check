@@ -28,11 +28,6 @@ define ( 'MESSAGE', 'message' );
 define ( 'HTTP_CODE', 'http_code' );
 define ( 'RG_AUTH', 'reg_auth' );
 define ( 'EMAIL', 'email' );
-define ( 'MESSAGE', 'message' );
-define ( 'MESSAGE', 'message' );
-define ( 'MESSAGE', 'message' );
-define ( 'MESSAGE', 'message' );
-define ( 'MESSAGE', 'message' );
 
 
 /**
