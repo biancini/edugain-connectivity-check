@@ -87,7 +87,6 @@ function executeStatement($mysqli, $r, $sql, $params) {
 
 function getEntityPreviousStatus($mysqli, $idp) {
     if ($mysqli === NULL) {
-        print "mysqli è NULL";
         return array(false, NULL);
     }
 
@@ -117,7 +116,7 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
 
     if ($ignoreEntity == true) {
         print "Entity " . $idp[ENTITY_ID] . " ignored.\n";
-	$mysqli->close();
+	     $mysqli->close();
         return;
     }
     
@@ -445,6 +444,7 @@ function getUrlWithCurl($url) {
 */
 function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    global $verbose;
+   //$verbose = True;
    
    date_default_timezone_set('UTC');
    $date = date('Y-m-d\TH:i:s\Z');
@@ -484,7 +484,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
          $error[] = "Did not find input for username or password.";
       }
    }
-   
+
    return array(
       "status" => $status,
       "message" => $message,

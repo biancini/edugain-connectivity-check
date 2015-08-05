@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS EntityDescriptors
 	technicalContacts BLOB NULL,
 	supportContacts BLOB NULL,
 	updated BOOLEAN NOT NULL DEFAULT 0,
+   ignoreReason VARCHAR(1000) NULL,
 	UNIQUE (entityID),
 	FOREIGN KEY (registrationAuthority) REFERENCES Federations(registrationAuthority) ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (entityID)

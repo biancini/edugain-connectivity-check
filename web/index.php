@@ -240,8 +240,7 @@ function changeItemsPerPage(new_rpp) {
             <?php
             } else {
             ?>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
+                <td colspan="2"><?=$row['ignoreReason']?></td>
                 <td>&nbsp;</td>
             <?php
             } 

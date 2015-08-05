@@ -34,7 +34,7 @@ if (getParameter("show", "") == "html") {
     }
 }
 else {
-    $sql = "SELECT entityID, spEntityID, DATE_FORMAT(checkTime, '%d/%m/%Y at %H:%m:%s') as checkTime FROM EntityChecks WHERE id = ?";
+    $sql = "SELECT acsUrls, serviceLocation,entityID, spEntityID, DATE_FORMAT(checkTime, '%d/%m/%Y at %H:%m:%s') as checkTime FROM EntityChecks WHERE id = ?";
     $result = executeStatement($mysqli, true, $sql, array("s", $id));
     ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -59,6 +59,7 @@ else {
         on <?= $row['checkTime'] ?>:</div>
         <hr>
         <iframe src="html.php?show=html&id=<?=$id?>" sandbox></iframe>
+        <p><a href="<?=createCheckUrl($row['acsUrls'], $row['serviceLocation'], $row['spEntityID'])?>" target="_blank">Repeat test manually</a></p>
         <?php
     }
     ?>
