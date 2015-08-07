@@ -11,10 +11,12 @@ parallel = 30
 check_history = 2
 
 [sp_1]
+name = SWITCH
 entityID = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
 acs_url = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
 
 [sp_2]
+name = GARR
 entityID = https://sp24-test.garr.it/shibboleth
 acs_url = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
 

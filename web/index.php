@@ -243,7 +243,10 @@ function changeItemsPerPage(new_rpp) {
             } else {
             ?>
                 <td colspan="2"><?=$row['ignoreReason']?></td>
-                <td>&nbsp;</td>
+                <td>
+                    <b>1</b>: <a href="<?=createCheckUrl($confArray['sp_1']['acsUrls'], $row['serviceLocation'], $confArray['sp_1']['entityID'])?>" target="_blank"><?=$confArray['sp_1']['name']?></a><br/>
+                    <b>2</b>: <a href="<?=createCheckUrl($confArray['sp_2']['acsUrls'], $row['serviceLocation'], $confArray['sp_2']['entityID'])?>" target="_blank"><?=$confArray['sp_2']['name']?></a>
+                </td>
             <?php
             } 
             ?>

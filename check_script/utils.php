@@ -98,7 +98,7 @@ function getEntityPreviousStatus($mysqli, $idp) {
         }
         return array($ignoreEntity, $previousStatus);
     } else {
-        executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts) VALUES (?, ?, ?, ?, ?)", array("sssss", $idp[ENTITY_ID], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts']));
+        executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation) VALUES (?, ?, ?, ?, ?, ?)", array("ssssss", $idp[ENTITY_ID], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts'], $idp['SingleSignOnService']));
         return array(false, NULL);
     }
 }
