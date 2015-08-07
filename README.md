@@ -1,5 +1,5 @@
-# MCCS
-Metadata Consumption Check Service
+# ECCS
+eduGAIN Connectivity Check Service
 
 # Requirements
 
@@ -29,13 +29,13 @@ Metadata Consumption Check Service
 
         git clone --recursive https://malavolti@bitbucket.org/biancini/mccs.git /opt/mccs
 
-4. Create a new site for MCCS on the Apache instance:
+4. Create a new site for ECCS on the Apache instance:
 
-        vim /etc/apache2/sites-available/mccs.conf
+        vim /etc/apache2/sites-available/eccs.conf
    
 
         <IfModule mod_alias.c>
-            Alias /mccs /opt/mccs/web
+            Alias /eccs /opt/mccs/web
 
             <Directory /opt/mccs/web>
                 Options Indexes MultiViews FollowSymLinks
@@ -47,7 +47,7 @@ Metadata Consumption Check Service
 
 5. Enable the new apache site:
 
-        sudo a2ensite mccs.conf ; service apache2 reload
+        sudo a2ensite eccs.conf ; service apache2 reload
 
 6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
 
@@ -57,8 +57,23 @@ Metadata Consumption Check Service
 
 8. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
-        00 5 * * * root /usr/bin/php /opt/mccs/check_script/mccs.php > /var/log/mccs.log
+        00 5 * * * root /usr/bin/php /opt/mccs/check_script/mccs.php > /var/log/eccs.log
    
-9. Open a web browser and go to the MCCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/mccs
+9. Open a web browser and go to the MCCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
 10. Enjoy yourself
+
+
+# Useful notes
+1. HOWTO Disable an entity on the service database:
+
+        update EntityDescriptors set ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect' where entityId = 'https://idp-test-1.example.org/SSO/saml2/idp';
+        
+2. HOWTO Disable more than one entity on the service database:
+
+        update EntityDescriptors set ignoreReason = 'Due to SSL issues', ignoreEntity = 1 where entityID in ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
+          
+3. HOWTO Disable an entire Federation on the service database:
+      
+        update EntityDescriptors set ignoreEntity = 1, ignoreReason = 'Federation excluded from check' where registrationAuthority = 'https://registrationAuthority_1.example.org';
+
