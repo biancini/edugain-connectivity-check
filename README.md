@@ -69,9 +69,11 @@ eduGAIN Connectivity Check Service
 
         update EntityDescriptors set ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect' where entityId = 'https://idp-test-1.example.org/SSO/saml2/idp';
         
+        
 2. HOWTO Disable more than one entity on the service database:
 
         update EntityDescriptors set ignoreReason = 'Due to SSL issues', ignoreEntity = 1 where entityID in ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
+          
           
 3. HOWTO Disable an entire Federation on the service database:
       
