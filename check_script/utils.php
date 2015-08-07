@@ -115,7 +115,11 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
     list($ignoreEntity, $previousStatus) = getEntityPreviousStatus($mysqli, $idp);
 
     if ($ignoreEntity == true) {
+        // update EntityDescriptors
+        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET currentResult = NULL WHERE entityID = ?", array("s", $idp[ENTITY_ID]));
+
         print "Entity " . $idp[ENTITY_ID] . " ignored.\n";
+
 	     $mysqli->close();
         return;
     }
