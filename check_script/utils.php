@@ -122,26 +122,38 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
     
     $reason = '1 - OK';
     $lastCheckHistory = $checkHistory - 1;
-
+    $ignoreReason = '';
+    
     for ($i = 0; $i < count($spEntityIDs); $i++) {
         $result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
         $status = array_key_exists('status', $result) ? $result['status'] : -1;
         $reason = array_key_exists('message', $result) ? $result['message'] : '0 - UNKNOWN-Error';
-
-        // fai insert in tabella EntityChecks
+        
+        if ($result['error']){
+           switch ($result['error'][0]){
+              case "OpenSSL was built without SSLv2 support":
+                 $ignoreReason = "IdP excluded because SSLv2 is insecure and therefore not supported in the check.";
+                 break;
+           }
+        }
+        
         executeStatement($mysqli, false, "INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", array("sssssisi", $idp[ENTITY_ID], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory));
     }
-
-    // update EntityDescriptors
-    executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp[ENTITY_ID]));
-
+        
+    if($ignoreReason){
+      executeStatement($mysqli, false, "UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = ?, currentResult = NULL, previousResult = NULL, updated = 1 WHERE entityID = ?", array("ss", $ignoreReason, $idp[ENTITY_ID]));
+    }
+    else{
+      executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp[ENTITY_ID]));
+    }
+        
     if ($status === 0) {
         print "The IdP ".$idp[ENTITY_ID]." consumed metadata correctly\n";
     }
     else {
         print "The IdP ".$idp[ENTITY_ID]." did NOT consume metadata correctly.\n\n";
         print "Reason: " . $reason . "\n";
-        print "Messages: " . print_r($result['error'], true) . "\n\n";
+        print "Messages: " . print_r($result['error'], true) . "\n\n";       
     }
 
     if ($mysqli !== NULL) {
