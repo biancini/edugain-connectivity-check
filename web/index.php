@@ -141,7 +141,7 @@ function changeItemsPerPage(new_rpp) {
                 <option value="3 - CURL-Error" <?= $params['f_current_result'] == "3 - CURL-Error" ? "selected" : "" ?>>CURL-Error</option>
             </select>
         </td>
-        <td class="filter_td" colspan="3"><input type="submit" name="filter" value="Search"  class="filter_gumb"/></td>
+        <td class="filter_td"><input type="submit" name="filter" value="Search"  class="filter_gumb"/></td>
     </tr>
     <tr>
         <td class="filter_td" colspan="4">IdP data</td>
@@ -244,8 +244,8 @@ function changeItemsPerPage(new_rpp) {
             ?>
                 <td colspan="2"><?=$row['ignoreReason']?></td>
                 <td>
-                    <b>1</b>: <a href="<?=createCheckUrl($confArray['sp_1']['acsUrls'], $row['serviceLocation'], $confArray['sp_1']['entityID'])?>" target="_blank"><?=$confArray['sp_1']['name']?></a><br/>
-                    <b>2</b>: <a href="<?=createCheckUrl($confArray['sp_2']['acsUrls'], $row['serviceLocation'], $confArray['sp_2']['entityID'])?>" target="_blank"><?=$confArray['sp_2']['name']?></a>
+                    <b>SP</b> <a style="font: 10px 'Tahoma', sans-serif;" href="<?=createCheckUrl($confArray['sp_1']['acsUrls'], $row['serviceLocation'], $confArray['sp_1']['entityID'])?>" target="_blank"><?=$confArray['sp_1']['name']?></a><br/><br/>
+                    <b>SP</b> <a style="font: 10px 'Tahoma', sans-serif;" href="<?=createCheckUrl($confArray['sp_2']['acsUrls'], $row['serviceLocation'], $confArray['sp_2']['entityID'])?>" target="_blank"><?=$confArray['sp_2']['name']?></a>
                 </td>
             <?php
             } 
