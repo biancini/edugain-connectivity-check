@@ -19,10 +19,10 @@ include ("utils.php");
 
 class IdpChecks {
     public function __construct() {
-        $this->arrContextOptions=array(
-            "ssl"=>array(
-                "verify_peer"=>false,
-                "verify_peer_name"=>false,
+        $this->arrContextOptions = array(
+            "ssl" => array(
+                "verify_peer" => false,
+                "verify_peer_name" => false,
             ),
         );
 
@@ -37,13 +37,16 @@ class IdpChecks {
         $this->spsKeys[] = preg_grep($regexp, $this->confArrayKeys);
         foreach ($this->spsKeys as $key => $value) {
             foreach($value as $sp => $val) {
-                $this->spEntityIDs[] = $this->confArray[$val][ENTITY_ID];
+                $this->spEntityIDs[] = $this->confArray[$val]['entityID'];
                 $this->spACSurls[] = $this->confArray[$val]['acs_url'];
             }
         }
 
         $this->parallel = intval($this->confArray['check_script']['parallel']);
         $this->checkHistory = intval($this->confArray['check_script']['check_history']);
+
+        global $verbose;
+        $verbose = $this->confArray['check_script']['verbose'];
 
         if (count($this->spEntityIDs) != count($this->spACSurls)) {
             throw new Exception("Configuration error. Please check properties.ini.");
@@ -86,7 +89,7 @@ class IdpChecks {
             $pid = pcntl_fork();
             if (!$pid) {
                 //In child
-                print "Executing check for " . $idpList[$count][ENTITY_ID] . "\n";
+                print "Executing check for " . $idpList[$count]['entityID'] . "\n";
                 executeIdPchecks($idpList[$count], $this->spEntityIDs, $this->spACSurls, $this->dbConnection, $this->checkHistory);
                 return false;
             }
@@ -99,7 +102,7 @@ class IdpChecks {
                 $pid = pcntl_fork();
                 if (!$pid) {
                     //In child
-                    print "Executing check for " . $idpList[$count][ENTITY_ID] . "\n";
+                    print "Executing check for " . $idpList[$count]['entityID'] . "\n";
                     executeIdPchecks($idpList[$count], $this->spEntityIDs, $this->spACSurls, $this->dbConnection, $this->checkHistory);
                     return false;
                 }
@@ -118,7 +121,7 @@ class IdpChecks {
         $edugainFedsUrl = $this->confArray['edugain_db_json']['json_feds_url'];
         $jsonEdugainFeds = file_get_contents($edugainFedsUrl, false, stream_context_create($this->arrContextOptions));
 
-        if ($jsonEdugainFeds === false){
+        if ($jsonEdugainFeds === false) {
             print "Error fetching JSON eduGAIN Federation members\n";
         } else {
             $mysqli = getDbConnection($this->dbConnection);

@@ -24,6 +24,9 @@ include ("utils.php");
 $conf_array = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
 $map_url = $conf_array['check_script']['map_url'];
 
+global $verbose;
+$verbose = $conf_array['check_script']['verbose'];
+
 $spEntityIDs = array();
 $spACSurls = array();
 
@@ -33,7 +36,7 @@ $conf_array_keys = array_keys($conf_array);
 $sps_keys[] = preg_grep ($regexp, $conf_array_keys);
 foreach ($sps_keys as $key => $value) {
         foreach($value as $sp => $val) {
-                $spEntityIDs[] = $conf_array[$val][ENTITY_ID];
+                $spEntityIDs[] = $conf_array[$val]['entityID'];
                 $spACSurls[] = $conf_array[$val]['acs_url'];
         }
 }
@@ -61,8 +64,8 @@ if (!$idpList) {
 }
 
 foreach ($idpList as $curIdP) {
-    if ($curIdP[ENTITY_ID] == $argv[1]) {
-        print "Executing check for " . $curIdP[ENTITY_ID] . "\n";
+    if ($curIdP['entityID'] == $argv[1]) {
+        print "Executing check for " . $curIdP['entityID'] . "\n";
         executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
     }
 }

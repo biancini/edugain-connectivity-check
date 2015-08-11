@@ -1,7 +1,7 @@
 <?php
 # Copyright 2015 Géant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License")
+# Licensed under the GEANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -11,14 +11,11 @@
 # limitations under the License.
 #
 # This software was developed by Consortium GARR. The research leading to
-# these results has received funding from the European Community¹s Seventh
+# these results has received funding from the European Community's Seventh
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
-# (GÉANT).
+# (GEANT).
 
 include (dirname(__FILE__)."/../PHPMailer/PHPMailerAutoload.php");
-
-define('ENTITY_ID', 'entityID');
-define('ERROR', 'Error: ');
 
 /**
  Create a new DB connection and return its pointer.
@@ -68,7 +65,7 @@ function executeStatement($mysqli, $r, $sql, $params) {
     $stmt = $mysqli->prepare($sql);
 
     if ($params != NULL && !call_user_func_array(array($stmt, "bind_param"), refValues($params))) {
-        throw new Exception(ERROR . mysqli_error($mysqli));
+        throw new Exception('Error: ' . mysqli_error($mysqli));
     }
 
     $stmt->execute();
@@ -76,7 +73,7 @@ function executeStatement($mysqli, $r, $sql, $params) {
     if ($r === true) {
         $result = $stmt->get_result();
         if (!$result) {
-            throw new Exception(ERROR . mysqli_error($mysqli));
+            throw new Exception('Error: ' . mysqli_error($mysqli));
         }
 
         return $result;
@@ -90,7 +87,7 @@ function getEntityPreviousStatus($mysqli, $idp) {
         return array(false, NULL);
     }
 
-    $result = executeStatement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck", array("s", $idp[ENTITY_ID]));
+    $result = executeStatement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck", array("s", $idp['entityID']));
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
             $previousStatus = $row['currentResult'];
@@ -98,13 +95,13 @@ function getEntityPreviousStatus($mysqli, $idp) {
         }
         return array($ignoreEntity, $previousStatus);
     } else {
-        executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation) VALUES (?, ?, ?, ?, ?, ?)", array("ssssss", $idp[ENTITY_ID], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts'], $idp['SingleSignOnService']));
+        executeStatement($mysqli, false, "INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation) VALUES (?, ?, ?, ?, ?, ?)", array("ssssss", $idp['entityID'], $idp['registrationAuthority'], $idp['displayName'],  $idp['technicalContacts'], $idp['supportContacts'], $idp['SingleSignOnService']));
         return array(false, NULL);
     }
 }
 
 /**
- Execute checks on each input IdP.
+ Execute
 
  @param array $idp Array containing the IdP entity
  @param array $spEntityIDs containing the SPs entityID
@@ -114,12 +111,10 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
     $mysqli = ($dbConnection !== NULL) ? getDbConnection($dbConnection) : null;
     list($ignoreEntity, $previousStatus) = getEntityPreviousStatus($mysqli, $idp);
 
-    if ($ignoreEntity == true) {
+    if ($ignoreEntity === true) {
         // update EntityDescriptors
-        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET currentResult = NULL WHERE entityID = ?", array("s", $idp[ENTITY_ID]));
-
-        print "Entity " . $idp[ENTITY_ID] . " ignored.\n";
-
+        executeStatement($mysqli, false, "UPDATE EntityDescriptors SET updated = 1, currentResult = NULL, previousResult = NULL WHERE entityID = ?", array("s", $idp['entityID']));
+        print "Entity " . $idp['entityID'] . " ignored.\n";
 	     $mysqli->close();
         return;
     }
@@ -129,35 +124,21 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
     $ignoreReason = '';
     
     for ($i = 0; $i < count($spEntityIDs); $i++) {
-        $result = checkIdp($idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
+        $result = checkIdp($idp['entityID'], $idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
         $status = array_key_exists('status', $result) ? $result['status'] : -1;
         $reason = array_key_exists('message', $result) ? $result['message'] : '0 - UNKNOWN-Error';
         
-        if ($result['error']){
-           switch ($result['error'][0]){
-              case "OpenSSL was built without SSLv2 support":
-                 $ignoreReason = "IdP excluded because SSLv2 is insecure and therefore not supported in the check.";
-                 break;
-           }
-        }
-        
-        executeStatement($mysqli, false, "INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", array("sssssisi", $idp[ENTITY_ID], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory));
+        executeStatement($mysqli, false, "INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", array("sssssisi", $idp['entityID'], $spEntityIDs[$i], $idp['SingleSignOnService'], $spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory));
     }
         
-    if($ignoreReason){
-      executeStatement($mysqli, false, "UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = ?, currentResult = NULL, previousResult = NULL, updated = 1 WHERE entityID = ?", array("ss", $ignoreReason, $idp[ENTITY_ID]));
-    }
-    else{
-      executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp[ENTITY_ID]));
-    }
+    executeStatement($mysqli, false, "UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?", array("ssss", date('Y-m-d\TH:i:s\Z'), $reason, $previousStatus, $idp['entityID']));
         
     if ($status === 0) {
-        print "The IdP ".$idp[ENTITY_ID]." consumed metadata correctly\n";
-    }
-    else {
-        print "The IdP ".$idp[ENTITY_ID]." did NOT consume metadata correctly.\n\n";
+        print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
+    } else {
+        print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
         print "Reason: " . $reason . "\n";
-        print "Messages: " . print_r($result['error'], true) . "\n\n";       
+        print "Messages: " . $result['error'] . "\n\n";       
     }
 
     if ($mysqli !== NULL) {
@@ -241,7 +222,7 @@ function getIdpMailContact($idp, $type) {
         foreach ($contact['e_p']['EmailAddress'] as $emailAddress) {
             if (0 === strpos($emailAddress, 'mailto:')) {
                 $contacts[] = preg_replace('/(mailto:)/', '', $emailAddress);
-            } else{
+            } else {
                 $contacts[] = $emailAddress;
             }
         }
@@ -266,8 +247,7 @@ function extractIdPfromJSON($jsonIdpList) {
 
     foreach ($idpsList as $idp) {
         $idps[] = array(
-            /*ENTITY_ID => (string) $idp[ENTITY_ID],*/
-            ENTITY_ID => (string) $idp['entityID'],
+            'entityID' => (string) $idp['entityID'],
             'registrationAuthority' => (string) $idp['registrationAuthority'],
             'SingleSignOnService' => (string) $idp['Location'],
             'displayName' => getDisplayName($idp),
@@ -290,7 +270,7 @@ function extractIdPfromJSON($jsonIdpList) {
                               "supportContacts" => array()),
  */
 
-function extractIdPfromXML ($metadata) {
+function extractIdPfromXML($metadata) {
         $xml = simplexml_load_string($metadata, null, LIBXML_COMPACT);
     
         // Register the used namespaced into the SimpleXMLElement
@@ -305,7 +285,7 @@ function extractIdPfromXML ($metadata) {
          foreach($items as $idp) {    
              $count++;
 
-             $idps[$count][ENTITY_ID] = (string)$idp[ENTITY_ID];
+             $idps[$count]['entityID'] = (string)$idp['entityID'];
 
              $idps[$count]['registrationAuthority'] = (string)$idp->xpath("./*[local-name()='Extensions']/*[local-name()='RegistrationInfo']/@registrationAuthority")[0];
              
@@ -415,12 +395,28 @@ function generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date
 }
 
 function getUrlWithCurl($url) {
+   global $verbose;
+
    $curl = curl_init($url);
 
    $html = false;
    $curlError = false;
-   for ($vers = 0; $vers <= 4; $vers++) {
+   for ($vers = 0; $vers <= 6; $vers++) {
+     /* One of CURL_SSLVERSION_DEFAULT (0),
+               CURL_SSLVERSION_TLSv1   (1),
+               CURL_SSLVERSION_SSLv2   (2),
+               CURL_SSLVERSION_SSLv3   (3),
+               CURL_SSLVERSION_TLSv1_0 (4),
+               CURL_SSLVERSION_TLSv1_1 (5) 
+            or CURL_SSLVERSION_TLSv1_2 (6).
+     */
+     if ($vers === 2) continue; //Disable SSLv2
+
      if ($html === false) {
+       if ($verbose) {
+         print "Using CURL with SSLVERSION = " . $vers . "\n";
+       }
+
        curl_setopt_array($curl, array(
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_FRESH_CONNECT => true,
@@ -428,8 +424,8 @@ function getUrlWithCurl($url) {
           CURLOPT_SSL_VERIFYHOST => false,
           CURLOPT_COOKIEJAR => "/dev/null",
           CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_TIMEOUT => 45,
-          CURLOPT_CONNECTTIMEOUT => 60,
+          CURLOPT_TIMEOUT => 90,
+          CURLOPT_CONNECTTIMEOUT => 90,
           CURLOPT_SSLVERSION => $vers,
           CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
        ));
@@ -437,6 +433,11 @@ function getUrlWithCurl($url) {
 
        if ($html === false) {
          $curlError = curl_error($curl);
+         if ($verbose) {
+             print "CURL error with SSLVERSION = " . $vers . " = " . $curlError . "\n";
+         }
+       } else {
+         $curlError = false;
        }
      }
    }
@@ -457,7 +458,7 @@ function getUrlWithCurl($url) {
    @param String $httpRedirectServiceLocation the HTTP-Redirect service location URL of an identity provider
    @return array("status", "http_code", "error", "html")
 */
-function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
+function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    global $verbose;
    
    date_default_timezone_set('UTC');
@@ -467,7 +468,7 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
    $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
    list($curlError, $info, $html) = getUrlWithCurl($url);
 
-   $error = array();
+   $error = '';
    $status = 0;
    $message = '1 - OK';
 
@@ -475,16 +476,16 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
       $status = 3;
       $message = '3 - CURL-Error';
       if ($verbose) {
-          echo "Curl error: ".$curlError."\n";
+          echo $idpEntityId . " Curl error: ".$curlError."\n";
       }
-      $error[] = $curlError;
+      $error = $curlError;
    } else if ($info['http_code'] != 200 && $info['http_code'] != 401) {
       $status = 3;
       $message = '3 - HTTP-Error';
       if ($verbose) {
-          echo "Status code: ".$info['http_code']."\n";
+          echo $idpEntityId . " Status code: ".$info['http_code']."\n";
       }
-      $error[] = "Status code: ".$info['http_code'];
+      $error = "Status code: ".$info['http_code'];
    } else {
       $patternUsername = '/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
       $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
@@ -493,18 +494,18 @@ function checkIdp($httpRedirectServiceLocation, $spEntityID, $spACSurl) {
          $status = 2;
          $message = '2 - FORM-Invalid';
          if ($verbose) {
-             echo "Did not find input for username or password.\n";
+             echo $idpEntityId . " Did not find input for username or password.\n";
          }
-         $error[] = "Did not find input for username or password.";
+         $error = "Did not find input for username or password.";
       }
    }
 
    return array(
-      "status" => $status,
-      "message" => $message,
-      "http_code" => $info['http_code'],
-      "error" => $error,
-      "html" => ($html) ? $html : "",
+      'status' => $status,
+      'message' => $message,
+      'http_code' => $info['http_code'],
+      'error' => $error,
+      'html' => ($html) ? $html : "",
    );
 }
 

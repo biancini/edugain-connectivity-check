@@ -9,6 +9,7 @@
 map_url = http://mds.edugain.org
 parallel = 30
 check_history = 2
+verbose = False
 
 [sp_1]
 name = SWITCH
