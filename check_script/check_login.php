@@ -21,7 +21,7 @@ if (count($argv) < 2) {
 
 include ("utils.php");
 
-$conf_array = parse_ini_file(dirname(__FILE__) . 'properties.ini', true);
+$conf_array = parse_ini_file(dirname(__FILE__) . '/properties.ini', true);
 $map_url = $conf_array['check_script']['map_url'];
 
 global $verbose;
