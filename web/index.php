@@ -31,7 +31,7 @@ $params = getAllParameters(array(
     array('rpp', 'All', false),
 ));
 
-$confArray = parse_ini_file('../properties.ini', true);
+$confArray = parse_ini_file('properties.ini.php', true);
 $dbConnection = $confArray['db_connection'];
 $mysqli = getDbConnection($dbConnection);
 

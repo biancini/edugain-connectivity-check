@@ -31,7 +31,7 @@ class IdpChecks {
 
         $regexp = "/^sp_\d/";
 
-        $this->confArray = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
+        $this->confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini', true);
         $this->dbConnection = $this->confArray['db_connection'];
         $this->confArrayKeys = array_keys($this->confArray);
         $this->spsKeys[] = preg_grep($regexp, $this->confArrayKeys);

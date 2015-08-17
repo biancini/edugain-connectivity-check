@@ -17,7 +17,7 @@
             
 include ("utils.php");
 
-$conf_array = parse_ini_file(dirname(__FILE__) . '/../properties.ini', true);
+$conf_array = parse_ini_file(dirname(__FILE__) . 'properties.ini', true);
 
 $db_connection = $conf_array['db_connection'];
 $email_properties = $conf_array['email'];

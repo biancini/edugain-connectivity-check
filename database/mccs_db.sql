@@ -5,6 +5,7 @@ SET CHARACTER SET utf8;
 CREATE DATABASE IF NOT EXISTS mccs_db CHARACTER SET=utf8;
 
 GRANT ALL PRIVILEGES ON mccs_db.* TO mccs_user@localhost IDENTIFIED BY 'password_db_mccs';
+GRANT SELECT ON mccs_db.* TO mccs_webuser@localhost IDENTIFIED BY 'password_db_mccs_web';
 FLUSH PRIVILEGES;
 
 use mccs_db;
