@@ -53,15 +53,17 @@ eduGAIN Connectivity Check Service
 
         mysql -u root -pPASSWORD < /opt/mccs/database/mccs_db.sql
 
-7. Copy the **properties.ini.example** to **properties.ini** and change it with your DB and Mail parameters.
+7. Copy the **properties.ini.example** to **properties.ini** in the folder **check_script** and change it with your DB and Mail parameters.
 
-8. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
+8. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **web** and change it with your DB parameters (in this case the user created should only have SELECT grant on the tables of the database).
+
+9. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
         00 5 * * * root /usr/bin/php /opt/mccs/check_script/mccs.php > /var/log/eccs.log
-   
-9. Open a web browser and go to the MCCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
+  
+10. Open a web browser and go to the MCCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
-10. Enjoy yourself
+11. Enjoy yourself
 
 
 # Useful notes
