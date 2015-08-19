@@ -27,20 +27,32 @@ eduGAIN Connectivity Check Service
 
 3. Retrieve the service code and put it into the `/opt` directory
 
-        git clone --recursive https://malavolti@bitbucket.org/biancini/mccs.git /opt/mccs
+        git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
 
 4. Create a new site for ECCS on the Apache instance:
 
         vim /etc/apache2/sites-available/eccs.conf
    
+        Apache < 2.4 : 
 
         <IfModule mod_alias.c>
-            Alias /eccs /opt/mccs/web
+            Alias /eccs /opt/edugain-connectivity-check/web
 
-            <Directory /opt/mccs/web>
+            <Directory /opt/edugain-connectivity-check/web>
                 Options Indexes MultiViews FollowSymLinks
                 Order deny,allow
                 Allow from all
+            </Directory>
+        </IfModule>
+
+        
+        Apache >= 2.4 :
+
+        <IfModule mod_alias.c>
+            Alias /eccs /opt/edugain-connectivity-check/web
+
+            <Directory /opt/edugain-connectivity-check/web>
+                Options Indexes MultiViews FollowSymLinks
                 Require all granted
             </Directory>
         </IfModule>
@@ -65,20 +77,19 @@ eduGAIN Connectivity Check Service
 
 11. Enjoy yourself
 
-
 # Useful notes
 1. HOWTO Disable an entity on the service's database:
 
-        update EntityDescriptors set ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect' where entityID = 'https://idp-test-1.example.org/SSO/saml2/idp';
-        
+        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect', currentResult = NULL, previousResult = NULL WHERE entityID = 'https://idp-test-1.example.org/SSO/saml2/idp';
+
 2. HOWTO Disable more than one entity on the service's database:
 
-        update EntityDescriptors set ignoreReason = 'Due to SSL issues', ignoreEntity = 1 where entityID in ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
-                    
+        UPDATE EntityDescriptors SET ignoreReason = 'Due to SSL issues', ignoreEntity = 1, currentResult = NULL, previousResult = NULL WHERE entityID IN ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
+
 3. HOWTO Disable an entire Federation on the service's database:
-      
-        update EntityDescriptors set ignoreEntity = 1, ignoreReason = 'Federation excluded from check' where registrationAuthority = 'https://registrationAuthority_1.example.org';
+
+        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority = 'https://registrationAuthority_1.example.org';
 
 4. HOWTO Disable more than one Federation on the service's database:
 
-         update EntityDescriptors set ignoreEntity = 1, ignoreReason = 'Federation excluded from check' where registrationAuthority in ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
+         UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');

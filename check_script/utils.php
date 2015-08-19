@@ -446,6 +446,7 @@ function getUrlWithCurl($url) {
 
    $html = cleanUtf8Curl($html, $curl);
    $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
+   $html = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $html);
 
    curl_close($curl);
    return array($curlError, $info, $html);
@@ -487,8 +488,8 @@ function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spAC
       }
       $error = "Status code: ".$info['http_code'];
    } else {
-      $patternUsername = '/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
-      $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
+      $patternUsername = '/<input[\s]+[^>]*((type=\s*[\'"](text|email)[\'"]|user)|(name=\s*[\'"](name)[\'"]))[^>]*>/im';
+      $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"]|password)[^>]*>/im';
 
       if (!preg_match($patternUsername, $html) || !preg_match($patternPassword, $html)) {
          $status = 2;
