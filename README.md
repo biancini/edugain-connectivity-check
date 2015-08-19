@@ -27,20 +27,32 @@ eduGAIN Connectivity Check Service
 
 3. Retrieve the service code and put it into the `/opt` directory
 
-        git clone --recursive https://malavolti@bitbucket.org/biancini/mccs.git /opt/mccs
+        git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
 
 4. Create a new site for ECCS on the Apache instance:
 
         vim /etc/apache2/sites-available/eccs.conf
    
+        Apache < 2.4 : 
 
         <IfModule mod_alias.c>
-            Alias /eccs /opt/mccs/web
+            Alias /eccs /opt/edugain-connectivity-check/web
 
-            <Directory /opt/mccs/web>
+            <Directory /opt/edugain-connectivity-check/web>
                 Options Indexes MultiViews FollowSymLinks
                 Order deny,allow
                 Allow from all
+            </Directory>
+        </IfModule>
+
+        
+        Apache >= 2.4 :
+
+        <IfModule mod_alias.c>
+            Alias /eccs /opt/edugain-connectivity-check/web
+
+            <Directory /opt/edugain-connectivity-check/web>
+                Options Indexes MultiViews FollowSymLinks
                 Require all granted
             </Directory>
         </IfModule>
