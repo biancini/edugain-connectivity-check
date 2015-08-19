@@ -487,8 +487,8 @@ function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spAC
       }
       $error = "Status code: ".$info['http_code'];
    } else {
-      $patternUsername = '/<input[\s]+[^>]*(type=\s*[\'"](text|email)[\'"]|user)[^>]*>/im';
-      $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"])[^>]*>/im';
+      $patternUsername = '/<input[\s]+[^>]*((type=\s*[\'"](text|email)[\'"]|user)|(name=\s*[\'"](name)[\'"]))[^>]*>/im';
+      $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"]|password)[^>]*>/im';
 
       if (!preg_match($patternUsername, $html) || !preg_match($patternPassword, $html)) {
          $status = 2;
