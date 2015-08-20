@@ -445,7 +445,8 @@ function getUrlWithCurl($url) {
    $info = curl_getinfo($curl);
 
    $html = cleanUtf8Curl($html, $curl);
-   $html = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $html));
+   $html = preg_replace('/\s*$^\s*/m', "\n", $html);
+   $html = preg_replace('/[ \t]+/', ' ', $html);
    $html = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $html);
 
    curl_close($curl);
