@@ -20,6 +20,9 @@ app.controller('testsController', function ($scope, $http, $filter, $location) {
     $scope.currentPage = 1;
     $scope.gap = 5;
 
+    $scope.today = new Date();
+    $scope.yesterday = new Date().setDate($scope.today.getDate()-1);
+
     var searchMatch = function (haystack, needle, exact) {
         if (!needle) {
             return true;
@@ -36,7 +39,7 @@ app.controller('testsController', function ($scope, $http, $filter, $location) {
     $scope.filters = {
         'entityID': getParameterByName('entityid'),
         'spEntityID': undefined,
-        'checkTime': undefined,
+        'checkTime': 'All',
         'httpStatusCode': undefined,
         'checkResult': 'All'
     };
@@ -60,6 +63,7 @@ app.controller('testsController', function ($scope, $http, $filter, $location) {
         $scope.filteredTests = $filter('filter')($scope.tests, function (item) {
             for (var attr in $scope.filters) {
                 if ((attr != 'checkResult' || $scope.filters[attr] != 'All')
+                  && (attr != 'checkTime' || $scope.filters[attr] != 'All')
                   && !searchMatch(item[attr], $scope.filters[attr], $scope.exactFilters.indexOf(attr) > -1)) {
                    return false;
                 }

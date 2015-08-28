@@ -56,9 +56,9 @@
         </td>
         <td class="filter_td">
             <select ng-model="filters.checkTime">
-                <option ng-value="All">All</option>
-                <option ng-value="1">Today</option>
-                <option ng-value="2">Yesterday</option>
+                <option value="All">All</option>
+                <option value="{{ today | date:'yyyy-MM-dd' }}">Today</option>
+                <option value="{{ yesterday | date:'yyyy-MM-dd' }}">Yesterday</option>
             </select>
         </td>
         <td class="filter_td">
