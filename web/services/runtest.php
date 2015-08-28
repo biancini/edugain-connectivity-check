@@ -31,5 +31,4 @@ if (!$acsUrl || !$serviceLocation || !$spEntityID) {
 
 $checkUrl = createCheckUrl($acsUrl, $serviceLocation, $spEntityID);
 header("Location: $checkUrl");
-exit;
 ?>
