@@ -16,6 +16,7 @@
   (GÉANT).
 -->
 
+<form ng-submit="search(filters)">
 <table class="list_table">
   <thead>
     <th custom-sort order="'displayName'" sort="sort">Display Name</th>
@@ -67,7 +68,7 @@
                 <option ng-value="3 - CURL-Error">CURL-Error</option>
             </select>
         </td>
-        <td class="filter_td"><input type="submit" ng-click="search(filters)" ></td>
+        <td class="filter_td"><input type="submit" /></td>
     </tr>
     <tr>
         <td class="filter_td" colspan="4">IdP data</td>
@@ -89,3 +90,4 @@
     </tr>
   </tbody>
 </table>
+</form>
