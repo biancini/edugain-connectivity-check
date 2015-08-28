@@ -211,7 +211,7 @@ $confArray = parse_ini_file('properties.ini.php', true);
 $dbConnection = $confArray['db_connection'];
 $mysqli = getDbConnection($dbConnection);
 
-$action = getParameter('action', 'entities');
+$action = getParameter('action', '');
 if ($action == 'entities') {
     getEntities($mysqli);
 }
@@ -222,6 +222,8 @@ elseif ($action == 'checkhtml') {
     getCheckHtml($mysqli);
 }
 else {
-    throw new Exception("Wrong action, valid actions are entities or checks.");
+    $message = "Wrong action, valid actions are entities or checks.";
+    print $message;
+    throw new Exception($message);
 }
 ?>
