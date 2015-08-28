@@ -114,7 +114,7 @@ app.controller('idpsController', function ($scope, $http, $filter, $location) {
     $scope.getIdP = function(pageSize) {
         $scope.idpsPerPage = (pageSize) ? pageSize : $scope.pageSizes[2];
 
-        url = 'services/json_api.php?rpp=All';
+        url = 'services/json_api.php?action=entities&rpp=All';
         $http.get(url).success(function (response) {
             $scope.idps = response.results;
             $scope.numRows = response.num_rows;

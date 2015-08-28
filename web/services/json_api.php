@@ -222,7 +222,7 @@ elseif ($action == 'checkhtml') {
     getCheckHtml($mysqli);
 }
 else {
-    $message = "Wrong action, valid actions are entities or checks.";
+    $message = "Wrong action, valid actions are entities, checks or checkhtml.";
     print $message;
     throw new Exception($message);
 }
