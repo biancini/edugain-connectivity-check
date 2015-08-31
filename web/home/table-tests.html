@@ -1,0 +1,94 @@
+<!--
+  Copyright 2015 Géant Association
+ 
+  Licensed under the GÉANT Standard Open Source (the "License")
+  you may not use this file except in compliance with the License.
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+ 
+  This software was developed by Consortium GARR. The research leading to
+  these results has received funding from the European Community¹s Seventh
+  Framework Programme (FP7/2007-2013) under grant agreement nº 238875
+  (GÉANT).
+-->
+
+<form ng-submit="search(filters)">
+<table class="list_table">
+  <thead>
+    <th custom-sort order="'entityID'" sorting="sorting" update-fn="showResults(pagination.itemsPerPage)">entityID</td>
+    <th custom-sort order="'spEntityID'" sorting="sorting" update-fn="showResults(pagination.itemsPerPage)">spEntityID</td>
+    <th custom-sort order="'checkTime'" sorting="sorting" update-fn="showResults(pagination.itemsPerPage)">Test Time</th>
+    <th custom-sort order="'httpStatusCode'" sorting="sorting" update-fn="showResults(pagination.itemsPerPage)">HTTP status code</td>
+    <th custom-sort order="'checkResult'" sorting="sorting" update-fn="showResults(pagination.itemsPerPage)">Test Result</th>
+    <th>Test</th>
+    <th>HTML</th>
+  </thead>
+  <tfoot>
+    <tr>
+      <td colspan="7" align="center">
+      Records found: {{ numRows }}
+      (showing pages of <select ng-model="pagination.itemsPerPage" ng-options="page as page.name for page in pagination.pageSizes" ng-change="showResults(pagination.itemsPerPage)"></select> elements)
+      </td>
+    </tr>
+    <tr>
+      <td colspan="7" align="center">
+          <span ng-repeat="n in pagination.getPageRange()"
+                ng-class="{active: n == pagination.currentPage}"
+                ng-click="pagination.setPage(n)">
+              <span ng-if="n == pagination.currentPage">{{ n }}</span>
+              <a href="#" ng-bind="n" ng-if="n != pagination.currentPage">{{ n }}</a>
+              {{ $last ? '' : ' | ' }}
+          </span>
+      </td>
+    </tr>
+  </tfoot>
+  <tbody>
+    <tr>
+        <td class="filter_td">
+            <input type="text" class="wide" ng-model="filters.entityID" />
+        </td>
+        <td class="filter_td">
+            <input type="text" class="wide" ng-model="filters.spEntityID" />
+        </td>
+        <td class="filter_td">
+            <select ng-model="filters.checkTime">
+                <option value="All">All</option>
+                <option value="{{ today | date:'yyyy-MM-dd' }}">Today</option>
+                <option value="{{ yesterday | date:'yyyy-MM-dd' }}">Yesterday</option>
+            </select>
+        </td>
+        <td class="filter_td">
+            <input type="text" ng-model="filters.httpStatusCode" />
+        </td>
+        <td class="filter_td">
+            <select ng-model="filters.checkResult">
+                <option ng-value="All">All</option>
+                <option ng-value="1 - OK">OK</option>
+                <option ng-value="2 - FORM-Invalid">FORM-Invalid</option>
+                <option ng-value="3 - HTTP-Error">HTTP-Error</option>
+                <option ng-value="3 - CURL-Error">CURL-Error</option>
+            </select>
+        </td>
+        <td>&nbsp;</td>
+        <td class="filter_td"><input type="submit" /></td>
+    </tr>
+    <tr>
+        <td class="filter_td" colspan="3">Test params</td>
+        <td class="filter_td" colspan="4">Test results</td>
+    </tr>
+    <tr ng-repeat="test in pagination.pagedItems[pagination.currentPage-1] | orderBy:sort.sortingOrder:sort.reverse" class="{{ test.css_class }}">
+      <td>{{ test.entityID }}</td>
+      <td>{{ test.spEntityID }}</td>
+      <td>{{ test.checkTime }}</td>
+      <td>{{ test.httpStatusCode }}</td>
+      <td>{{ test.checkResult }}</td>
+      <td><a href="services/runtest.php?acsUrl={{ test.acsUrl }}&serviceLocation={{ test.serviceLocation }}&spEntityID={{ test.spEntityID }}" target="_blank">Perform test yourself</a></td>
+      <td><a href="html.html?checkid={{test.checkID}}" target="_blank">Show HTML returned for this test</a></td>
+    </tr>
+  </tbody>
+</table>
+</form>

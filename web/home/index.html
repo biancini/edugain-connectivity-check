@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--
+  Copyright 2015 Géant Association
+ 
+  Licensed under the GÉANT Standard Open Source (the "License")
+  you may not use this file except in compliance with the License.
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+ 
+  This software was developed by Consortium GARR. The research leading to
+  these results has received funding from the European Community¹s Seventh
+  Framework Programme (FP7/2007-2013) under grant agreement nº 238875
+  (GÉANT).
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" ng-app="EccsApplication">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <link media="screen" href="css/ui.switchbutton.min.css" type="text/css" rel="stylesheet"/>
+    <link media="screen" href="css/eduroam.css" type="text/css" rel="stylesheet"/>
+
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="js/jquery.switchbutton.min.js"></script>
+    <script type="text/javascript" src="js/eccs.js"></script>
+    <script type="text/javascript" src="js/eccs-idps.js"></script>
+
+    <title>eduGAIN Connectivity Check</title>
+</head>
+<body>
+<center>
+    <table class="container" cellpadding="5" cellspacing="0">
+        <tr>
+            <td>
+                <a title="edugain home" href="http://www.geant.net/service/edugain/pages/home.aspx"><img src="images/edugain.png"></a>
+            </td>
+        </tr>
+        <tr>
+            <td class="body" ng-controller="EccsController" ng-init="page = 'idp'">
+                <div ng-include="'menu.html'"></div>
+                <div ng-controller="IdpsController" ng-include="'table-idps.html'"></div>
+            </td>
+        </tr>
+    </table>
+</center>
+
+</body>
+</html>

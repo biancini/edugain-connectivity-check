@@ -1,0 +1,30 @@
+;<?php
+;throw new Exception("Should not be here.");
+;/*
+
+; This configuration file contains information to
+; connect to the MySQL database used to store
+; metadata and idp check information.
+
+; Rename this file to properties.ini.php and check
+; information before running the code.
+
+[sp_1]
+name = SWITCH
+entityID = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
+acs_url = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
+
+[sp_2]
+name = GARR
+entityID = https://sp24-test.garr.it/shibboleth
+acs_url = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
+
+[db_connection]
+db_host = localhost
+db_port = 3306
+db_name = mccs_db
+db_user = mccs_webuser
+db_password = password_db_mccs_web
+db_sock = /var/run/mysqld/mysqld.sock
+
+;*/
