@@ -13,11 +13,13 @@ app.controller('HtmlController', function ($scope, EccsJsonAPI) {
         'entityID': undefined,
     }
 
-    var promise = $scope.jsonApi.getCheck($scope.checkid);
-    promise.then(function(results) {
-        $scope.check = results;
-        $scope.checkurl = 'services/html.php?checkid=' + $scope.checkid;
-    });
+    $scope.getCheckHtml = function () {
+        var promise = $scope.jsonApi.getCheck($scope.checkid);
+        promise.then(function(results) {
+            $scope.check = results;
+            $scope.checkurl = 'services/html.php?checkid=' + $scope.checkid;
+        });
+    };
 
     $scope.getCheckHtml();
 });

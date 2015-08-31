@@ -224,60 +224,60 @@ app.service('Sorting', function($filter) {
 });
 
 app.directive("customSort", function() {
-  return {
-    restrict: 'A',
-    transclude: true,    
-    scope: {
-      order: '=',
-      sorting: '=',
-      updateFn: '&'
-    },
-    template : 
-      '<a ng-click="sort_by(order)">'+
-      '  <span class="link" ng-transclude></span>'+
-      '  <img ng-src="{{selectedCls(order)}}" />'+
-      '</a>',
-    link: function(scope) {
-      // change sorting order
-      scope.sort_by = function(newSortingOrder) {       
-        if (scope.sorting.sortingOrder == newSortingOrder) {
-            scope.sorting.reverse = !scope.sorting.reverse;
-        }
+    return {
+        restrict: 'A',
+        transclude: true,    
+        scope: {
+            order: '=',
+            sorting: '=',
+            updateFn: '&'
+        },
+        template:
+            '<a ng-click="sort_by(order)">'+
+            '  <span class="link" ng-transclude></span>'+
+            '  <img ng-src="{{selectedCls(order)}}" />'+
+            '</a>',
+        link: function(scope) {
+            // change sorting order
+            scope.sort_by = function(newSortingOrder) {       
+                if (scope.sorting.sortingOrder == newSortingOrder) {
+                    scope.sorting.reverse = !scope.sorting.reverse;
+                }
 
-        scope.sorting.sortingOrder = newSortingOrder;
-        scope.updateFn();
-      };
+                scope.sorting.sortingOrder = newSortingOrder;
+                scope.updateFn();
+            };
    
-      scope.selectedCls = function(column) {
-        if (column == scope.sorting.sortingOrder) {
-          return ('images/' + ((scope.sorting.reverse) ? 'desc' : 'asc') + '.gif');
-        }
-        else {
-          return 'images/sort.gif' 
-        }
-      };      
-    }// end link
-  }
+            scope.selectedCls = function(column) {
+                if (column == scope.sorting.sortingOrder) {
+                    return ('images/' + ((scope.sorting.reverse) ? 'desc' : 'asc') + '.gif');
+                }
+                else {
+                    return 'images/sort.gif' 
+                }
+            };
+        }// end link
+    }
 });
 
 var getParameterByName = function (name) {
-  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
 
-  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-  var results = regex.exec(location.search);
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+    var results = regex.exec(location.search);
 
-  return results === null ? undefined : decodeURIComponent(results[1].replace(/\+/g, " "));
+    return results === null ? undefined : decodeURIComponent(results[1].replace(/\+/g, " "));
 };
 
 var searchMatch = function (haystack, needle, exact) {
-  if (!needle) {
-    return true;
-  }
+    if (!needle) {
+        return true;
+    }
 
-  if (exact) {
-    return haystack.toString().toLowerCase() == needle.toString().toLowerCase();
-  }
-  else {
-    return haystack.toString().toLowerCase().indexOf(needle.toString().toLowerCase()) !== -1;
-  }
+    if (exact) {
+        return haystack.toString().toLowerCase() == needle.toString().toLowerCase();
+    }
+    else {
+        return haystack.toString().toLowerCase().indexOf(needle.toString().toLowerCase()) !== -1;
+    }
 };
