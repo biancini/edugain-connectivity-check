@@ -36,9 +36,9 @@ eduGAIN Connectivity Check Service
         Apache < 2.4 : 
 
         <IfModule mod_alias.c>
-            Alias /eccs /opt/edugain-connectivity-check/web
+            Alias /eccs /opt/edugain-connectivity-check/web/home
 
-            <Directory /opt/edugain-connectivity-check/web>
+            <Directory /opt/edugain-connectivity-check/web/home>
                 Options Indexes MultiViews FollowSymLinks
                 Order deny,allow
                 Allow from all
@@ -49,9 +49,9 @@ eduGAIN Connectivity Check Service
         Apache >= 2.4 :
 
         <IfModule mod_alias.c>
-            Alias /eccs /opt/edugain-connectivity-check/web
+            Alias /eccs /opt/edugain-connectivity-check/web/home
 
-            <Directory /opt/edugain-connectivity-check/web>
+            <Directory /opt/edugain-connectivity-check/web/home>
                 Options Indexes MultiViews FollowSymLinks
                 Require all granted
             </Directory>
