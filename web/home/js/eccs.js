@@ -27,9 +27,9 @@ app.service('EccsJsonAPI', function($q, $http) {
 
     jsonApi.getNew = function() {
         var apis = {
-            urlIdp: 'services/json_api.php?action=entities&rpp=All',
-            urlTest: 'services/json_api.php?action=checks&rpp=All',
-            urlCheck: 'services/json_api.php?action=checkhtml&checkid=',
+            urlIdp: 'services/JsonAPI.php?action=entities&rpp=All',
+            urlTest: 'services/JsonAPI.php?action=checks&rpp=All',
+            urlCheck: 'services/JsonAPI.php?action=checkhtml&checkid=',
         }
 
         apis.getEntities = function () {
@@ -68,7 +68,7 @@ app.service('EccsJsonAPI', function($q, $http) {
         apis.getCheck = function (checkid) {
             var deferred = $q.defer();
             $http.get(apis.urlCheck + checkid).success(function (response) {
-                deferred.resolve(response.results);
+                deferred.resolve(response.result);
             });
 
             return deferred.promise;

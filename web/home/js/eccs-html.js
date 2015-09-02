@@ -17,7 +17,7 @@ app.controller('HtmlController', function ($scope, EccsJsonAPI) {
         var promise = $scope.jsonApi.getCheck($scope.checkid);
         promise.then(function(results) {
             $scope.check = results;
-            $scope.checkurl = 'services/html.php?checkid=' + $scope.checkid;
+            $scope.checkurl = 'services/CheckHtml.php?checkid=' + $scope.checkid;
         });
     };
 

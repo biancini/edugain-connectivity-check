@@ -15,19 +15,30 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nÂº 238875
 # (GÃ‰ANT).
 
-include("utils.php");
+require 'EccsService.php';
+require 'QueryBuilder.php';
 
-$confArray = parse_ini_file('properties.ini.php', true);
-$dbConnection = $confArray['db_connection'];
-$mysqli = getDbConnection($dbConnection);
+class CheckHtml extends EccsService {
+    public function handle() {
+        $id = $this->getParameter("checkid", "");
 
-$id = getParameter("checkid", "");
+        $query = new QueryBuilder();
+        $sql = "SELECT checkHtml FROM EntityChecks";
+        $query->setSql($sql);
+        $query->addAllSqlConditions(array('id' => $id), array(
+            array('id', 'id', false, NULL),
+        ));
 
-$sql = "SELECT checkHtml FROM EntityChecks WHERE id = ?";
-$result = executeStatement($mysqli, true, $sql, array("s", $id));
-while ($row = $result->fetch_assoc()) {
-    print $row['checkHtml'];
+        $result = $this->dbManager->executeStatement(true, $query);
+
+        $return = '';
+        while ($row = $result->fetch_assoc()) {
+            $return .= $row['checkHtml'] . '\n';
+        }
+
+        return $return;
+    }
 }
 
-$mysqli->close();
-?>
+$handler = new CheckHtml();
+print $handler->handle();

@@ -1,2 +1,6 @@
 properties.ini
 properties.ini.php
+composer.lock
+composer.phar
+**/bin/**
+**/vendor/**
