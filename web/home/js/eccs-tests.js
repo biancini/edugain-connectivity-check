@@ -39,19 +39,18 @@ app.controller('TestsController', function ($scope, EccsJsonAPI, Filtering, Sort
     });
 
     $scope.showResults = function (pageSize) {
-        // Finish to inizialize paginator by injecting total number of pages
-        $scope.pagination.setPageSize(pageSize, $scope.numRows);
-
-        // Filter, sort and paginate results
+        // Filter and sort results
         $scope.filtering.search($scope.items, $scope.filtering.filters);
         $scope.sorting.sort($scope.filtering.filteredItems);
+
+        // Paginate results
+        $scope.pagination.setPageSize(pageSize, $scope.sorting.sortedItems.length);
         $scope.pagination.groupToPages($scope.sorting.sortedItems);
     };
 
     var promise = $scope.jsonApi.getTests();
     promise.then(function(results) {
         $scope.items = results;
-        $scope.numRows = $scope.items.length;
         $scope.showResults();
     });
 });

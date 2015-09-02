@@ -131,7 +131,7 @@ app.service('Pagination', function() {
                 start = size - $scope.gap;
             }
 
-            for (var i = start; i < end; i++) {
+            for (var i = start; i <= end; i++) {
                 ret.push(i);
             }
 
@@ -167,13 +167,30 @@ app.service('Filtering', function($filter) {
             attrSupportingAll: [],
         }
 
+        filter.searchMatch = function (haystack, needle, exact) {
+            if (!needle) {
+                return true;
+            }
+
+            if (!haystack) {
+                return false;
+            }
+
+            if (exact) {
+                return haystack.toString().toLowerCase() == needle.toString().toLowerCase();
+            }
+            else {
+                return haystack.toString().toLowerCase().indexOf(needle.toString().toLowerCase()) !== -1;
+            }
+        };
+
         filter.search = function (items, newfilters) {
             filter.filters = (newfilters) ? newfilters : filter.filters;
 
             filter.filteredItems = $filter('filter')(items, function (item) {
                 for (var attr in filter.filters) {
                     if ((filter.attrSupportingAll.indexOf(attr) == -1 || filter.filters[attr] != 'All')
-                      && !searchMatch(item[attr], filter.filters[attr], filter.exactFilters.indexOf(attr) > -1)) {
+                      && !filter.searchMatch(item[attr], filter.filters[attr], filter.exactFilters.indexOf(attr) > -1)) {
                        return false;
                     }
                 }
@@ -269,15 +286,3 @@ var getParameterByName = function (name) {
     return results === null ? undefined : decodeURIComponent(results[1].replace(/\+/g, " "));
 };
 
-var searchMatch = function (haystack, needle, exact) {
-    if (!needle) {
-        return true;
-    }
-
-    if (exact) {
-        return haystack.toString().toLowerCase() == needle.toString().toLowerCase();
-    }
-    else {
-        return haystack.toString().toLowerCase().indexOf(needle.toString().toLowerCase()) !== -1;
-    }
-};

@@ -16,7 +16,7 @@
   (GÉANT).
 -->
 
-<form ng-submit="search(filters)">
+<form ng-submit="filtering.search(filters); showResults(pagination.itemsPerPage)">
 <table class="list_table">
   <thead>
     <th custom-sort order="'displayName'" sorting="sorting" update-fn="showResults(pagination.itemsPerPage)">Display Name</th>
@@ -30,7 +30,7 @@
   <tfoot>
     <tr>
       <td colspan="7" align="center">
-      Records found: {{ numRows }}
+      Records found: {{ filtering.filteredItems.length }}
       (showing pages of <select ng-model="pagination.itemsPerPage" ng-options="page as page.name for page in pagination.pageSizes" ng-change="showResults(pagination.itemsPerPage)"></select> elements)
       </td>
     </tr>
@@ -49,18 +49,18 @@
   <tbody>
     <tr>
         <td class="filter_td">
-            <input type="text" ng-model="filters.displayName" />
+            <input type="text" ng-model="filtering.filters.displayName" />
         </td>
         <td class="filter_td">
-            <input type="text" class="wide" ng-model="filters.entityID" />
+            <input type="text" class="wide" ng-model="filtering.filters.entityID" />
         </td>
         <td class="filter_td">
-            <input type="text" ng-model="filters.registrationAuthority" />
+            <input type="text" ng-model="filtering.filters.registrationAuthority" />
         </td>
         <td class="filter_td" class="nowrap"><center><b>T</b>: Technical, <b>S</b>: Support</center></td>
         <td class="filter_td">&nbsp;</td>
         <td class="filter_td">
-            <select ng-model="filters.currentResult">
+            <select ng-model="filtering.filters.currentResult">
                 <option ng-value="All">All</option>
                 <option ng-value="1 - OK">OK</option>
                 <option ng-value="2 - FORM-Invalid">FORM-Invalid</option>
