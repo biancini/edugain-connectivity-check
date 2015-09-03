@@ -15,25 +15,25 @@ eduGAIN Connectivity Check Service
 
 0. Install the requiremets packages:
 
-```bash
+```sh
 # sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
 ```
 
 1. Install the requirements libraries:
 
-```bash      
+```sh      
 # sudo apt-get install php5-curl php5-json php5-mysqlnd
 ```
 
 2. Be sure to have enabled mod_alias apache module: 
 
-```bash
+```sh
 # sudo a2enmod alias
 ```
 
 3. Retrieve the service code and put it into the `/opt` directory
         
-```bash
+```sh
 git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
 ```
 
@@ -69,13 +69,13 @@ Apache >= 2.4 :
 
 5. Enable the new apache site:
 
-```bash
+```sh
 # sudo a2ensite eccs.conf ; service apache2 reload
 ```
 
 6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
         
-```bash
+```sh
 # mysql -u root -pPASSWORD < /opt/mccs/database/mccs_db.sql
 ```
 
@@ -125,7 +125,7 @@ To test the various components do as explained in the following:
 ## View
 For the AngularJS web interface, you can use karma:
 
-```bash
+```sh
 # apt-ge install npm nodejs 
 # npm install -g karma
 # cd tests/view/
@@ -134,13 +134,13 @@ For the AngularJS web interface, you can use karma:
 
 Now you can connect your browser to the following url http://hostname:9876 (where hostname is your host name).
 
-```bash
+```sh
 # karma run karma.config.js
 ```
 
 The output for the command should show all tests passed with success:
 
-```bash
+```sh
 [DEBUG] config - Loading config /opt/MCCS/tests/view/karma.config.js
 Chrome 44.0.2403 (Windows 10 0.0.0): Executed 18 of 18 SUCCESS (0.155 secs / 0.094 secs)
 ```
@@ -148,7 +148,7 @@ Chrome 44.0.2403 (Windows 10 0.0.0): Executed 18 of 18 SUCCESS (0.155 secs / 0.0
 ## Json
 For the Json API used by the webpage, you can use PHPSpec:
 
-```bash
+```sh
 # cd tests/apis/
 # curl http://getcomposer.org/installer | php
 # php composer.phar install
@@ -157,7 +157,7 @@ For the Json API used by the webpage, you can use PHPSpec:
 
 The output for the command should show all tests passed with success:
 
-```bash
+```sh
 4 specs
 32 examples (32 passed)
 96ms
