@@ -20,18 +20,20 @@ require_once 'QueryBuilder.php';
     
 class JsonAPI extends EccsService {
     private function computeCssClass($inputStatus) {
+        $color = '';
         if ($inputStatus == '1 - OK') {
-            return 'green';
+            $color = 'green';
         }
         elseif ($inputStatus == '2 - FORM-Invalid') {
-            return 'yellow';
+            $color = 'yellow';
         }
         elseif ($inputStatus == '3 - HTTP-Error' || $inputStatus == '3 - CURL-Error') {
-            return 'red';
+            $color =  'red';
         }
         else {
-            return 'white';
+            $color = 'white';
         }
+        return $color;
     }
     
     private function getEntities() {

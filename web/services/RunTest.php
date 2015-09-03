@@ -43,8 +43,6 @@ class RunTest extends EccsService {
     }
 
     function handle() {
-        $confArray = parse_ini_file('properties.ini.php', true);
-
         $acsUrl = $this->getParameter("acsUrl", null);
         $serviceLocation = $this->getParameter("serviceLocation", null);
         $spEntityID = $this->getParameter("spEntityID", null);
@@ -53,7 +51,7 @@ class RunTest extends EccsService {
             throw new Exception("Wrong parameter passed, you have to specify acsUrl, serviceLocation and spEntityID.");
         }
 
-        return self::createCheckUrl($acsUrl, $serviceLocation, $spEntityID);
+        return static::createCheckUrl($acsUrl, $serviceLocation, $spEntityID);
     }
 }
 

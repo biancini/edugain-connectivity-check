@@ -31,12 +31,12 @@ class QueryBuilder {
         $this->queryParams = array();
     }
 
-    private function concatenateWhere($sqlConditions) {
-        if (!strstr($sqlConditions, "WHERE")) {
-            return " WHERE";
+    private function concatenateWhere() {
+        if (!strstr($this->sqlConditions, "WHERE")) {
+            $this->sqlConditions .= " WHERE";
         }
         else {
-            return " AND";
+            $this->sqlConditions .= " AND";
         }
     }
 
@@ -47,11 +47,11 @@ class QueryBuilder {
     
         if (is_array($params[$paramName])) {
             if (in_array("NULL", $params[$paramName])) {
-                $this->sqlConditions .= $this->concatenateWhere($this->sqlConditions);
+                $this->concatenateWhere();
                 $this->sqlConditions .= " $sqlName IS NULL";
             }
             if (!in_array("All", $params[$paramName])) {
-                $this->sqlConditions .= $this->concatenateWhere($this->sqlConditions);
+                $this->concatenateWhere();
                 $this->sqlConditions .= " $sqlName in (";
                 foreach ($params[$paramName] as $val) {
                     $this->sqlConditions .= (substr($this->sqlConditions, -1) != "(") ? ", ": "";
@@ -62,7 +62,7 @@ class QueryBuilder {
             }
         }
         elseif ($params[$paramName] != "All") {
-            $this->sqlConditions .= $this->concatenateWhere($this->sqlConditions);
+            $this->concatenateWhere();
             if ($like) {
                 $this->sqlConditions .= " $sqlName LIKE ?";
                 array_push($this->queryParams, "%" . $params[$paramName] . "%");

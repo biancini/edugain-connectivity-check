@@ -4,3 +4,5 @@ composer.lock
 composer.phar
 **/bin/**
 **/vendor/**
+coverage.xml
+junit.xml
