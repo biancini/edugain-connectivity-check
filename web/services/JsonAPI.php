@@ -188,13 +188,12 @@ class JsonAPI extends EccsService {
             array_push($entities, $entity);
         }
     
-        $return = array(
+        return array(
             'results' => $entities,
             'num_rows' => $numrows,
             'page' => $page,
             'total_pages' => $totalpages,
         );
-        return $return;
     }
     
     private function getCheckHtml() {
@@ -224,10 +223,9 @@ class JsonAPI extends EccsService {
             );
         }
     
-        $return = array(
+        return array(
             'result' => $entity
         );
-        return $return;
     }
 
     public function handle() {

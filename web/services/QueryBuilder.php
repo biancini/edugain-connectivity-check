@@ -45,23 +45,7 @@ class QueryBuilder {
             return;
         }
     
-        if (is_array($params[$paramName])) {
-            if (in_array("NULL", $params[$paramName])) {
-                $this->concatenateWhere();
-                $this->sqlConditions .= " $sqlName IS NULL";
-            }
-            if (!in_array("All", $params[$paramName])) {
-                $this->concatenateWhere();
-                $this->sqlConditions .= " $sqlName in (";
-                foreach ($params[$paramName] as $val) {
-                    $this->sqlConditions .= (substr($this->sqlConditions, -1) != "(") ? ", ": "";
-                    $this->sqlConditions .= "?";
-                    array_push($this->queryParams, $val);
-                }
-                $this->sqlConditions .= ")";
-            }
-        }
-        elseif ($params[$paramName] != "All") {
+        if ($params[$paramName] != "All") {
             $this->concatenateWhere();
             if ($like) {
                 $this->sqlConditions .= " $sqlName LIKE ?";

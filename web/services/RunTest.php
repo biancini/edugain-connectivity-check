@@ -38,8 +38,7 @@ class RunTest extends EccsService {
 
         $samlRequest = preg_replace('/[\s]+/',' ',$samlRequest);
         $samlRequest = urlencode( base64_encode( gzdeflate( $samlRequest ) ) );
-        $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
-        return $url;
+        return $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
     }
 
     function handle() {
