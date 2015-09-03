@@ -100,31 +100,33 @@ To test the various components do as explained in the following:
 
 ## View
 For the AngularJS web interface, you can use karma:
-
-         # apt-ge install npm nodejs 
-         # npm install -g karma
-         # cd tests/view/
-         # karma start karma.config.js
-
+```bash
+# apt-ge install npm nodejs 
+# npm install -g karma
+# cd tests/view/
+# karma start karma.config.js
+```
 Now you can connect your browser to the following url http://hostname:9876 (where hostname is your host name).
-
-         # karma run karma.config.js
-
+```bash
+# karma run karma.config.js
+```
 The output for the command should show all tests passed with success:
-
-         [DEBUG] config - Loading config /opt/MCCS/tests/view/karma.config.js
-         Chrome 44.0.2403 (Windows 10 0.0.0): Executed 18 of 18 SUCCESS (0.155 secs / 0.094 secs)
+```bash
+[DEBUG] config - Loading config /opt/MCCS/tests/view/karma.config.js
+Chrome 44.0.2403 (Windows 10 0.0.0): Executed 18 of 18 SUCCESS (0.155 secs / 0.094 secs)
+```
 
 ## Json
 For the Json API used by the webpage, you can use PHPSpec:
-         # cd tests/apis/
-         # curl http://getcomposer.org/installer | php
-         # php composer.phar install
-         # ./bin/phpspec run
+```bash
+# cd tests/apis/
+# curl http://getcomposer.org/installer | php
+# php composer.phar install
+# ./bin/phpspec run
 
 The output for the command should show all tests passed with success:
-
-         4 specs
-         32 examples (32 passed)
-         96ms
-
+```bash
+4 specs
+32 examples (32 passed)
+96ms
+```
