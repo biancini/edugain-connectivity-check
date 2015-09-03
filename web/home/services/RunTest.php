@@ -15,7 +15,7 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (G�~IANT
 
-require 'EccsService.php';
+require_once 'EccsService.php';
 
 class RunTest extends EccsService {
     function createCheckUrl($spACSurl, $httpRedirectServiceLocation, $spEntityID) {

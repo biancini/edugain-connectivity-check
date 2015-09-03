@@ -15,17 +15,19 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-require 'DBManager.php';
+require_once 'DBManager.php';
 
 class EccsService {
     protected $dbManager;
+    protected $requestParams;
 
-    public function __construct() {
-        $this->dbManager = new DBManager();
+    public function __construct($dbManager = null, $requestParams = null) {
+        $this->dbManager = $dbManager ? $dbManager : new DBManager();
+        $this->requestParams = $requestParams ? $requestParams : $_REQUEST;
     }
 
     protected function getParameter($key, $defaultValue, $array=false) {
-        $value = (array_key_exists($key, $_REQUEST) ? htmlspecialchars($_REQUEST[$key]) : $defaultValue);
+        $value = (array_key_exists($key, $this->requestParams) ? htmlspecialchars($this->requestParams[$key]) : $defaultValue);
     
         if (!$value || trim($value) == '') {
             $value = $defaultValue;

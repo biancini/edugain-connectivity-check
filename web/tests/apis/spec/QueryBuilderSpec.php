@@ -44,9 +44,10 @@ class QueryBuilderSpec extends ObjectBehavior {
     }
 
     function it_appendConditions_works() {
+        $sql = "SELECT * FROM TABLE";
+        $this->setSql($sql);
         $this->appendConditions(" ORDER BY field");
-        $this->appendConditions(" LIMIT 1");
 
-        $this->getQuerySql()->shouldReturn(" ORDER BY field LIMIT 1");
+        $this->getQuerySql()->shouldReturn("SELECT * FROM TABLE ORDER BY field");
     }
 }

@@ -15,12 +15,16 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nÂº 238875
 # (GÃ‰ANT).
 
-require 'EccsService.php';
-require 'QueryBuilder.php';
+require_once 'EccsService.php';
+require_once 'QueryBuilder.php';
 
 class CheckHtml extends EccsService {
     public function handle() {
-        $id = $this->getParameter("checkid", "");
+        $id = $this->getParameter('checkid', null);
+        if (!$id) {
+            $message = "Wrong checkid passed as argument.";
+            throw new Exception($message);
+        }
 
         $query = new QueryBuilder();
         $sql = "SELECT checkHtml FROM EntityChecks";
@@ -41,4 +45,9 @@ class CheckHtml extends EccsService {
 }
 
 $handler = new CheckHtml();
-print $handler->handle();
+try {
+    print $handler->handle();
+}
+catch (Exception $e) {
+    print $e->getMessage();
+}

@@ -15,8 +15,8 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-require 'EccsService.php';
-require 'QueryBuilder.php';
+require_once 'EccsService.php';
+require_once 'QueryBuilder.php';
     
 class JsonAPI extends EccsService {
     private function computeCssClass($inputStatus) {
@@ -69,13 +69,13 @@ class JsonAPI extends EccsService {
         $query->setSql($sqlCount);
         $result = $this->dbManager->executeStatement(true, $query);
         $numrows = $result->fetch_row()[0];
-    
+
         $rowsperpage = $this->getParameter('rpp', '30');
         if ($rowsperpage == 'All') {
             $rowsperpage = $numrows;
         }
         $rowsperpage = is_numeric($rowsperpage) ? (int) $rowsperpage : 30;
-        $totalpages = ceil($numrows / $rowsperpage);
+        $totalpages = (int) ceil($numrows / $rowsperpage);
         $page = $this->getParameter('page', '1');
         $page = is_numeric($page) ? (int) $page : 1;
         if ($page > $totalpages) {
@@ -114,10 +114,10 @@ class JsonAPI extends EccsService {
             'page' => $page,
             'total_pages' => $totalpages,
         );
-        return json_encode($return);
+        return $return;
     }
     
-    public function getChecks() {
+    private function getChecks() {
         $params = $this->getAllParameters(array(
             array('show', 'list_idps', false),
             array('f_order', 'entityID', false),
@@ -155,7 +155,7 @@ class JsonAPI extends EccsService {
         if ($rowsperpage == 'All') {
             $rowsperpage = $numrows;
         }
-        $totalpages = ceil($numrows / $rowsperpage);
+        $totalpages = (int) ceil($numrows / $rowsperpage);
         $page = $this->getParameter('page', '1');
         $page = is_numeric($page) ? (int) $page : 1;
         if ($page > $totalpages) {
@@ -192,10 +192,10 @@ class JsonAPI extends EccsService {
             'page' => $page,
             'total_pages' => $totalpages,
         );
-        return json_encode($return);
+        return $return;
     }
     
-    public function getCheckHtml() {
+    private function getCheckHtml() {
         $id = $this->getParameter('checkid', null);
         if (!$id) {
             throw new Exception("You must specify the checkid parameter.");
@@ -225,7 +225,7 @@ class JsonAPI extends EccsService {
         $return = array(
             'result' => $entity
         );
-        return json_encode($return);
+        return $return;
     }
 
     public function handle() {
@@ -249,7 +249,7 @@ class JsonAPI extends EccsService {
 
 $handler = new JsonAPI();
 try {
-    print $handler->handle();  
+    print json_encode($handler->handle()); 
 }
 catch (Exception $e) {
     print $e->getMessage();
