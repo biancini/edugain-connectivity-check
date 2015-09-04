@@ -15,7 +15,7 @@ app.controller('TestsController', function ($scope, EccsJsonAPI, Filtering, Sort
         'checkTime': 'All',
         'httpStatusCode': undefined,
         'checkResult': 'All',
-        'css_class': undefined,
+        'css_class': undefined
     };
 
     $scope.filtering.exactFilters = ['httpStatusCode'];

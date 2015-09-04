@@ -9,7 +9,7 @@ app.controller('EccsController', function ($scope) {
     };
 
     $scope.filterStatus = function (instatus) {
-       if (instatus == 'disabled') {
+       if (instatus === 'disabled') {
            $scope.filters.css_class = 'All';
            $scope.filters.ignoreEntity = 'true';
        }
@@ -27,9 +27,9 @@ app.service('EccsJsonAPI', function($q, $http) {
 
     jsonApi.getNew = function() {
         var apis = {
-            urlIdp: 'services/JsonAPI.php?action=entities&rpp=All',
-            urlTest: 'services/JsonAPI.php?action=checks&rpp=All',
-            urlCheck: 'services/JsonAPI.php?action=checkhtml&checkid=',
+            urlIdp: 'services/json_api.php?action=entities&rpp=All',
+            urlTest: 'services/json_api.php?action=checks&rpp=All',
+            urlCheck: 'services/json_api.php?action=checkhtml&checkid='
         }
 
         apis.getEntities = function () {
@@ -97,13 +97,13 @@ app.service('Pagination', function() {
                 { name: '50', id: 50 },
                 { name: '100', id: 100 },
                 { name: 'All', id: 'All' }
-            ],
+            ]
         };
 
         paginator.setPageSize = function (pageSize, numRows) {
             paginator.itemsPerPage = (pageSize) ? pageSize : paginator.pageSizes[2];
 
-            if (paginator.itemsPerPage.id == 'All') {
+            if (paginator.itemsPerPage.id === 'All') {
                 paginator.itemsPerPage.id = numRows;
             }
         };
@@ -164,7 +164,7 @@ app.service('Filtering', function($filter) {
             filters: {},
             exactFilters: [],
             filteredItems: [],
-            attrSupportingAll: [],
+            attrSupportingAll: []
         }
 
         filter.searchMatch = function (haystack, needle, exact) {
@@ -177,7 +177,7 @@ app.service('Filtering', function($filter) {
             }
 
             if (exact) {
-                return haystack.toString().toLowerCase() == needle.toString().toLowerCase();
+                return haystack.toString().toLowerCase() === needle.toString().toLowerCase();
             }
             else {
                 return haystack.toString().toLowerCase().indexOf(needle.toString().toLowerCase()) !== -1;
@@ -189,7 +189,7 @@ app.service('Filtering', function($filter) {
 
             filter.filteredItems = $filter('filter')(items, function (item) {
                 for (var attr in filter.filters) {
-                    if ((filter.attrSupportingAll.indexOf(attr) == -1 || filter.filters[attr] != 'All')
+                    if ((filter.attrSupportingAll.indexOf(attr) === -1 || filter.filters[attr] !== 'All')
                       && !filter.searchMatch(item[attr], filter.filters[attr], filter.exactFilters.indexOf(attr) > -1)) {
                        return false;
                     }
@@ -211,7 +211,7 @@ app.service('Sorting', function($filter) {
         var sorter = {
             sortingOrder: undefined,
             reverse: false,
-            sortedItems: [],
+            sortedItems: []
         }
 
         sorter.sort = function (items) {
@@ -257,7 +257,7 @@ app.directive("customSort", function() {
         link: function(scope) {
             // change sorting order
             scope.sort_by = function(newSortingOrder) {       
-                if (scope.sorting.sortingOrder == newSortingOrder) {
+                if (scope.sorting.sortingOrder === newSortingOrder) {
                     scope.sorting.reverse = !scope.sorting.reverse;
                 }
 
@@ -266,7 +266,7 @@ app.directive("customSort", function() {
             };
    
             scope.selectedCls = function(column) {
-                if (column == scope.sorting.sortingOrder) {
+                if (column === scope.sorting.sortingOrder) {
                     return ('images/' + ((scope.sorting.reverse) ? 'desc' : 'asc') + '.gif');
                 }
                 else {

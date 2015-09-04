@@ -80,7 +80,7 @@ class DBManager {
             return $stmt->get_result();
         }
     
-        return true;
+        return $query->getNumRows($stmt);
     }
 
     public function escapeStringChars($string) {

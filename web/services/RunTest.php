@@ -53,6 +53,3 @@ class RunTest extends EccsService {
         return static::createCheckUrl($acsUrl, $serviceLocation, $spEntityID);
     }
 }
-
-$handler = new RunTest;
-header("Location: " . $handler->handle());

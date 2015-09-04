@@ -14,7 +14,7 @@ app.controller('IdpsController', function ($scope, EccsJsonAPI, Filtering, Sorti
         'registrationAuthority': undefined,
         'currentResult': 'All',
         'ignoreEntity': undefined,
-        'css_class': undefined,
+        'css_class': undefined
     };
 
     $scope.filtering.exactFilters = [];

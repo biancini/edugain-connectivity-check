@@ -18,8 +18,8 @@
 
 <div class="admin_naslov" style="background-color: #e9e9e9;">
     The following HTML code was returned during the test when login from
-    the Identity Provider <i>{{ check.entityID }}</i>
-    on the service <i>{{ check.spEntityID }}</i>
+    the Identity Provider <em>{{ check.entityID }}</em>
+    on the service <em>{{ check.spEntityID }}</em>
     on {{ check.checkTime }}:
 </div>
 
@@ -27,4 +27,4 @@
 
 <iframe src="{{ checkurl | trustAsResourceUrl }}" sandbox></iframe>
 
-<p><a href="services/RunTest.php?acsUrl={{ check.acsUrl }}&serviceLocation={{ check.serviceLocation }}&spEntityID={{ check.spEntityID }}" target="_blank">Repeat test manually</a></p>
+<p><a href="services/runtest.php?acsUrl={{ check.acsUrl }}&serviceLocation={{ check.serviceLocation }}&spEntityID={{ check.spEntityID }}" target="_blank">Repeat test manually</a></p>

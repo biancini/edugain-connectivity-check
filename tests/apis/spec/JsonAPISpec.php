@@ -6,12 +6,20 @@ use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 use PhpSpec\Exception\Example\FailureException;
 
+require_once '../../utils/DBManager.php';
+
 class JsonAPISpec extends ObjectBehavior {
-    function it_is_initializable() {
+    function it_is_initializable($dbManager) {
+        $dbManager->beADoubleOf('DBManager');
+        $this->beConstructedWith($dbManager);
+
         $this->shouldHaveType('JsonAPI');
     }
 
-    function it_getEntities_throw_exception_no_action() {
+    function it_getEntities_throw_exception_no_action($dbManager) {
+        $dbManager->beADoubleOf('DBManager');
+        $this->beConstructedWith($dbManager);
+
         $this->shouldThrow('Exception')->duringHandle();
     }
 

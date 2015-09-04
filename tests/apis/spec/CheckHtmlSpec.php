@@ -5,8 +5,13 @@ namespace spec;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
+require_once '../../utils/DBManager.php';
+
 class CheckHtmlSpec extends ObjectBehavior {
-    function it_is_initializable() {
+    function it_is_initializable($dbManager) {
+        $dbManager->beADoubleOf('DBManager');
+        $this->beConstructedWith($dbManager);
+
         $this->shouldHaveType('CheckHtml');
     }
 

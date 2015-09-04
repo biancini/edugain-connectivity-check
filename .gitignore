@@ -6,3 +6,5 @@ composer.phar
 **/vendor/**
 coverage.xml
 junit.xml
+**/reports/**
+**/node_modules/**

@@ -121,7 +121,6 @@ function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $dbConnection, $checkH
     
     $reason = '1 - OK';
     $lastCheckHistory = $checkHistory - 1;
-    $ignoreReason = '';
     
     for ($i = 0; $i < count($spEntityIDs); $i++) {
         $result = checkIdp($idp['entityID'], $idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);

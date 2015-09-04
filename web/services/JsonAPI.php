@@ -16,7 +16,7 @@
 # (GÉANT).
 
 require_once 'EccsService.php';
-require_once 'QueryBuilder.php';
+require_once '../../utils/QueryBuilder.php';
     
 class JsonAPI extends EccsService {
     private function computeCssClass($inputStatus) {
@@ -245,12 +245,4 @@ class JsonAPI extends EccsService {
             throw new Exception($message);
         }
     }
-}
-
-$handler = new JsonAPI();
-try {
-    print json_encode($handler->handle()); 
-}
-catch (Exception $e) {
-    print $e->getMessage();
 }

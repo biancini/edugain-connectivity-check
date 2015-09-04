@@ -7,17 +7,16 @@ app.controller('HtmlController', function ($scope, EccsJsonAPI) {
     $scope.check = {
         'acsUrl' : undefined,
         'serviceLocation' : undefined,
-        'serviceLocation' : undefined,
         'spEntityID' : undefined,
         'checkTime': undefined,
-        'entityID': undefined,
+        'entityID': undefined
     }
 
     $scope.getCheckHtml = function () {
         var promise = $scope.jsonApi.getCheck($scope.checkid);
         promise.then(function(results) {
             $scope.check = results;
-            $scope.checkurl = 'services/CheckHtml.php?checkid=' + $scope.checkid;
+            $scope.checkurl = 'services/checkhtml.php?checkid=' + $scope.checkid;
         });
     };
 

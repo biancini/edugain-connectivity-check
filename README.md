@@ -128,6 +128,9 @@ For the AngularJS web interface, you can use karma:
 ```sh
 # apt-ge install npm nodejs 
 # npm install -g karma
+# npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage
+# npm install -g karma-chrome-launcher
+
 # cd tests/view/
 # karma start karma.config.js
 ```

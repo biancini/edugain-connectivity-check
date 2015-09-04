@@ -29,13 +29,13 @@
   </thead>
   <tfoot>
     <tr>
-      <td colspan="7" align="center">
+      <td colspan="7" class="center">
       Records found: {{ filtering.filteredItems.length }}
       (showing pages of <select ng-model="pagination.itemsPerPage" ng-options="page as page.name for page in pagination.pageSizes" ng-change="showResults(pagination.itemsPerPage)"></select> elements)
       </td>
     </tr>
     <tr>
-      <td colspan="8" align="center">
+      <td colspan="8" class="center">
           <span ng-repeat="n in pagination.getPageRange()"
                 ng-class="{active: n == pagination.currentPage}"
                 ng-click="pagination.setPage(n)">
@@ -57,7 +57,7 @@
         <td class="filter_td">
             <input type="text" ng-model="filtering.filters.registrationAuthority" />
         </td>
-        <td class="filter_td" class="nowrap"><center><b>T</b>: Technical, <b>S</b>: Support</center></td>
+        <td class="filter_td nowrap"><strong>T</strong>: Technical, <strong>S</strong>: Support</td>
         <td class="filter_td">&nbsp;</td>
         <td class="filter_td">
             <select ng-model="filtering.filters.currentResult">
@@ -80,7 +80,7 @@
       <td>{{ idp.registrationAuthority }}</td>
       <td>
         <span ng-repeat="contact in idp.contacts" class="nowrap">
-          <b>{{ contact.type }}:</b> <a href="mailto:{{ contact.mail }}">{{ contact.mail }}</a>
+          <strong>{{ contact.type }}:</strong> <a href="mailto:{{ contact.mail }}">{{ contact.mail }}</a>
           <br ng-hide="$last"/>
         </span>
       </td>

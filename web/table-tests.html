@@ -29,13 +29,13 @@
   </thead>
   <tfoot>
     <tr>
-      <td colspan="7" align="center">
+      <td colspan="7" class="center">
       Records found: {{ filtering.filteredItems.length }}
       (showing pages of <select ng-model="pagination.itemsPerPage" ng-options="page as page.name for page in pagination.pageSizes" ng-change="showResults(pagination.itemsPerPage)"></select> elements)
       </td>
     </tr>
     <tr>
-      <td colspan="7" align="center">
+      <td colspan="7" class="center">
           <span ng-repeat="n in pagination.getPageRange()"
                 ng-class="{active: n == pagination.currentPage}"
                 ng-click="pagination.setPage(n)">
@@ -86,7 +86,7 @@
       <td>{{ test.checkTime }}</td>
       <td>{{ test.httpStatusCode }}</td>
       <td>{{ test.checkResult }}</td>
-      <td><a href="services/RunTest.php?acsUrl={{ test.acsUrl }}&serviceLocation={{ test.serviceLocation }}&spEntityID={{ test.spEntityID }}" target="_blank">Perform test yourself</a></td>
+      <td><a href="services/runtest.php?acsUrl={{ test.acsUrl }}&serviceLocation={{ test.serviceLocation }}&spEntityID={{ test.spEntityID }}" target="_blank">Perform test yourself</a></td>
       <td><a href="html.html?checkid={{test.checkID}}" target="_blank">Show HTML returned for this test</a></td>
     </tr>
   </tbody>

@@ -16,7 +16,7 @@
 # (GÃ‰ANT).
 
 require_once 'EccsService.php';
-require_once 'QueryBuilder.php';
+require_once '../../utils/QueryBuilder.php';
 
 class CheckHtml extends EccsService {
     public function handle() {
@@ -42,12 +42,4 @@ class CheckHtml extends EccsService {
 
         return $return;
     }
-}
-
-$handler = new CheckHtml();
-try {
-    print $handler->handle();
-}
-catch (Exception $e) {
-    print $e->getMessage();
 }

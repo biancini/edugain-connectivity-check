@@ -1,21 +1,25 @@
-body {
+html,body {
+   box-sizing: border-box;
 	background: #bcd7e8 repeat-x;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 11px;
 	padding: 0;
 	margin: 0;
+   display: inline-block;
+   text-align: center;
+   width: 100%;
 }
+
 a:visited{
 	color: #000;
 }
+
 a {
 	color: #000;
 }
+
 img {
 	border: 0;
-}
-table {
-	
 }
 
 select {
@@ -23,68 +27,89 @@ select {
 }
 
 input[type="text"], input[type="password"], input[type="password"] {
+   box-sizing: border-box;
 	width: 200px;
 	border: 1px solid;
 }
-input.narrow {
+
+.narrow {
 	width: 100px;
 }
-input.wide {
+
+.wide {
 	width: 100%;
 }
 	
-div.admin_naslov {
+.admin_naslov {
 	margin: 10px;
 	padding: 5px;
 	font-size: 14px;
 	font-weight: bold;
 }
-table.container {
+
+.container {
+   box-sizing: border-box;
+   margin: 0 auto;
 	width: 1000px;
 	background-color: #fff;
+   border-spacing: 0;
+   padding: 5px;
 }
-td.body {
+
+.body {
 	border: #166A8F 1px solid;
 	border-top: #166A8F solid 3px;
 }
-div.menu {
+
+.menu {
 	font-size: 14px;
 	text-decoration: none;
+
 }
-div.menu a: hover {
+.menu a: hover {
 	background-color: #e9e9e9;
 }
-table.list_table tr.odd_row {
+
+.list_table .odd_row {
 	background-color: #e9e9e9;
 }
-table.list_table td {
+
+.list_table td {
 	border-bottom: 1px solid #e9e9e9;
+   text-align: left;
 }
-table.list_table td.filter_td {
+
+.list_table .filter_td {
 	background-color: #e9e9e9;
 	border: 1px solid #ffffff;
 }
-table.view_table th {
+
+.view_table th {
 	text-align: right;
 }
-table.view_table th.th_title {
+
+.view_table .th_title {
 	text-align: center;
 	background-color: #e9e9e9;
 }
 
-tr.white {
+.center {
+   text-align: center ! important;
+}
+
+.white {
 	background-color: #FFFFFF;
 }
-tr.red {
+.red {
 	background-color: #FF4040;
 }
-tr.green {
+.green {
 	background-color: #72F80E;
 }
-tr.yellow {
+.yellow {
 	background-color: #FFFF80
 }
-div.message {
+.message {
 	color: red;
 	padding: 5px;
 }
@@ -96,6 +121,7 @@ div.message {
 }
 
 iframe {
+  box-sizing: border-box;
   width: 100%;
   height: 700px;
   border: #166A8F 1px solid;

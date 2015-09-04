@@ -45,7 +45,23 @@ class QueryBuilder {
             return;
         }
     
-        if ($params[$paramName] != "All") {
+        if (is_array($params[$paramName])) {
+            if (in_array("NULL", $params[$paramName])) {
+                $this->concatenateWhere($this->sqlConditions);
+                $this->sqlConditions .= " $sqlName IS NULL";
+            }
+            if (!in_array("All", $params[$paramName])) {
+                $this->concatenateWhere($this->sqlConditions);
+                $this->sqlConditions .= " $sqlName in (";
+                foreach ($params[$paramName] as $val) {
+                    $this->sqlConditions .= (substr($this->sqlConditions, -1) != "(") ? ", ": "";
+                    $this->sqlConditions .= "?";
+                    array_push($queryParams, $val);
+                }
+                $this->sqlConditions .= ")";
+            }
+        }
+        elseif ($params[$paramName] != "All") {
             $this->concatenateWhere();
             if ($like) {
                 $this->sqlConditions .= " $sqlName LIKE ?";
@@ -85,5 +101,9 @@ class QueryBuilder {
 
     public function getQueryParams() {
         return array_merge(array(str_repeat('s', count($this->queryParams))), $this->queryParams);
+    }
+
+    public function getNumRows($stmt) {
+        return $stmt->num_rows;
     }
 }

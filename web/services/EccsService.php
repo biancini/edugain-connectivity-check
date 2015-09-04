@@ -15,7 +15,7 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-require_once 'DBManager.php';
+require_once '../../utils/DBManager.php';
 
 class EccsService {
     protected $dbManager;
