@@ -1,5 +1,3 @@
-'use strict'
-
 app.controller('TestsController', function ($scope, EccsJsonAPI, Filtering, Sorting, Pagination) {
     // Initialize services
     $scope.jsonApi = EccsJsonAPI.getNew();

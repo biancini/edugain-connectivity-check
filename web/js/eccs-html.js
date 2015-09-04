@@ -1,5 +1,3 @@
-'use strict'
-
 app.controller('HtmlController', function ($scope, EccsJsonAPI) {
     $scope.jsonApi = EccsJsonAPI.getNew();
     $scope.checkid = getParameterByName('checkid');
@@ -10,7 +8,7 @@ app.controller('HtmlController', function ($scope, EccsJsonAPI) {
         'spEntityID' : undefined,
         'checkTime': undefined,
         'entityID': undefined
-    }
+    };
 
     $scope.getCheckHtml = function () {
         var promise = $scope.jsonApi.getCheck($scope.checkid);
@@ -27,4 +25,4 @@ app.filter('trustAsResourceUrl', ['$sce', function($sce) {
     return function(val) {
         return $sce.trustAsResourceUrl(val);
     };
-}])
+}]);

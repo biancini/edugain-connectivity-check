@@ -1,5 +1,3 @@
-'use strict'
-
 var app = angular.module('EccsApplication', []);
 
 app.controller('EccsController', function ($scope) {
@@ -30,14 +28,14 @@ app.service('EccsJsonAPI', function($q, $http) {
             urlIdp: 'services/json_api.php?action=entities&rpp=All',
             urlTest: 'services/json_api.php?action=checks&rpp=All',
             urlCheck: 'services/json_api.php?action=checkhtml&checkid='
-        }
+        };
 
         apis.getEntities = function () {
             var deferred = $q.defer();
             $http.get(apis.urlIdp).success(function (response) {
                 response.results.forEach(function (item) {
                     // Re-organize contacts
-                    item.contacts = []
+                    item.contacts = [];
                     item.technicalContacts.split(',').forEach(function (contact) {
                         if (contact) {
                             item.contacts.push({'type': 'T', 'mail': contact });
@@ -110,7 +108,7 @@ app.service('Pagination', function() {
 
         paginator.groupToPages = function (items) {
             paginator.pagedItems = [];
-    
+
             for (var i = 0; i < items.length; i++) {
                 if (i % paginator.itemsPerPage.id === 0) {
                     paginator.pagedItems[Math.floor(i / paginator.itemsPerPage.id)] = [ items[i] ];
@@ -144,7 +142,7 @@ app.service('Pagination', function() {
             var end = paginator.currentPage + paginator.gap;
 
             return paginator.range(size, start, end);
-        }
+        };
 
         paginator.setPage = function (n) {
             paginator.currentPage = n;
@@ -165,7 +163,7 @@ app.service('Filtering', function($filter) {
             exactFilters: [],
             filteredItems: [],
             attrSupportingAll: []
-        }
+        };
 
         filter.searchMatch = function (haystack, needle, exact) {
             if (!needle) {
@@ -212,7 +210,7 @@ app.service('Sorting', function($filter) {
             sortingOrder: undefined,
             reverse: false,
             sortedItems: []
-        }
+        };
 
         sorter.sort = function (items) {
             if (sorter.sortingOrder === 'css_class') {
@@ -224,7 +222,7 @@ app.service('Sorting', function($filter) {
                             return 2;
                         case 'red':
                             return 3;
-                        default: 
+                        default:
                             return 0;
                     }
                 }, sorter.reverse);
@@ -243,7 +241,7 @@ app.service('Sorting', function($filter) {
 app.directive("customSort", function() {
     return {
         restrict: 'A',
-        transclude: true,    
+        transclude: true,
         scope: {
             order: '=',
             sorting: '=',
@@ -256,7 +254,7 @@ app.directive("customSort", function() {
             '</a>',
         link: function(scope) {
             // change sorting order
-            scope.sort_by = function(newSortingOrder) {       
+            scope.sort_by = function(newSortingOrder) {
                 if (scope.sorting.sortingOrder === newSortingOrder) {
                     scope.sorting.reverse = !scope.sorting.reverse;
                 }
@@ -264,17 +262,17 @@ app.directive("customSort", function() {
                 scope.sorting.sortingOrder = newSortingOrder;
                 scope.updateFn();
             };
-   
+
             scope.selectedCls = function(column) {
                 if (column === scope.sorting.sortingOrder) {
                     return ('images/' + ((scope.sorting.reverse) ? 'desc' : 'asc') + '.gif');
                 }
                 else {
-                    return 'images/sort.gif' 
+                    return 'images/sort.gif';
                 }
             };
-        }// end link
-    }
+        }
+    };
 });
 
 var getParameterByName = function (name) {

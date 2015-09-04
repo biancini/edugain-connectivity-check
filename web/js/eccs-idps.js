@@ -1,5 +1,3 @@
-'use strict'
-
 app.controller('IdpsController', function ($scope, EccsJsonAPI, Filtering, Sorting, Pagination) {
     // Initialize services
     $scope.jsonApi = EccsJsonAPI.getNew();
