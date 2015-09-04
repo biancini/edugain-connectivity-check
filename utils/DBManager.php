@@ -76,11 +76,13 @@ class DBManager {
             throw new Exception(ERROR . mysqli_error($this->mysqli));
         }
     
+        $resultset = $stmt->get_result();
         if ($r === true) {
-            return $stmt->get_result();
+            return $resultset;
         }
-    
-        return $query->getNumRows($stmt);
+        else {
+            return $resultset->fetch_row()[0];
+        }
     }
 
     public function escapeStringChars($string) {

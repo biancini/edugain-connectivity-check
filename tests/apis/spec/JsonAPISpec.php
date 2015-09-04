@@ -66,12 +66,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_works($dbManager, $result) {
         $requestParams = array('action' => 'entities');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_entity('urn:mace:entityid:1'), false));
         $entity = array('entityID' => 'urn:mace:entityid:1');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -89,12 +89,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_status_ok_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'entities');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_entity('urn:mace:entityid:1', $ignore = 0, $currentResult = '1 - OK'), false));
         $entity = array('entityID' => 'urn:mace:entityid:1', 'currentResult' => 'OK', 'css_class' => 'green');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -108,12 +108,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_status_form_invalid_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'entities');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_entity('urn:mace:entityid:1', $ignore = 0, $currentResult = '2 - FORM-Invalid'), false));
         $entity = array('entityID' => 'urn:mace:entityid:1', 'currentResult' => 'FORM-Invalid', 'css_class' => 'yellow');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -127,12 +127,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_status_http_error_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action'=> 'entities');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_entity('urn:mace:entityid:1', $ignore = 0, $currentResult = '3 - HTTP-Error'), false));
         $entity = array('entityID' => 'urn:mace:entityid:1', 'currentResult' => 'HTTP-Error', 'css_class' => 'red');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -146,12 +146,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_status_curl_error_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'entities');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_entity('urn:mace:entityid:1', $ignore = 0, $currentResult = '3 - CURL-Error'), false));
         $entity = array('entityID' => 'urn:mace:entityid:1', 'currentResult' => 'CURL-Error', 'css_class' => 'red');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -165,12 +165,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_ignored_entity_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'entities');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_entity('urn:mace:entityid:1', $ignore = 1), false));
         $entity = array('entityID' => 'urn:mace:entityid:1', 'css_class' => 'silver');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -184,7 +184,6 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_one_page($dbManager, $result) {
         $requestParams = array('action' => 'entities', 'rpp' => 2);
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(2)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_entity('urn:mace:entityid:1'),
                                    $this->_generate_entity('urn:mace:entityid:2'),
@@ -192,6 +191,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(2);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -208,7 +208,6 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_more_page($dbManager, $result) {
         $requestParams = array('action' => 'entities', 'rpp' => 2);
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(5)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_entity('urn:mace:entityid:1'),
                                    $this->_generate_entity('urn:mace:entityid:2'),
@@ -216,6 +215,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(5);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -232,7 +232,6 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_page_two($dbManager, $result) {
         $requestParams = array('action' => 'entities', 'rpp' => 2, 'page' => 2);
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(5)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_entity('urn:mace:entityid:3'),
                                    $this->_generate_entity('urn:mace:entityid:4'),
@@ -240,6 +239,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(5);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -256,7 +256,6 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getEntities_page_all($dbManager, $result) {
         $requestParams = array('action' => 'entities', 'rpp' => 'All');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(5)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_entity('urn:mace:entityid:1'),
                                    $this->_generate_entity('urn:mace:entityid:2'),
@@ -267,6 +266,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(5);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -283,12 +283,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_works($dbManager, $result) {
         $requestParams = array('action' => 'checks');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_check('123123', 'urn:mace:entityid:1'), false));
         $check = array('entityID' => 'urn:mace:entityid:1');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -306,12 +306,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_status_ok_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'checks');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_check('123123', 'urn:mace:entityid:1', $checkResult = '1 - OK'), false));
         $check = array('entityID' => 'urn:mace:entityid:1', 'checkResult' => 'OK', 'css_class' => 'green');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -325,12 +325,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_status_form_invalid_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'checks');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_check('123123', 'urn:mace:entityid:1', $checkResult = '2 - FORM-Invalid'), false));
         $check = array('entityID' => 'urn:mace:entityid:1', 'checkResult' => 'FORM-Invalid', 'css_class' => 'yellow');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -344,12 +344,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_status_http_error_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'checks');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_check('123123', 'urn:mace:entityid:1', $checkResult = '3 - HTTP-Error'), false));
         $check = array('entityID' => 'urn:mace:entityid:1', 'checkResult' => 'HTTP-Error', 'css_class' => 'red');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -363,12 +363,12 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_status_curl_error_correct_ccs_class($dbManager, $result) {
         $requestParams = array('action' => 'checks');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(1)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'), array($this->_generate_check('123123', 'urn:mace:entityid:1', $checkResult = '3 - CURL-Error'), false));
         $check = array('entityID' => 'urn:mace:entityid:1', 'checkResult' => 'CURL-Error', 'css_class' => 'red');
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(1);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -382,7 +382,6 @@ class JsonAPISpec extends ObjectBehavior {
     function is_getChecks_one_page($dbManager, $result) {
         $requestParams = array('action' => 'checks', 'rpp' => 2);
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(2)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_check(123123, 'urn:mace:entityid:1'),
                                    $this->_generate_check(123124, 'urn:mace:entityid:2'),
@@ -390,6 +389,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(2);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -406,7 +406,6 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_more_page($dbManager, $result) {
         $requestParams = array('action' => 'checks', 'rpp' => 2);
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(5)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_check(123123, 'urn:mace:entityid:1'),
                                    $this->_generate_check(123124, 'urn:mace:entityid:2'),
@@ -414,6 +413,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(5);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -430,7 +430,6 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_page_two($dbManager, $result) {
         $requestParams = array('action' => 'checks', 'rpp' => 2, 'page' => 2);
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(5)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_check(123123, 'urn:mace:entityid:3'),
                                    $this->_generate_check(123124, 'urn:mace:entityid:4'),
@@ -438,6 +437,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(5);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);
@@ -454,7 +454,6 @@ class JsonAPISpec extends ObjectBehavior {
     function it_getChecks_page_all($dbManager, $result) {
         $requestParams = array('action' => 'checks', 'rpp' => 'All');
         $result->beADoubleOf('mysqli_result');
-        $result->fetch_row()->willReturn(array(5)); 
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
                              array($this->_generate_check(123123, 'urn:ace:entityid:1'),
                                    $this->_generate_check(123124, 'urn:mace:entityid:2'),
@@ -465,6 +464,7 @@ class JsonAPISpec extends ObjectBehavior {
 
         $dbManager->beADoubleOf('DBManager');
         $dbManager->escapeStringChars('entityID')->shouldBeCalled()->willReturn('entityID');
+        $dbManager->executeStatement(false, Argument::type('QueryBuilder'))->willReturn(5);
         $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
 
         $this->beConstructedWith($dbManager, $requestParams);

@@ -102,8 +102,4 @@ class QueryBuilder {
     public function getQueryParams() {
         return array_merge(array(str_repeat('s', count($this->queryParams))), $this->queryParams);
     }
-
-    public function getNumRows($stmt) {
-        return $stmt->num_rows;
-    }
 }

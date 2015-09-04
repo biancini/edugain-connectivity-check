@@ -35,6 +35,26 @@ class JsonAPI extends EccsService {
         }
         return $color;
     }
+
+    private function paginate($numrows) {
+        $rowsperpage = $this->getParameter('rpp', '30');
+        if ($rowsperpage == 'All') {
+            $rowsperpage = $numrows;
+        }
+        $rowsperpage = is_numeric($rowsperpage) ? (int) $rowsperpage : 30;
+        $totalpages = (int) ceil($numrows / $rowsperpage);
+        $page = $this->getParameter('page', '1');
+        $page = is_numeric($page) ? (int) $page : 1;
+        if ($page > $totalpages) {
+            $page = $totalpages;
+        }
+        if ($page < 1) {
+            $page = 1;
+        }
+        $offset = ($page - 1) * $rowsperpage;
+
+        return array($page, $offset, $rowsperpage, $totalpages);
+    }
     
     private function getEntities() {
         $params = $this->getAllParameters(array(
@@ -69,24 +89,8 @@ class JsonAPI extends EccsService {
         
         // find out how many rows are in the table
         $query->setSql($sqlCount);
-        $result = $this->dbManager->executeStatement(true, $query);
-        $numrows = $result->fetch_row()[0];
-
-        $rowsperpage = $this->getParameter('rpp', '30');
-        if ($rowsperpage == 'All') {
-            $rowsperpage = $numrows;
-        }
-        $rowsperpage = is_numeric($rowsperpage) ? (int) $rowsperpage : 30;
-        $totalpages = (int) ceil($numrows / $rowsperpage);
-        $page = $this->getParameter('page', '1');
-        $page = is_numeric($page) ? (int) $page : 1;
-        if ($page > $totalpages) {
-            $page = $totalpages;
-        }
-        if ($page < 1) {
-            $page = 1;
-        }
-        $offset = ($page - 1) * $rowsperpage;
+        $numrows = $this->dbManager->executeStatement(false, $query);
+        list($page, $offset, $rowsperpage, $totalpages) = $this->paginate($numrows);
     
         $query->appendConditions(" LIMIT " . $offset . " , " . $rowsperpage);
         $query->setSql($sql);
@@ -110,13 +114,12 @@ class JsonAPI extends EccsService {
             array_push($entities, $entity);
         }
         
-        $return = array(
+        return array(
             'results' => $entities,
             'num_rows' => $numrows,
             'page' => $page,
             'total_pages' => $totalpages,
         );
-        return $return;
     }
     
     private function getChecks() {
@@ -150,24 +153,9 @@ class JsonAPI extends EccsService {
     
         // find out how many rows are in the table
         $query->setSql($sqlCount);
-        $result = $this->dbManager->executeStatement(true, $query);
-        $numrows = $result->fetch_row()[0];
-    
-        $rowsperpage = $this->getParameter('rpp', '30');
-        if ($rowsperpage == 'All') {
-            $rowsperpage = $numrows;
-        }
-        $totalpages = (int) ceil($numrows / $rowsperpage);
-        $page = $this->getParameter('page', '1');
-        $page = is_numeric($page) ? (int) $page : 1;
-        if ($page > $totalpages) {
-            $page = $totalpages;
-        }
-        if ($page < 1) {
-            $page = 1;
-        }
-        $offset = ($page - 1) * $rowsperpage;
-        
+        $numrows = $this->dbManager->executeStatement(false, $query);
+        list($page, $offset, $rowsperpage, $totalpages) = $this->paginate($numrows);
+
         $query->appendConditions(" LIMIT " . $offset . " , " . $rowsperpage);
         $query->setSql($sql);
         $result = $this->dbManager->executeStatement(true, $query);

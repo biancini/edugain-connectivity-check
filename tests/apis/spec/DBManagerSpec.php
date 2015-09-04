@@ -13,13 +13,15 @@ class DBManagerSpec extends ObjectBehavior {
         $this->shouldHaveType('DBManager');
     }
 
-    function it_executeStatement_returns_num_rows_if_no_resultset($query, $stmt, $mysqli) {
-        $stmt->beADoubleOf('mysqli_stmt');
-        $stmt->execute()->willReturn(true);
+    function it_executeStatement_returns_num_rows_if_no_resultset($query, $stmt, $mysqli, $result) {
         $query->beADoubleOf('QueryBuilder');
         $query->getQuerySql()->willReturn("");
         $query->getQueryParams()->willReturn(array());
-        $query->getNumRows($stmt)->willReturn(10);
+        $result->beADoubleOf('mysqli_result');
+        $result->fetch_row()->willReturn(array(10));
+        $stmt->beADoubleOf('mysqli_stmt');
+        $stmt->execute()->willReturn(true);
+        $stmt->get_result()->willReturn($result);
         $mysqli->beADoubleOf('mysqli');
         $mysqli->prepare("")->willReturn($stmt);
 
