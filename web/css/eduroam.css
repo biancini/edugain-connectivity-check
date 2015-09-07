@@ -10,7 +10,7 @@ html,body {
    width: 100%;
 }
 
-div {
+div, td {
    text-align: left;
 }
 

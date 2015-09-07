@@ -126,7 +126,7 @@ To test the various components do as explained in the following:
 For the AngularJS web interface, you can use karma:
 
 ```sh
-# apt-ge install npm nodejs 
+# apt-get install npm nodejs 
 # npm install -g karma
 # npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage
 # npm install -g karma-chrome-launcher
