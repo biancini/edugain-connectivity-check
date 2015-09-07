@@ -32,7 +32,8 @@ select {
 
 input[type="text"], input[type="password"], input[type="password"] {
    box-sizing: border-box;
-	width: 200px;
+	width: 100%;
+   min-width: 200px;
 	border: 1px solid;
 }
 
