@@ -29,7 +29,7 @@ app.controller('TestsController', function ($scope, EccsJsonAPI, Filtering, Sort
     $scope.$on("UPDATE_STATUS", function(event, newfilters) {
         for (var curfilter in newfilters) {
             if (curfilter in $scope.filters) {
-                $scope.filters[curfilter] = newfilters[curfilter];
+                $scope.filtering.filters[curfilter] = newfilters[curfilter];
             }
         }
 

@@ -37,7 +37,7 @@ class CheckHtml extends EccsService {
 
         $return = '';
         while ($row = $result->fetch_assoc()) {
-            $return .= $row['checkHtml'] . '\n';
+            $return .= $row['checkHtml'];
         }
 
         return $return;

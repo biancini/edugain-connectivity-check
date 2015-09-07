@@ -25,6 +25,6 @@ class CheckHtmlSpec extends ObjectBehavior {
 
         $this->beConstructedWith($dbManager, $requestParams);
         $returned = $this->handle();
-        $returned->shouldBeLike('test html page\n');
+        $returned->shouldBeLike('test html page');
     }
 }
