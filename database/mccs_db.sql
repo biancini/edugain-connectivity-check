@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS EntityChecks
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
 CREATE OR REPLACE VIEW FederationStats AS
-   `EntityDescriptors`.`registrationAuthority` AS `registrationAuthority`,
+   SELECT `EntityDescriptors`.`registrationAuthority` AS `registrationAuthority`,
    `EntityDescriptors`.`currentResult` AS `currentResult`,
    count(0) AS `numIdPs`
    FROM `EntityDescriptors`
