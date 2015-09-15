@@ -59,9 +59,8 @@ CREATE TABLE IF NOT EXISTS EntityChecks
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
 CREATE OR REPLACE VIEW FederationStats AS
-   SELECT CAST(`EntityDescriptors`.`lastCheck` AS DATE) AS `checkDate`,
    `EntityDescriptors`.`registrationAuthority` AS `registrationAuthority`,
    `EntityDescriptors`.`currentResult` AS `currentResult`,
    count(0) AS `numIdPs`
    FROM `EntityDescriptors`
-   GROUP BY CAST(`EntityDescriptors`.`lastCheck` AS DATE), `EntityDescriptors`.`registrationAuthority`, `EntityDescriptors`.`currentResult`;
+   GROUP BY `EntityDescriptors`.`registrationAuthority`, `EntityDescriptors`.`currentResult`;
