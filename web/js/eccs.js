@@ -91,6 +91,7 @@ app.service('EccsJsonAPI', function($q, $http) {
                         curitem = {
                             'checkDate': result.checkDate,
                             'registrationAuthority': result.registrationAuthority,
+                            'totIdps': 0,
                             'idpsOk': 0,
                             'idpsWarn': 0,
                             'idpsError': 0,
@@ -113,11 +114,12 @@ app.service('EccsJsonAPI', function($q, $http) {
                             curitem['idpsError'] += result.numIdPs;
                             break;
                         default:
-                            console.log("errore");
                             break;
                     }
+
+                    curitem['totIdps'] += result.numIdPs;
                 });
-                console.log(items);
+
                 deferred.resolve(items);
             });
 
