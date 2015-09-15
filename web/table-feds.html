@@ -22,6 +22,7 @@
 
 <table class="list_table">
   <thead>
+    <th custom-sort order="'checkDate'" sorting="sorting" update-fn="showResults(items)">Check Date</th>
     <th custom-sort order="'registrationAuthority'" sorting="sorting" update-fn="showResults(items)">Registration Authority</th>
     <th custom-sort order="'totIdps'" sorting="sorting" update-fn="showResults(items)">Total IdPs</th>
     <th custom-sort order="'idpsOk'" sorting="sorting" update-fn="showResults(items)">OK</th>
@@ -31,6 +32,7 @@
   </thead>
   <tbody>
     <tr ng-repeat="stat in sorting.sortedItems">
+      <td class="narrow">{{ stat.checkDate }}</td>
       <td class="medium">{{ stat.registrationAuthority }}</td>
       <td class="narrow">{{ stat.totIdps }}</td>
       <td class="narrow">{{ stat.idpsOk }}</td>

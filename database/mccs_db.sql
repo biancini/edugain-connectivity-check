@@ -58,7 +58,15 @@ CREATE TABLE IF NOT EXISTS EntityChecks
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
-CREATE OR REPLACE VIEW FederationStats AS
+CREATE TABLE IF NOT EXISTS FederationStats
+(
+  checkDate DATE NOT NULL,
+  registrationAuthority VARCHAR(255) NOT NULL,
+  currentResult VARCHAR(16) NULL default NULL,
+  numIdPs INTEGER
+) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
+
+CREATE OR REPLACE VIEW FederationStatsView AS
    SELECT `EntityDescriptors`.`registrationAuthority` AS `registrationAuthority`,
    `EntityDescriptors`.`currentResult` AS `currentResult`,
    count(0) AS `numIdPs`

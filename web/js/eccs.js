@@ -89,6 +89,7 @@ app.service('EccsJsonAPI', function($q, $http) {
 
                     if (!curitem) {
                         curitem = {
+                            'checkDate': result.checkDate,
                             'registrationAuthority': result.registrationAuthority,
                             'totIdps': 0,
                             'idpsOk': 0,

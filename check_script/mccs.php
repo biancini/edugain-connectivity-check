@@ -135,6 +135,12 @@ class IdpChecks {
             $mysqli->close();
         }
     }
+
+    function storeFederationStats() {
+        $mysqli = getDbConnection($this->dbConnection);
+        executeStatement($mysqli, false, "INSERT INTO FederationStats (SELECT CURDATE() AS checkDate, registrationAuthority, currentResult, numIdPs FROM FederationStatsView)", NULL);
+        $mysqli->close();
+    }
 }
 
 $micTime = microtime();
@@ -147,6 +153,8 @@ $worker->updateFederations();
 $terminated = $worker->executeAllChecks();
 
 if ($terminated) {
+    $worker->storeFederationStats();
+
     $micTime = microtime();
     $micTime = explode(" ",$micTime);
     $micTime = $micTime[1] + $micTime[0];
