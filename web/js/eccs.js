@@ -29,7 +29,8 @@ app.service('EccsJsonAPI', function($q, $http) {
         var apis = {
             urlIdp: 'services/json_api.php?action=entities&rpp=All',
             urlTest: 'services/json_api.php?action=checks&rpp=All',
-            urlCheck: 'services/json_api.php?action=checkhtml&checkid='
+            urlCheck: 'services/json_api.php?action=checkhtml&checkid=',
+            urlFeds: 'services/json_api.php?action=fedstats'
         };
 
         apis.getEntities = function () {
@@ -69,6 +70,55 @@ app.service('EccsJsonAPI', function($q, $http) {
             var deferred = $q.defer();
             $http.get(apis.urlCheck + checkid).success(function (response) {
                 deferred.resolve(response.result);
+            });
+
+            return deferred.promise;
+        };
+
+        apis.getFedStatistics = function () {
+            var deferred = $q.defer();
+            $http.get(apis.urlFeds).success(function (response) {
+                var items = [];
+                response.result.forEach(function (result) {
+                    var curitem = undefined;
+                    items.forEach(function (item) {
+                        if (item.checkDate == result.checkDate && item.registrationAuthority == result.registrationAuthority) {
+                            curitem = item;
+                        }
+                    });
+
+                    if (!curitem) {
+                        curitem = {
+                            'checkDate': result.checkDate,
+                            'registrationAuthority': result.registrationAuthority,
+                            'idpsOk': 0,
+                            'idpsWarn': 0,
+                            'idpsError': 0,
+                            'idpsDisabled': 0
+                        };
+                        items.push(curitem);
+                    }
+
+                    switch(result.css_class) {
+                        case 'silver':
+                            curitem['idpsDisabled'] += result.numIdPs;
+                            break;
+                        case 'green':
+                            curitem['idpsOk'] += result.numIdPs;
+                            break;
+                        case 'yellow':
+                            curitem['idpsWarn'] += result.numIdPs;
+                            break;
+                        case 'yellow':
+                            curitem['idpsDisabled'] += result.numIdPs;
+                            break;
+                        default:
+                            console.log("errore");
+                            break;
+                    }
+                });
+                console.log(items);
+                deferred.resolve(items);
             });
 
             return deferred.promise;

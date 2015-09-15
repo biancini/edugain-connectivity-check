@@ -37,6 +37,10 @@ input[type="text"], input[type="password"], input[type="password"] {
 	border: 1px solid;
 }
 
+.medium {
+	width: 200px;
+}
+
 .narrow {
 	width: 100px;
 }

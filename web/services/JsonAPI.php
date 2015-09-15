@@ -31,7 +31,7 @@ class JsonAPI extends EccsService {
             $color =  'red';
         }
         else {
-            $color = 'white';
+            $color = 'silver';
         }
         return $color;
     }
@@ -216,6 +216,30 @@ class JsonAPI extends EccsService {
         );
     }
 
+    private function getFederationStatistics() {
+        $query = new QueryBuilder();
+        $sql = "SELECT * FROM FederationStats";
+        $query->setSql($sql);
+
+        $result = $this->dbManager->executeStatement(true, $query);
+    
+        $entities = array();
+        while ($row = $result->fetch_assoc()) {
+            $entity = array(
+                'checkDate' => $row['checkDate'],
+                'registrationAuthority' => $row['registrationAuthority'],
+                'currentResult' => ($row['currentResult']) ? substr($row['currentResult'], 4) : 'disabled',
+                'css_class' => $this->computeCssClass($row['currentResult']),
+                'numIdPs' => $row['numIdPs'],
+            );
+            array_push($entities, $entity);
+        }
+    
+        return array(
+            'result' => $entities
+        );
+    }
+
     public function handle() {
         $action = $this->getParameter('action', '');
 
@@ -228,8 +252,11 @@ class JsonAPI extends EccsService {
         elseif ($action == 'checkhtml') {
             return $this->getCheckHtml();
         }
+        elseif ($action == 'fedstats') {
+            return $this->getFederationStatistics();
+        }
         else {
-            $message = "Wrong action, valid actions are entities, checks or checkhtml.";
+            $message = "Wrong action, valid actions are entities, checks, checkhtml, fedstats.";
             throw new Exception($message);
         }
     }
