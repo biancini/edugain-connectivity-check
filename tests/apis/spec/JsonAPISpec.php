@@ -505,4 +505,31 @@ class JsonAPISpec extends ObjectBehavior {
         $returned['result']->shouldHaveKeyWithValue('checkTime', 'checkTime value');
         $returned['result']->shouldHaveKeyWithValue('checkHtml', 'checkHtml value');
     }
+
+    function it_getFederationStatistics_worksl($dbManager, $result) {
+        $requestParams = array('action' => 'fedstats');
+        $result->beADoubleOf('mysqli_result');
+        call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
+                             array(array('checkDate' => 'checkDate value',
+                                         'registrationAuthority' => 'registrationAuthority value',
+                                         'currentResult' => '1 - OK',
+                                         'numIdPs' => 17),
+                                   false));
+
+        $dbManager->beADoubleOf('DBManager');
+        $dbManager->executeStatement(true, Argument::type('QueryBuilder'))->willReturn($result);
+
+        $this->beConstructedWith($dbManager, $requestParams);
+        $returned = $this->handle();
+        $returned->shouldBeArray();
+        $returned->shouldHaveKey('result');
+        $returned['result']->shouldBeArray();
+        $returned['result']->shouldHaveCount(1);
+        $returned['result'][0]->shouldBeArray();
+        $returned['result'][0]->shouldHaveKeyWithValue('checkDate', 'checkDate value');
+        $returned['result'][0]->shouldHaveKeyWithValue('registrationAuthority', 'registrationAuthority value');
+        $returned['result'][0]->shouldHaveKeyWithValue('currentResult', 'OK');
+        $returned['result'][0]->shouldHaveKeyWithValue('css_class', 'green');
+        $returned['result'][0]->shouldHaveKeyWithValue('numIdPs', 17);
+    }
 }
