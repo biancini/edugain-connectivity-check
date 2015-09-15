@@ -109,8 +109,8 @@ app.service('EccsJsonAPI', function($q, $http) {
                         case 'yellow':
                             curitem['idpsWarn'] += result.numIdPs;
                             break;
-                        case 'yellow':
-                            curitem['idpsDisabled'] += result.numIdPs;
+                        case 'red':
+                            curitem['idpsError'] += result.numIdPs;
                             break;
                         default:
                             console.log("errore");
