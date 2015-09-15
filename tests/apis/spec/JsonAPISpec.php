@@ -510,8 +510,7 @@ class JsonAPISpec extends ObjectBehavior {
         $requestParams = array('action' => 'fedstats');
         $result->beADoubleOf('mysqli_result');
         call_user_func_array(array($result->fetch_assoc(), 'willReturn'),
-                             array(array('checkDate' => 'checkDate value',
-                                         'registrationAuthority' => 'registrationAuthority value',
+                             array(array('registrationAuthority' => 'registrationAuthority value',
                                          'currentResult' => '1 - OK',
                                          'numIdPs' => 17),
                                    false));
@@ -526,7 +525,6 @@ class JsonAPISpec extends ObjectBehavior {
         $returned['result']->shouldBeArray();
         $returned['result']->shouldHaveCount(1);
         $returned['result'][0]->shouldBeArray();
-        $returned['result'][0]->shouldHaveKeyWithValue('checkDate', 'checkDate value');
         $returned['result'][0]->shouldHaveKeyWithValue('registrationAuthority', 'registrationAuthority value');
         $returned['result'][0]->shouldHaveKeyWithValue('currentResult', 'OK');
         $returned['result'][0]->shouldHaveKeyWithValue('css_class', 'green');
