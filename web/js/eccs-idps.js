@@ -24,7 +24,7 @@ app.controller('IdpsController', function ($scope, EccsJsonAPI, Filtering, Sorti
     // Catch event from parent controller
     $scope.$on("UPDATE_STATUS", function(event, newfilters) {
         for (var curfilter in newfilters) {
-            if (curfilter in $scope.filters) {
+            if (curfilter in $scope.filtering.filters) {
                 $scope.filtering.filters[curfilter] = newfilters[curfilter];
             }
         }

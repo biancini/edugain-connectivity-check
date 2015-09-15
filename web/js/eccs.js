@@ -3,7 +3,9 @@ var app = angular.module('EccsApplication', []);
 app.controller('EccsController', function ($scope) {
     $scope.filters = {
         'css_class': undefined,
-        'ignoreEntity': undefined
+        'ignoreEntity': undefined,
+        'currentResult': 'All',
+        'checkResult': 'All'
     };
 
     $scope.filterStatus = function (instatus) {
