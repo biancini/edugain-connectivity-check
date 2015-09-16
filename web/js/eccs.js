@@ -82,7 +82,7 @@ app.service('EccsJsonAPI', function($q, $http) {
                 response.result.forEach(function (result) {
                     var curitem = undefined;
                     items.forEach(function (item) {
-                        if (item.registrationAuthority == result.registrationAuthority) {
+                        if (item.checkDate == result.checkDate && item.registrationAuthority == result.registrationAuthority) {
                             curitem = item;
                         }
                     });

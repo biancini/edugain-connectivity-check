@@ -137,6 +137,8 @@ class IdpChecks {
     }
 
     function storeFederationStats() {
+        print "Executing update of federation statistics";
+
         $mysqli = getDbConnection($this->dbConnection);
         executeStatement($mysqli, false, "INSERT INTO FederationStats (SELECT CURDATE() AS checkDate, registrationAuthority, currentResult, numIdPs FROM FederationStatsView)", NULL);
         $mysqli->close();
