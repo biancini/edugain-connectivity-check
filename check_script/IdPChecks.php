@@ -25,11 +25,8 @@ class IdpChecks {
     protected $getDataFromJson;
 
     public function __construct() {
-        $this->confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
-
         $this->storeResultsDb = new StoreResultsDb();
         $this->getDataFromJson = new GetDataFromJson();
-
 
         $this->spEntityIDs = array();
         $this->spACSurls = array();
