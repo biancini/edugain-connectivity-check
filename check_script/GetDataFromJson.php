@@ -201,7 +201,9 @@ class GetDataFromJson {
                       CURL_SSLVERSION_TLSv1_1 (5) 
                    or CURL_SSLVERSION_TLSv1_2 (6).
              */
-            if ($vers === 2) continue; //Disable SSLv2
+            if ($vers === 2) {
+                continue; //Disable SSLv2
+            }
 
             if ($html === false) {
                 if ($verbose) {
@@ -224,9 +226,6 @@ class GetDataFromJson {
 
                 if ($html === false) {
                     $curlError = curl_error($curl);
-                    if ($verbose) {
-                        print "CURL error with SSLVERSION = " . $vers . " = " . $curlError . "\n";
-                    }
                 } else {
                     $curlError = false;
                 }

@@ -242,22 +242,25 @@ class JsonAPI extends EccsService {
 
     public function handle() {
         $action = $this->getParameter('action', '');
+        $return = NULL;
 
         if ($action == 'entities') {
-            return $this->getEntities();
+            $return = $this->getEntities();
         }
         elseif ($action == 'checks') {
-            return $this->getChecks();
+            $return = $this->getChecks();
         }
         elseif ($action == 'checkhtml') {
-            return $this->getCheckHtml();
+            $return = $this->getCheckHtml();
         }
         elseif ($action == 'fedstats') {
-            return $this->getFederationStatistics();
+            $return = $this->getFederationStatistics();
         }
         else {
             $message = "Wrong action, valid actions are entities, checks, checkhtml, fedstats.";
             throw new Exception($message);
         }
+
+        return $return;
     }
 }

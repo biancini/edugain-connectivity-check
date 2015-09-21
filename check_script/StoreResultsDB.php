@@ -33,7 +33,6 @@ class StoreResultsDB {
             ),
         );
 
-        $regexp = "/^sp_\d/";
         $this->confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
     }
 
@@ -106,29 +105,30 @@ class StoreResultsDB {
                 $query->addQueryParam($fed['email'], 's');
                 $query->addQueryParam($fed['reg_auth'], 's');
                 $this->dbManager->executeStatement(false, $query);
+
+                continue;
             }
-            else {
-                while ($row = $result->fetch_assoc()) {
+
+            while ($row = $result->fetch_assoc()) {
+                $query = new QueryBuilder();
+                $query->setSql("UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?");
+                $query->addQueryParam($fed['reg_auth'], 's');
+                $this->dbManager->executeStatement(false, $query);
+                    
+                if ($fed['name'] !== $row['federationName']) {
                     $query = new QueryBuilder();
-                    $query->setSql("UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?");
+                    $query->setSql("UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?");
+                    $query->addQueryParam($fed['name'], 's');
                     $query->addQueryParam($fed['reg_auth'], 's');
                     $this->dbManager->executeStatement(false, $query);
-                    
-                    if ($fed['name'] !== $row['federationName']) {
-                        $query = new QueryBuilder();
-                        $query->setSql("UPDATE Federations SET federationName = ? WHERE registrationAuthority = ?");
-                        $query->addQueryParam($fed['name'], 's');
-                        $query->addQueryParam($fed['reg_auth'], 's');
-                        $this->dbManager->executeStatement(false, $query);
-                    }
+                }
                           
-                    if ($fed['email'] !== $row['emailAddress']) {
-                        $query = new QueryBuilder();
-                        $query->setSql("UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?");
-                        $query->addQueryParam($fed['email'], 's');
-                        $query->addQueryParam($fed['reg_auth'], 's');
-                        $this->dbManager->executeStatement(false, $query);
-                    }
+                if ($fed['email'] !== $row['emailAddress']) {
+                    $query = new QueryBuilder();
+                    $query->setSql("UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?");
+                    $query->addQueryParam($fed['email'], 's');
+                    $query->addQueryParam($fed['reg_auth'], 's');
+                    $this->dbManager->executeStatement(false, $query);
                 }
             }
         }
