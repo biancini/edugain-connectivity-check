@@ -14,19 +14,26 @@
 # these results has received funding from the European Community¹s Seventh
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
-            
-include ("utils.php");
 
-$conf_array = parse_ini_file(dirname(__FILE__) . 'properties.ini', true);
+require_once '../utils/MailUtils.php';
+require_once '../utils/QueryBuilder.php';
+require_once '../utils/DBManager.php';
 
-$db_connection = $conf_array['db_connection'];
+$mailer = new MailUtils();
+$dbManager = new DBManager();
+
+$conf_array = parse_ini_file(dirname(__FILE__) . 'properties.ini.php', true);
 $email_properties = $conf_array['email'];
 
-$mysqli = getDbConnection($db_connection);
-$fed_result = executeStatement($mysqli, true, "SELECT * FROM Federations", NULL);
+$query = new QueryBuilder();
+$query->setSql("SELECT * FROM Federations");
+$fed_result = $dbManager->executeStatement(true, $query);
 
 while ($cur_federation = $fed_result->fetch_assoc()) { 
-    $result = executeStatement($mysqli, true, "SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'", array("s", $cur_federation['registrationAuthority']));
+    $query = new QueryBuilder();
+    $query->setSql("SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'");
+    $query->addQueryParam($cur_federation['registrationAuthority'], 's');
+    $result = $dbManager->executeStatement(true, $query);
     $idps = array();
     while ($cur_idp = $result->fetch_assoc()) {
         $idps[$cur_idp['entityID']] = array();
@@ -37,9 +44,6 @@ while ($cur_federation = $fed_result->fetch_assoc()) {
     }
 
     if (!empty($cur_federation['emailAddress']) && count($idps) > 0) {
-        sendEmail($email_properties, $cur_federation['emailAddress'], $idps);
+        $mailer.>sendEmail($email_properties, $cur_federation['emailAddress'], $idps);
     }
 } 
-
-$mysqli->close();
-?>

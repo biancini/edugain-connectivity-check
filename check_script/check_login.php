@@ -19,9 +19,9 @@ if (count($argv) < 2) {
     throw new Exception("Please specify IdP entityID as parameter to this script.");
 }
 
-include ("utils.php");
+require_once 'GetDataFromJson.php';
 
-$conf_array = parse_ini_file(dirname(__FILE__) . '/properties.ini', true);
+$conf_array = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
 $map_url = $conf_array['check_script']['map_url'];
 
 global $verbose;
@@ -58,7 +58,9 @@ if (($json_edugain_idps = file_get_contents($edugain_idps_url, false, stream_con
         throw new Exception("Error fetching JSON eduGAIN IdPs");
 }
 
-$idpList = extractIdPfromJSON($json_edugain_idps);
+$getDataFromJson = new GetDataFromJson();
+
+$idpList = $getDataFromJson->extractIdPfromJSON($json_edugain_idps);
 if (!$idpList) {
     throw new Exception("Error loading eduGAIN JSON IdPs.");
 }
@@ -66,7 +68,7 @@ if (!$idpList) {
 foreach ($idpList as $curIdP) {
     if ($curIdP['entityID'] == $argv[1]) {
         print "Executing check for " . $curIdP['entityID'] . "\n";
-        executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
+        $getDataFromJson->executeIdPchecks($curIdP, $spEntityIDs, $spACSurls, NULL);
     }
 }
 

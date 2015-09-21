@@ -1,3 +1,7 @@
+;<?php
+;die();
+;/*
+
 ; This configuration file contains information to
 ; connect to the MySQL database used to store
 ; metadata and idp check information.
@@ -42,3 +46,5 @@ password = password
 from = mccs@edugain.net
 baseurl = https://server-hosting-mccs.edugain.net/mccs
 test_recipient = 
+
+;*/

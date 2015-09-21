@@ -70,17 +70,26 @@ class DBManager {
 
         $stmt = $this->mysqli->prepare($sql);
         if ($params != NULL && count($params) > 1 && !call_user_func_array(array($stmt, "bind_param"), $this->refValues($params))) {
-            throw new Exception(ERROR . mysqli_error($this->mysqli));
+            throw new Exception('ERROR ' . mysqli_error($this->mysqli));
         }
         if (!$stmt->execute()) {
-            throw new Exception(ERROR . mysqli_error($this->mysqli));
+            throw new Exception('ERROR ' . mysqli_error($this->mysqli));
         }
     
         $resultset = $stmt->get_result();
-        if ($r === true) {
+
+        if ($r == true) {
+            if (!$resultset) {
+                throw new Exception('ERROR ' . mysqli_error($this->mysqli));
+            }
+
             return $resultset;
         }
         else {
+            if (!$resultset) {
+                return 1;
+            }
+
             return $resultset->fetch_row()[0];
         }
     }

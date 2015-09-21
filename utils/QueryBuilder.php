@@ -19,6 +19,7 @@ class QueryBuilder {
     private $sql;
     private $sqlConditions;
     private $queryParams;
+    private $queryParamTypes;
 
     /**
      Create a new DB connection and return its pointer.
@@ -29,6 +30,7 @@ class QueryBuilder {
         $this->sql = "";
         $this->sqlConditions = "";
         $this->queryParams = array();
+        $this->queryParamTypes = "";
     }
 
     private function concatenateWhere() {
@@ -56,7 +58,7 @@ class QueryBuilder {
                 foreach ($params[$paramName] as $val) {
                     $this->sqlConditions .= (substr($this->sqlConditions, -1) != "(") ? ", ": "";
                     $this->sqlConditions .= "?";
-                    array_push($queryParams, $val);
+                    $this->addQueryParam($val, 's');
                 }
                 $this->sqlConditions .= ")";
             }
@@ -65,15 +67,15 @@ class QueryBuilder {
             $this->concatenateWhere();
             if ($like) {
                 $this->sqlConditions .= " $sqlName LIKE ?";
-                array_push($this->queryParams, "%" . $params[$paramName] . "%");
+                $this->addQueryParam("%" . $params[$paramName] . "%", 's');
             }
             elseif ($map !== NULL) {
                 $this->sqlConditions .= " $sqlName = ?";
-                array_push($this->queryParams, $map[$params[$paramName]]);
+                $this->addQueryParam($map[$params[$paramName]], 's');
             }
             else { 
                 $this->sqlConditions .= " $sqlName = ?";
-                array_push($this->queryParams, $params[$paramName]);
+                $this->addQueryParam($params[$paramName], 's');
             }
         }
         else {
@@ -100,6 +102,11 @@ class QueryBuilder {
     }
 
     public function getQueryParams() {
-        return array_merge(array(str_repeat('s', count($this->queryParams))), $this->queryParams);
+        return array_merge(array($this->queryParamTypes), $this->queryParams);
+    }
+
+    public function addQueryParam($paramValue, $paramType = 's') {
+        $this->queryParamTypes .= $paramType;
+        array_push($this->queryParams, $paramValue);
     }
 }
