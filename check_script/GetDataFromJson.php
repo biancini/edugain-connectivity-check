@@ -16,10 +16,14 @@
 # (GEANT).
 
 class GetDataFromJson {
-    protected $confArray;
+    protected $edugainFedsUrl;
+    protected $edugainIdpsUrl;
+    protected $arrContextOptions;
 
     public function __construct() {
-        $this->confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
+        $confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
+        $this->edugainFedsUrl = $confArray['edugain_db_json']['json_feds_url'];
+        $this->edugainIdpsUrl = $confArray['edugain_db_json']['json_idps_url'];
 
         $this->arrContextOptions = array(
             "ssl" => array(
@@ -29,10 +33,23 @@ class GetDataFromJson {
         );
     }
 
+    function obtainFederationsList() {
+        $fedsList = false;
+        $jsonEdugainFeds = file_get_contents($this->edugainFedsUrl, false, stream_context_create($this->arrContextOptions));
+
+        if ($jsonEdugainFeds !== false) {
+            $fedsList = json_decode($jsonEdugainFeds, true, 10, JSON_UNESCAPED_UNICODE);
+        }
+
+        if ($fedsList === false) {
+            throw new Exception("Error fetching JSON eduGAIN Federation members");
+        }
+        return $fedsList;
+    }
+
     function obtainIdPList() {
-        $edugainIdpsUrl = $this->confArray['edugain_db_json']['json_idps_url'];
         $idpList = false;
-        $jsonEdugainIdps = file_get_contents($edugainIdpsUrl, false, stream_context_create($this->arrContextOptions));
+        $jsonEdugainIdps = file_get_contents($this->edugainIdpsUrl, false, stream_context_create($this->arrContextOptions));
         if ($jsonEdugainIdps !== false) {
             $idpList = $this->extractIdPfromJSON($jsonEdugainIdps);
         }
@@ -186,8 +203,6 @@ class GetDataFromJson {
     }
 
     function getUrlWithCurl($url) {
-        global $verbose;
-
         $curl = curl_init($url);
 
         $html = false;
@@ -206,10 +221,6 @@ class GetDataFromJson {
             }
 
             if ($html === false) {
-                if ($verbose) {
-                    print "Using CURL with SSLVERSION = " . $vers . "\n";
-                }
-
                 curl_setopt_array($curl, array(
                     CURLOPT_FOLLOWLOCATION => true,
                     CURLOPT_FRESH_CONNECT => true,

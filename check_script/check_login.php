@@ -23,8 +23,6 @@ require_once 'GetDataFromJson.php';
 
 $conf_array = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
 $map_url = $conf_array['check_script']['map_url'];
-
-global $verbose;
 $verbose = $conf_array['check_script']['verbose'];
 
 $spEntityIDs = array();

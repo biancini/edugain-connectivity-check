@@ -23,38 +23,38 @@ require_once 'GetDataFromJson.php';
 class IdpChecks {
     protected $storeResultsDb;
     protected $getDataFromJson;
+    protected $spEntityIDs = array();
+    protected $spACSurls = array();
+    protected $parallel;
+    protected $checkHistory;
+    protected $verbose;
 
     public function __construct() {
         $this->storeResultsDb = new StoreResultsDb();
         $this->getDataFromJson = new GetDataFromJson();
-
-        $this->spEntityIDs = array();
-        $this->spACSurls = array();
+        $this->parallel = intval($confArray['check_script']['parallel']);
+        $this->checkHistory = intval($confArray['check_script']['check_history']);
+        $this->verbose = $confArray['check_script']['verbose'];
 
         $regexp = "/^sp_\d/";
-        $this->confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
-        $this->confArrayKeys = array_keys($this->confArray);
-        $this->spsKeys[] = preg_grep($regexp, $this->confArrayKeys);
-        foreach ($this->spsKeys as $key => $value) {
+        $confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
+        $confArrayKeys = array_keys($confArray);
+        $spsKeys[] = preg_grep($regexp, $confArrayKeys);
+        foreach ($spsKeys as $key => $value) {
             foreach($value as $sp => $val) {
-                $this->spEntityIDs[] = $this->confArray[$val]['entityID'];
-                $this->spACSurls[] = $this->confArray[$val]['acs_url'];
+                $this->spEntityIDs[] = $confArray[$val]['entityID'];
+                $this->spACSurls[] = $confArray[$val]['acs_url'];
             }
         }
  
-        $this->parallel = intval($this->confArray['check_script']['parallel']);
-        $this->checkHistory = intval($this->confArray['check_script']['check_history']);
-
-        global $verbose;
-        $verbose = $this->confArray['check_script']['verbose'];
-
         if (count($this->spEntityIDs) != count($this->spACSurls)) {
             throw new Exception("Configuration error. Please check properties.ini.");
         }
     }
 
     function executeAllChecks() {
-        $this->storeResultsDb->updateFederations();
+        $fedsList = $this->getDataFromJson->obtainFederationsList();
+        $this->storeResultsDb->storeFedsIntoDb($fedsList);
 
         $this->storeResultsDb->cleanOldEntityChecks();
         $idpList = $this->getDataFromJson->obtainIdPList();
@@ -172,8 +172,6 @@ class IdpChecks {
     }
 
     function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spACSurl) {
-        global $verbose;
-   
         date_default_timezone_set('UTC');
         $date = date('Y-m-d\TH:i:s\Z');
         $id = md5($date.rand(1, 1000000));
@@ -186,14 +184,14 @@ class IdpChecks {
         if ($curlError !== false) {
             $status = 3;
             $message = '3 - CURL-Error';
-            if ($verbose) {
+            if ($this->verbose) {
                 echo $idpEntityId . " Curl error: ".$curlError."\n";
             }
             $error = $curlError;
         } else if ($info['http_code'] != 200 && $info['http_code'] != 401) {
             $status = 3;
             $message = '3 - HTTP-Error';
-            if ($verbose) {
+            if ($this->verbose) {
                 echo $idpEntityId . " Status code: ".$info['http_code']."\n";
             }
             $error = "Status code: ".$info['http_code'];
@@ -203,7 +201,7 @@ class IdpChecks {
             if (!preg_match($patternUsername, $html) || !preg_match($patternPassword, $html)) {
                 $status = 2;
                 $message = '2 - FORM-Invalid';
-                if ($verbose) {
+                if ($this->verbose) {
                     echo $idpEntityId . " Did not find input for username or password.\n";
                 }
                 $error = "Did not find input for username or password.";

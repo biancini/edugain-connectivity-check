@@ -20,20 +20,9 @@ require_once '../utils/DBManager.php';
     
 class StoreResultsDB {
     protected $dbManager;
-    protected $arrContextOptions;
-    protected $confArray;
 
     public function __construct($dbManager = null) {
         $this->dbManager = $dbManager ? $dbManager : new DBManager();
-
-        $this->arrContextOptions = array(
-            "ssl" => array(
-                "verify_peer" => false,
-                "verify_peer_name" => false,
-            ),
-        );
-
-        $this->confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
     }
 
     function cleanOldEntityChecks() {
@@ -58,25 +47,6 @@ class StoreResultsDB {
         $this->dbManager->executeStatement(false, $query);
     }
 
-    function updateFederations() {
-        $edugainFedsUrl = $this->confArray['edugain_db_json']['json_feds_url'];
-        $jsonEdugainFeds = file_get_contents($edugainFedsUrl, false, stream_context_create($this->arrContextOptions));
-
-        if ($jsonEdugainFeds === false) {
-            print "Error fetching JSON eduGAIN Federation members\n";
-        } else {
-            $query = new QueryBuilder();
-            $query->setSql("UPDATE Federations SET updated = 0");
-            $this->dbManager->executeStatement(false, $query);
-
-            $this->storeFedsIntoDb($jsonEdugainFeds);
-
-            $query = new QueryBuilder();
-            $query->setSql("DELETE FROM Federations WHERE updated = 0");
-            $this->dbManager->executeStatement(false, $query);
-        }
-    }
-
     function storeFederationStats() {
         print "Executing update of federation statistics";
 
@@ -85,9 +55,11 @@ class StoreResultsDB {
         $this->dbManager->executeStatement(false, $query);
     }
 
-    function storeFedsIntoDb($jsonEdugainFeds) {
-        $fedsList = json_decode($jsonEdugainFeds, true, 10, JSON_UNESCAPED_UNICODE);
-    
+    function storeFedsIntoDb($fedsList) {
+        $query = new QueryBuilder();
+        $query->setSql("UPDATE Federations SET updated = 0");
+        $this->dbManager->executeStatement(false, $query);
+
         foreach ($fedsList as $fed) { 
             //If I find a registrationAuthority value for the federation
             if ($fed['reg_auth'] === null || $fed['reg_auth'] === '') {
@@ -132,5 +104,9 @@ class StoreResultsDB {
                 }
             }
         }
+
+        $query = new QueryBuilder();
+        $query->setSql("DELETE FROM Federations WHERE updated = 0");
+        $this->dbManager->executeStatement(false, $query);
     }
 }
