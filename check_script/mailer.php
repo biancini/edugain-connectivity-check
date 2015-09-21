@@ -44,6 +44,6 @@ while ($cur_federation = $fed_result->fetch_assoc()) {
     }
 
     if (!empty($cur_federation['emailAddress']) && count($idps) > 0) {
-        $mailer.>sendEmail($email_properties, $cur_federation['emailAddress'], $idps);
+        $mailer->sendEmail($email_properties, $cur_federation['emailAddress'], $idps);
     }
 } 

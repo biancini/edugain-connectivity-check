@@ -30,6 +30,8 @@ class IdpChecks {
     protected $verbose;
 
     public function __construct() {
+        $confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
+
         $this->storeResultsDb = new StoreResultsDb();
         $this->getDataFromJson = new GetDataFromJson();
         $this->parallel = intval($confArray['check_script']['parallel']);
@@ -37,7 +39,6 @@ class IdpChecks {
         $this->verbose = $confArray['check_script']['verbose'];
 
         $regexp = "/^sp_\d/";
-        $confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
         $confArrayKeys = array_keys($confArray);
         $spsKeys[] = preg_grep($regexp, $confArrayKeys);
         foreach ($spsKeys as $key => $value) {
@@ -66,7 +67,7 @@ class IdpChecks {
             if (!$pid) {
                 //In child
                 print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-                $this->executeIdPchecks($idpList[$count], $this->spEntityIDs, $this->spACSurls, $this->checkHistory);
+                $this->executeIdPchecks($idpList[$count]);
                 return false;
             }
             $count++;
@@ -79,7 +80,7 @@ class IdpChecks {
                 if (!$pid) {
                     //In child
                     print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-                    $this->executeIdPchecks($idpList[$count], $this->spEntityIDs, $this->spACSurls, $this->checkHistory);
+                    $this->executeIdPchecks($idpList[$count]);
                     return false;
                 }
                 $count++;
@@ -91,7 +92,7 @@ class IdpChecks {
         return true;
     }
 
-    function executeIdPchecks($idp, $spEntityIDs, $spACSurls, $checkHistory = 2) {
+    function executeIdPchecks($idp) {
         $dbManager = new DBManager();
         list($ignoreEntity, $previousStatus) = $this->getEntityPreviousStatus($dbManager, $idp);
 
@@ -106,20 +107,20 @@ class IdpChecks {
         }
 
         $reason = '1 - OK';
-        $lastCheckHistory = $checkHistory - 1;
+        $lastCheckHistory = $this->checkHistory - 1;
         $query = new QueryBuilder();
 
-        for ($i = 0; $i < count($spEntityIDs); $i++) {
-            $result = $this->checkIdp($idp['entityID'], $idp['SingleSignOnService'], $spEntityIDs[$i], $spACSurls[$i]);
+        for ($i = 0; $i < count($this->spEntityIDs); $i++) {
+            $result = $this->checkIdp($idp['entityID'], $idp['SingleSignOnService'], $this->spEntityIDs[$i], $this->spACSurls[$i]);
             $status = array_key_exists('status', $result) ? $result['status'] : -1;
             $reason = array_key_exists('message', $result) ? $result['message'] : '0 - UNKNOWN-Error';
 
             $query = new QueryBuilder();
             $query->setSql('INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
             $query->addQueryParam($idp['entityID'], 's');
-            $query->addQueryParam($spEntityIDs[$i], 's');
+            $query->addQueryParam($this->spEntityIDs[$i], 's');
             $query->addQueryParam($idp['SingleSignOnService'], 's');
-            $query->addQueryParam($spACSurls[$i], 's');
+            $query->addQueryParam($this->spACSurls[$i], 's');
             $query->addQueryParam($result['html'], 's');
             $query->addQueryParam($result['http_code'], 'i');
             $query->addQueryParam($reason, 's');

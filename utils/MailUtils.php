@@ -17,7 +17,7 @@
             
 include (dirname(__FILE__)."/../PHPMailer/PHPMailerAutoload.php");
 
-class MailUtils() {
+class MailUtils {
     function sendEmail($emailProperties, $recipient, $idps) {
         $mail = new PHPMailer;
         //$mail->SMTPDebug = 3; // Enable verbose debug output
