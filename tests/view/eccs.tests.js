@@ -11,6 +11,7 @@ describe('EccsController', function() {
         $controller('EccsController', {$scope: scope});
     }));
 
+
     it('should have filter initialized correctly', function () {
         expect(scope.filters.css_class).toBe(undefined);
         expect(scope.filters.ignoreEntity).toBe(undefined);
@@ -29,34 +30,66 @@ describe('EccsController', function() {
     }]));
 
     it('should EccsJsonAPI.getEntities return promise containing array', inject(['EccsJsonAPI', function(EccsJsonAPI) {
-        $httpBackend.expectGET().respond(200, '{ results: [\'element1\', \'element2\'] }');
+        var element1 = { technicalContacts: 'address1@mail.com', supportContacts: '' };
+        var element2 = { technicalContacts: 'address1@mail.com', supportContacts: 'address2@mail.com' };
+
+        $httpBackend.expectGET().respond(200, { results: [ element1, element2 ] });
         scope.jsonApi = EccsJsonAPI.getNew();
 
+        var results = undefined;
         var promise = scope.jsonApi.getEntities();
-        promise.then(function(results) {
-            expect(results).toEqual(['element1', 'element2']);
-        });
+        promise.then(function (r) { results = r; });
+
+        $httpBackend.flush();
+        element1['contacts'] = [{'type': 'T', 'mail': 'address1@mail.com' }];
+        element2['contacts'] = [{'type': 'T', 'mail': 'address1@mail.com' }, {'type': 'S', 'mail': 'address2@mail.com' }];
+        expect(results).toEqual([element1, element2]);
     }]));
 
     it('should EccsJsonAPI.getTests return promise containing array', inject(['EccsJsonAPI', function(EccsJsonAPI) {
-        $httpBackend.expectGET().respond(200, '{ results: [\'element1\', \'element2\'] }');
+        $httpBackend.expectGET().respond(200, { results: ['element1', 'element2'] });
         scope.jsonApi = EccsJsonAPI.getNew();
 
+        var results = undefined;
         var promise = scope.jsonApi.getTests();
-        promise.then(function(results) {
-            expect(results).toEqual(['element1', 'element2']);
-        });
+        promise.then(function (r) { results = r; });
+
+        $httpBackend.flush();
+        expect(results).toEqual(['element1', 'element2']);
     }]));
 
-    it('should EccsJsonAPI.getCheck return promise containing array', inject(['EccsJsonAPI', function(EccsJsonAPI) {
-        $httpBackend.expectGET().respond(200, '{ results: \'element\' }');
+    it('should EccsJsonAPI.getCheck return promise containing array', inject(['EccsJsonAPI',function(EccsJsonAPI) {
+        $httpBackend.expectGET().respond(200, { result: 'element' });
         scope.jsonApi = EccsJsonAPI.getNew();
-        var checkid = 123;
 
+        var result = undefined;
+        var checkid = 123;
         var promise = scope.jsonApi.getCheck(checkid);
-        promise.then(function(results) {
-            expect(results).toEqual('element');
-        });
+        promise.then(function (r) { result = r; });
+
+        $httpBackend.flush();
+        expect(result).toEqual('element');
+    }]));
+
+    it('should EccsJsonAPI.getFedStatistics return promise containing array', inject(['EccsJsonAPI', function(EccsJsonAPI) {
+        $httpBackend.expectGET().respond(200, { results: [
+            { 'checkDate': '2015-09-15', 'registrationAuthority': 'http://federation', 'currentResult': 'OK', 'css_class': 'green', 'numIdPs': 6}
+        ] });
+        scope.jsonApi = EccsJsonAPI.getNew();
+
+        var results = undefined;
+        var promise = scope.jsonApi.getFedStatistics();
+        promise.then(function (r) { results = r; });
+
+        $httpBackend.flush();
+        expect(results.length).toBe(1);
+        expect(results[0].checkDate).toEqual('2015-09-15');
+        expect(results[0].registrationAuthority).toEqual('http://federation');
+        expect(results[0].totIdps).toEqual(6);
+        expect(results[0].idpsOk).toEqual(6);
+        expect(results[0].idpsWarn).toEqual(0);
+        expect(results[0].idpsError).toEqual(0);
+        expect(results[0].idpsDisabled).toEqual(0);
     }]));
 
     it('should Sorting.sort return ordered array ascending', inject(['Sorting', function(Sorting) {

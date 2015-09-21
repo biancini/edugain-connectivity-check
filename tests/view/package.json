@@ -3,6 +3,8 @@
     "karma": "~0.10",
     "karma-junit-reporter": "~0.3.4",
     "karma-phantomjs-launcher": "~0.2.1",
-    "karma-coverage": "~0.5.1"
+    "karma-coverage": "~0.5.1",
+    "karma-chai": "~0.1.0",
+    "karma-chai-as-promised": "~0.1.2"    
   }
 }

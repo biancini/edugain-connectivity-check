@@ -236,7 +236,7 @@ class JsonAPI extends EccsService {
         }
     
         return array(
-            'result' => $entities
+            'results' => $entities
         );
     }
 

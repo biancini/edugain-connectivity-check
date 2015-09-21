@@ -22,7 +22,7 @@ app.controller('EccsController', function ($scope) {
     };
 });
 
-app.service('EccsJsonAPI', function($q, $http) {
+app.service('EccsJsonAPI', function($http) {
     var jsonApi = {};
 
     jsonApi.getNew = function() {
@@ -34,9 +34,8 @@ app.service('EccsJsonAPI', function($q, $http) {
         };
 
         apis.getEntities = function () {
-            var deferred = $q.defer();
-            $http.get(apis.urlIdp).success(function (response) {
-                response.results.forEach(function (item) {
+            return $http.get(apis.urlIdp).then(function (response) {
+                response.data.results.forEach(function (item) {
                     // Re-organize contacts
                     item.contacts = [];
                     item.technicalContacts.split(',').forEach(function (contact) {
@@ -51,38 +50,29 @@ app.service('EccsJsonAPI', function($q, $http) {
                     });
                 });
     
-                deferred.resolve(response.results);
+                return response.data.results;
             });
-
-            return deferred.promise;
         };
 
         apis.getTests = function () {
-            var deferred = $q.defer();
-            $http.get(apis.urlTest).success(function (response) {
-                deferred.resolve(response.results);
+            return $http.get(apis.urlTest).then(function (response) {
+                return response.data.results;
             });
-
-            return deferred.promise;
         };
 
         apis.getCheck = function (checkid) {
-            var deferred = $q.defer();
-            $http.get(apis.urlCheck + checkid).success(function (response) {
-                deferred.resolve(response.result);
+            return $http.get(apis.urlCheck + checkid).then(function (response) {
+                return response.data.result;
             });
-
-            return deferred.promise;
         };
 
         apis.getFedStatistics = function () {
-            var deferred = $q.defer();
-            $http.get(apis.urlFeds).success(function (response) {
+            return $http.get(apis.urlFeds).then(function (response) {
                 var items = [];
-                response.result.forEach(function (result) {
+                response.data.results.forEach(function (result) {
                     var curitem = undefined;
                     items.forEach(function (item) {
-                        if (item.checkDate == result.checkDate && item.registrationAuthority == result.registrationAuthority) {
+                        if (item.registrationAuthority == result.registrationAuthority) {
                             curitem = item;
                         }
                     });
@@ -120,10 +110,8 @@ app.service('EccsJsonAPI', function($q, $http) {
                     curitem['totIdps'] += result.numIdPs;
                 });
 
-                deferred.resolve(items);
+                return items;
             });
-
-            return deferred.promise;
         };
 
         return apis;

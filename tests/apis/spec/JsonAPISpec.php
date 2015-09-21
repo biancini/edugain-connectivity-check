@@ -522,14 +522,14 @@ class JsonAPISpec extends ObjectBehavior {
         $this->beConstructedWith($dbManager, $requestParams);
         $returned = $this->handle();
         $returned->shouldBeArray();
-        $returned->shouldHaveKey('result');
-        $returned['result']->shouldBeArray();
-        $returned['result']->shouldHaveCount(1);
-        $returned['result'][0]->shouldBeArray();
-        $returned['result'][0]->shouldHaveKeyWithValue('checkDate', 'checkDate value');
-        $returned['result'][0]->shouldHaveKeyWithValue('registrationAuthority', 'registrationAuthority value');
-        $returned['result'][0]->shouldHaveKeyWithValue('currentResult', 'OK');
-        $returned['result'][0]->shouldHaveKeyWithValue('css_class', 'green');
-        $returned['result'][0]->shouldHaveKeyWithValue('numIdPs', 17);
+        $returned->shouldHaveKey('results');
+        $returned['results']->shouldBeArray();
+        $returned['results']->shouldHaveCount(1);
+        $returned['results'][0]->shouldBeArray();
+        $returned['results'][0]->shouldHaveKeyWithValue('checkDate', 'checkDate value');
+        $returned['results'][0]->shouldHaveKeyWithValue('registrationAuthority', 'registrationAuthority value');
+        $returned['results'][0]->shouldHaveKeyWithValue('currentResult', 'OK');
+        $returned['results'][0]->shouldHaveKeyWithValue('css_class', 'green');
+        $returned['results'][0]->shouldHaveKeyWithValue('numIdPs', 17);
     }
 }
