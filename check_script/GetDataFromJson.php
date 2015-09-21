@@ -159,7 +159,9 @@ class GetDataFromJson {
         }
 
         /* 5: Default for HTML */
-        $charset = "ISO 8859-1";
+        if (!$charset) {
+            $charset = "ISO 8859-1";
+        }
 
         return $charset;
     }
@@ -197,9 +199,7 @@ class GetDataFromJson {
             </samlp:AuthnRequest>';
 
        $samlRequest = preg_replace('/[\s]+/', ' ', $samlRequest);
-       $samlRequest = urlencode(base64_encode(gzdeflate($samlRequest)));
-
-       return $samlRequest;
+       return urlencode(base64_encode(gzdeflate($samlRequest)));
     }
 
     function getUrlWithCurl($url) {
@@ -217,7 +217,8 @@ class GetDataFromJson {
                    or CURL_SSLVERSION_TLSv1_2 (6).
              */
             if ($vers === 2) {
-                continue; //Disable SSLv2
+                //Disable SSLv2
+                continue;
             }
 
             if ($html === false) {
