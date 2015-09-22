@@ -87,6 +87,7 @@ class IdpChecks {
             } 
         }
 
+        $this->storeResultsDb = new StoreResultsDb();
         $this->storeResultsDb->deleteOldEntities();
         $this->storeResultsDb->storeFederationStats();
         return true;
@@ -145,7 +146,7 @@ class IdpChecks {
         }
     }
 
-    function getEntityPreviousStatus($dbManager, $idp) {
+    private function getEntityPreviousStatus($dbManager, $idp) {
         $query = new QueryBuilder();
         $query->setSql('SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck');
         $query->addQueryParam($idp['entityID']);
@@ -172,13 +173,13 @@ class IdpChecks {
         }
     }
 
-    function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spACSurl) {
+    private function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spACSurl) {
         date_default_timezone_set('UTC');
         $date = date('Y-m-d\TH:i:s\Z');
         $id = md5($date.rand(1, 1000000));
         $samlRequest = $this->getDataFromJson->generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
         $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
-        list($curlError, $info, $html) = $this->getDataFromJson->getUrlWithCurl($url);
+        list($curlError, $info, $html) = $this->getUrlWithCurl($url);
         $error = '';
         $status = 0;
         $message = '1 - OK';
@@ -215,5 +216,101 @@ class IdpChecks {
             'error' => $error,
             'html' => ($html) ? $html : "",
         );
+    }
+
+    private function getUrlWithCurl($url) {
+        $curl = curl_init($url);
+
+        $html = false;
+        $curlError = false;
+        for ($vers = 0; $vers <= 6; $vers++) {
+            /* One of CURL_SSLVERSION_DEFAULT (0),
+                      CURL_SSLVERSION_TLSv1   (1),
+                      CURL_SSLVERSION_SSLv2   (2),
+                      CURL_SSLVERSION_SSLv3   (3),
+                      CURL_SSLVERSION_TLSv1_0 (4),
+                      CURL_SSLVERSION_TLSv1_1 (5) 
+                   or CURL_SSLVERSION_TLSv1_2 (6).
+             */
+            if ($vers === 2) {
+                //Disable SSLv2
+                continue;
+            }
+
+            if ($html === false) {
+                curl_setopt_array($curl, array(
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_FRESH_CONNECT => true,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_COOKIEJAR => "/dev/null",
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 90,
+                    CURLOPT_CONNECTTIMEOUT => 90,
+                    CURLOPT_SSLVERSION => $vers,
+                    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
+                ));
+                $html = curl_exec($curl);
+
+                if ($html === false) {
+                    $curlError = curl_error($curl);
+                } else {
+                    $curlError = false;
+                }
+            }
+        }
+   
+        $info = curl_getinfo($curl);
+
+        $html = $this->cleanUtf8Curl($html, $curl);
+        $html = preg_replace('/\s*$^\s*/m', "\n", $html);
+        $html = preg_replace('/[ \t]+/', ' ', $html);
+        $html = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $html);
+
+        curl_close($curl);
+    }
+
+    private function cleanUtf8Curl($html, $curl) {
+        if (!is_string($html)) {
+            return $html;
+        }
+        $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
+        $charset = $this->obtainCharset($contentType, $html);
+        /* Convert it if it is anything but UTF-8 */
+        /* You can change "UTF-8"  to "UTF-8//IGNORE" to 
+        ignore conversion errors and still output something reasonable */
+        if (isset($charset) && strtoupper($charset) != "UTF-8") {
+            $html = iconv($charset, 'UTF-8', $html);
+        }
+        return $html;
+    }
+
+    private function obtainCharset($contentType, $html) {
+        $charset = NULL;
+        /* 1: HTTP Content-Type: header */
+        preg_match('@([\w/+]+)(;\s*charset=(\S+))?@i', $contentType, $matches);
+        if (!$charset && isset($matches[3])) {
+            $charset = $matches[3];
+        }
+        /* 2: <meta> element in the page */
+        preg_match('@<meta\s+http-equiv="Content-Type"\s+content="([\w/]+)(;\s*charset=([^\s"]+))?@i', $html, $matches);
+        if (!$charset && isset($matches[3])) {
+            $charset = $matches[3];
+        }
+        /* 3: <xml> element in the page */
+        preg_match('@<\?xml.+encoding="([^\s"]+)@si', $html, $matches);
+        if (!$charset && isset($matches[1])) {
+           $charset = $matches[1];
+        }
+        /* 4: PHP's heuristic detection */
+        $encoding = mb_detect_encoding($html);
+        if (!$charset && $encoding) {
+            $charset = $encoding;
+        }
+        /* 5: Default for HTML */
+        if (!$charset) {
+            $charset = "ISO 8859-1";
+        }
+        return $charset;
     }
 }

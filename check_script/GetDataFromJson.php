@@ -60,7 +60,7 @@ class GetDataFromJson {
         return $idpList;
     }
 
-    function getDisplayName($idp) {
+    private function getDisplayName($idp) {
         if ($idp['displayname']) {
             $aux1 = explode("==", $idp['displayname']);
             foreach ($aux1 as $result) {
@@ -90,7 +90,7 @@ class GetDataFromJson {
         return "";
     }
 
-    function getIdpMailContact($idp, $type) {
+    private function getIdpMailContact($idp, $type) {
         if (!array_key_exists($type, $idp['contacts'])) {
             return "";
         }
@@ -131,7 +131,7 @@ class GetDataFromJson {
         return $idps;
     }
 
-    function obtainCharset($contentType, $html) {
+    private function obtainCharset($contentType, $html) {
         $charset = NULL;
 
         /* 1: HTTP Content-Type: header */
@@ -166,24 +166,6 @@ class GetDataFromJson {
         return $charset;
     }
 
-    function cleanUtf8Curl($html, $curl) {
-        if (!is_string($html)) {
-            return $html;
-        }
-
-        $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-        $charset = $this->obtainCharset($contentType, $html);
-
-        /* Convert it if it is anything but UTF-8 */
-        /* You can change "UTF-8"  to "UTF-8//IGNORE" to 
-        ignore conversion errors and still output something reasonable */
-        if (isset($charset) && strtoupper($charset) != "UTF-8") {
-            $html = iconv($charset, 'UTF-8', $html);
-        }
-
-        return $html;
-    }
-
     function generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID) {
         $samlRequest = '
             <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
@@ -200,58 +182,5 @@ class GetDataFromJson {
 
        $samlRequest = preg_replace('/[\s]+/', ' ', $samlRequest);
        return urlencode(base64_encode(gzdeflate($samlRequest)));
-    }
-
-    function getUrlWithCurl($url) {
-        $curl = curl_init($url);
-
-        $html = false;
-        $curlError = false;
-        for ($vers = 0; $vers <= 6; $vers++) {
-            /* One of CURL_SSLVERSION_DEFAULT (0),
-                      CURL_SSLVERSION_TLSv1   (1),
-                      CURL_SSLVERSION_SSLv2   (2),
-                      CURL_SSLVERSION_SSLv3   (3),
-                      CURL_SSLVERSION_TLSv1_0 (4),
-                      CURL_SSLVERSION_TLSv1_1 (5) 
-                   or CURL_SSLVERSION_TLSv1_2 (6).
-             */
-            if ($vers === 2) {
-                //Disable SSLv2
-                continue;
-            }
-
-            if ($html === false) {
-                curl_setopt_array($curl, array(
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_FRESH_CONNECT => true,
-                    CURLOPT_SSL_VERIFYPEER => false,
-                    CURLOPT_SSL_VERIFYHOST => false,
-                    CURLOPT_COOKIEJAR => "/dev/null",
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_TIMEOUT => 90,
-                    CURLOPT_CONNECTTIMEOUT => 90,
-                    CURLOPT_SSLVERSION => $vers,
-                    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
-                ));
-                $html = curl_exec($curl);
-
-                if ($html === false) {
-                    $curlError = curl_error($curl);
-                } else {
-                    $curlError = false;
-                }
-            }
-        }
-   
-        $info = curl_getinfo($curl);
-
-        $html = $this->cleanUtf8Curl($html, $curl);
-        $html = preg_replace('/\s*$^\s*/m', "\n", $html);
-        $html = preg_replace('/[ \t]+/', ' ', $html);
-        $html = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $html);
-
-        curl_close($curl);
-        return array($curlError, $info, $html);
     }
 }
