@@ -87,6 +87,7 @@ class IdpChecks {
             } 
         }
 
+        // End of all cycles
         $this->storeResultsDb = new StoreResultsDb();
         $this->storeResultsDb->deleteOldEntities();
         $this->storeResultsDb->storeFederationStats();
@@ -114,7 +115,7 @@ class IdpChecks {
         for ($i = 0; $i < count($this->spEntityIDs); $i++) {
             $result = $this->checkIdp($idp['entityID'], $idp['SingleSignOnService'], $this->spEntityIDs[$i], $this->spACSurls[$i]);
             $status = array_key_exists('status', $result) ? $result['status'] : -1;
-            $reason = array_key_exists('message', $result) ? $result['message'] : '0 - UNKNOWN-Error';
+            $reason = $result['message'] ? $result['message'] : '0 - UNKNOWN-Error';
 
             $query = new QueryBuilder();
             $query->setSql('INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
@@ -123,7 +124,7 @@ class IdpChecks {
             $query->addQueryParam($idp['SingleSignOnService'], 's');
             $query->addQueryParam($this->spACSurls[$i], 's');
             $query->addQueryParam($result['html'], 's');
-            $query->addQueryParam($result['http_code'], 'i');
+            $query->addQueryParam($result['http_code'] ? $result['http_code'] : 0, 'i');
             $query->addQueryParam($reason, 's');
             $query->addQueryParam($lastCheckHistory, 'i');
             $dbManager->executeStatement(false, $query);
@@ -268,6 +269,7 @@ class IdpChecks {
         $html = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $html);
 
         curl_close($curl);
+        return array($curlError, $info, $html);
     }
 
     private function cleanUtf8Curl($html, $curl) {
