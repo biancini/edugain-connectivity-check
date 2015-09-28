@@ -9,7 +9,7 @@ app.controller('IdpsController', function ($scope, EccsJsonAPI, Filtering, Sorti
     $scope.filtering.filters = {
         'displayName': undefined,
         'entityID': undefined,
-        'registrationAuthority': undefined,
+        'registrationAuthority': getParameterByName('registrationAuthority'),
         'currentResult': 'All',
         'ignoreEntity': undefined,
         'css_class': undefined
