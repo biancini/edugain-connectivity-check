@@ -62,6 +62,19 @@ class StoreResultsDB {
         $query = new QueryBuilder();
         $query->setSql("INSERT INTO FederationStats (SELECT CURDATE() AS checkDate, registrationAuthority, currentResult, numIdPs FROM FederationStatsView)");
         $this->dbManager->executeStatement(false, $query);
+
+        $query = new QueryBuilder();
+        $query->setSql("SELECT DISTINCT(checkDate) AS checkDate FROM FederationStats ORDER BY checkDate DESC LIMIT 2");
+        $result = $this->dbManager->executeStatement(true, $query);
+
+        if ($result->num_rows >= 2) {
+            $query = new QueryBuilder();
+            $query->setSql("DELETE FROM FederationStats WHERE checkDate NOT IN (?, ?)");
+            $query->addQueryParam($result->fetch_assoc()['checkDate'], 's');
+            $query->addQueryParam($result->fetch_assoc()['checkDate'], 's');
+            $this->dbManager->executeStatement(false, $query);
+        }
+
     }
 
     function storeFedsIntoDb($fedsList) {
