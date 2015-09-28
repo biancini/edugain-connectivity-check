@@ -15,14 +15,23 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-require_once '../utils/QueryBuilder.php';
-require_once '../utils/DBManager.php';
+require_once dirname(__FILE__) . '/../utils/QueryBuilder.php';
+require_once dirname(__FILE__) . '/../utils/DBManager.php';
     
 class StoreResultsDB {
     protected $dbManager;
 
     public function __construct($dbManager = null) {
-        $this->dbManager = $dbManager ? $dbManager : new DBManager();
+        if ($dbManager) {
+            $this->dbManager = $dbManager;
+        }
+        else {
+            $this->resetDbConnection();
+        }
+    }
+
+    public function resetDbConnection() {
+        $this->dbManager = new DBManager();
     }
 
     function cleanOldEntityChecks() {
@@ -108,5 +117,63 @@ class StoreResultsDB {
         $query = new QueryBuilder();
         $query->setSql("DELETE FROM Federations WHERE updated = 0");
         $this->dbManager->executeStatement(false, $query);
+    }
+
+    function updateDisabledEntities($entityID) {
+        $query = new QueryBuilder();
+        $query->setSql('UPDATE EntityDescriptors SET updated = 1, currentResult = NULL, previousResult = NULL WHERE entityID = ?');
+        $query->addQueryParam($entityID, 's');
+        $this->dbManager->executeStatement(false, $query);
+    }
+
+    function insertCheck($entityID, $spEntityID, $ssoService, $acsUrl, $html, $httpCode, $reason, $lastCheckHistory) {
+        $query = new QueryBuilder();
+        $query->setSql('INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $query->addQueryParam($entityID, 's');
+        $query->addQueryParam($spEntityID, 's');
+        $query->addQueryParam($ssoService, 's');
+        $query->addQueryParam($acsUrl, 's');
+        $query->addQueryParam($html, 's');
+        $query->addQueryParam($httpCode ? $httpCode : 0, 'i');
+        $query->addQueryParam($reason, 's');
+        $query->addQueryParam($lastCheckHistory, 'i');
+        $this->dbManager->executeStatement(false, $query);
+    }
+
+    function updateEntityLastCheckStatus($reason, $previousStatus, $entityID) {
+        $query = new QueryBuilder();
+        $query->setSql("UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?");
+        $query->addQueryParam(date('Y-m-d\TH:i:s\Z'), 's');
+        $query->addQueryParam($reason, 's');
+        $query->addQueryParam($previousStatus, 's');
+        $query->addQueryParam($entityID, 's');
+        $this->dbManager->executeStatement(false, $query);
+    }
+
+    function getEntityPreviousStatus($idp) {
+        $query = new QueryBuilder();
+        $query->setSql('SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck');
+        $query->addQueryParam($idp['entityID']);
+        $result = $this->dbManager->executeStatement(true, $query);
+
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $previousStatus = $row['currentResult'];
+                $ignoreEntity = $row['ignoreEntity'];
+            }
+            return array($ignoreEntity, $previousStatus);
+        } else {
+            $query = new QueryBuilder();
+            $query->setSql("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation) VALUES (?, ?, ?, ?, ?, ?)");
+            $query->addQueryParam($idp['entityID'], 's');
+            $query->addQueryParam($idp['registrationAuthority'], 's');
+            $query->addQueryParam($idp['displayName'], 's');
+            $query->addQueryParam($idp['technicalContacts'], 's');
+            $query->addQueryParam($idp['supportContacts'], 's');
+            $query->addQueryParam($idp['SingleSignOnService'], 's');
+            $result = $this->dbManager->executeStatement(false, $query);
+
+            return array(false, NULL);
+        }
     }
 }

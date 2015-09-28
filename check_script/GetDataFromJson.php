@@ -131,41 +131,6 @@ class GetDataFromJson {
         return $idps;
     }
 
-    private function obtainCharset($contentType, $html) {
-        $charset = NULL;
-
-        /* 1: HTTP Content-Type: header */
-        preg_match('@([\w/+]+)(;\s*charset=(\S+))?@i', $contentType, $matches);
-        if (!$charset && isset($matches[3])) {
-            $charset = $matches[3];
-        }
-
-        /* 2: <meta> element in the page */
-        preg_match('@<meta\s+http-equiv="Content-Type"\s+content="([\w/]+)(;\s*charset=([^\s"]+))?@i', $html, $matches);
-        if (!$charset && isset($matches[3])) {
-            $charset = $matches[3];
-        }
-
-        /* 3: <xml> element in the page */
-        preg_match('@<\?xml.+encoding="([^\s"]+)@si', $html, $matches);
-        if (!$charset && isset($matches[1])) {
-           $charset = $matches[1];
-        }
-
-        /* 4: PHP's heuristic detection */
-        $encoding = mb_detect_encoding($html);
-        if (!$charset && $encoding) {
-            $charset = $encoding;
-        }
-
-        /* 5: Default for HTML */
-        if (!$charset) {
-            $charset = "ISO 8859-1";
-        }
-
-        return $charset;
-    }
-
     function generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID) {
         $samlRequest = '
             <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"

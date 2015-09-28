@@ -15,8 +15,6 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-require_once '../utils/QueryBuilder.php';
-require_once '../utils/DBManager.php';
 require_once 'StoreResultsDB.php';
 require_once 'GetDataFromJson.php';
     
@@ -66,6 +64,7 @@ class IdpChecks {
             $pid = pcntl_fork();
             if (!$pid) {
                 //In child
+                $this->storeResultsDb->resetDbConnection();
                 print "Executing check for " . $idpList[$count]['entityID'] . "\n";
                 $this->executeIdPchecks($idpList[$count]);
                 return false;
@@ -79,6 +78,7 @@ class IdpChecks {
                 $pid = pcntl_fork();
                 if (!$pid) {
                     //In child
+                    $this->storeResultsDb->resetDbConnection();
                     print "Executing check for " . $idpList[$count]['entityID'] . "\n";
                     $this->executeIdPchecks($idpList[$count]);
                     return false;
@@ -88,55 +88,34 @@ class IdpChecks {
         }
 
         // End of all cycles
-        $this->storeResultsDb = new StoreResultsDb();
+        $this->storeResultsDb->resetDbConnection();
         $this->storeResultsDb->deleteOldEntities();
         $this->storeResultsDb->storeFederationStats();
         return true;
     }
 
     function executeIdPchecks($idp) {
-        $dbManager = new DBManager();
-        list($ignoreEntity, $previousStatus) = $this->getEntityPreviousStatus($dbManager, $idp);
+        list($ignoreEntity, $previousStatus) = $this->storeResultsDb->getEntityPreviousStatus($idp);
 
         if ($ignoreEntity) {
             // update EntityDescriptors
-            $query = new QueryBuilder();
-            $query->setSql('UPDATE EntityDescriptors SET updated = 1, currentResult = NULL, previousResult = NULL WHERE entityID = ?');
-            $query->addQueryParam($idp['entityID'], 's');
-            $dbManager->executeStatement(false, $query);
+            $this->storeResultsDb->updateDisabledEntities();
             print "Entity " . $idp['entityID'] . " ignored.\n";
             return;
         }
 
         $reason = '1 - OK';
         $lastCheckHistory = $this->checkHistory - 1;
-        $query = new QueryBuilder();
 
         for ($i = 0; $i < count($this->spEntityIDs); $i++) {
             $result = $this->checkIdp($idp['entityID'], $idp['SingleSignOnService'], $this->spEntityIDs[$i], $this->spACSurls[$i]);
             $status = array_key_exists('status', $result) ? $result['status'] : -1;
             $reason = $result['message'] ? $result['message'] : '0 - UNKNOWN-Error';
 
-            $query = new QueryBuilder();
-            $query->setSql('INSERT INTO EntityChecks (entityID, spEntityID, serviceLocation, acsUrls, checkHtml, httpStatusCode, checkResult, checkExec) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-            $query->addQueryParam($idp['entityID'], 's');
-            $query->addQueryParam($this->spEntityIDs[$i], 's');
-            $query->addQueryParam($idp['SingleSignOnService'], 's');
-            $query->addQueryParam($this->spACSurls[$i], 's');
-            $query->addQueryParam($result['html'], 's');
-            $query->addQueryParam($result['http_code'] ? $result['http_code'] : 0, 'i');
-            $query->addQueryParam($reason, 's');
-            $query->addQueryParam($lastCheckHistory, 'i');
-            $dbManager->executeStatement(false, $query);
+            $this->storeResultsDb->insertCheck($idp['entityID'], $this->spEntityIDs[$i], $idp['SingleSignOnService'], $this->spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory);
         }
 
-        $query = new QueryBuilder();
-        $query->setSql("UPDATE EntityDescriptors SET lastCheck = ?, currentResult = ?, previousResult = ?, updated = 1 WHERE entityID = ?");
-        $query->addQueryParam(date('Y-m-d\TH:i:s\Z'), 's');
-        $query->addQueryParam($reason, 's');
-        $query->addQueryParam($previousStatus, 's');
-        $query->addQueryParam($idp['entityID'], 's');
-        $result = $dbManager->executeStatement(false, $query);
+        $this->storeResultsDb->updateEntityLastCheckStatus($reason, $previousStatus, $idp['entityID']);
 
         if ($status === 0) {
             print "The IdP ".$idp['entityID']." consumed metadata correctly\n";
@@ -144,33 +123,6 @@ class IdpChecks {
             print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
             print "Reason: " . $reason . "\n";
             print "Messages: " . $result['error'] . "\n\n";
-        }
-    }
-
-    private function getEntityPreviousStatus($dbManager, $idp) {
-        $query = new QueryBuilder();
-        $query->setSql('SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck');
-        $query->addQueryParam($idp['entityID']);
-        $result = $dbManager->executeStatement(true, $query);
-
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $previousStatus = $row['currentResult'];
-                $ignoreEntity = $row['ignoreEntity'];
-            }
-            return array($ignoreEntity, $previousStatus);
-        } else {
-            $query = new QueryBuilder();
-            $query->setSql("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation) VALUES (?, ?, ?, ?, ?, ?)");
-            $query->addQueryParam($idp['entityID'], 's');
-            $query->addQueryParam($idp['registrationAuthority'], 's');
-            $query->addQueryParam($idp['displayName'], 's');
-            $query->addQueryParam($idp['technicalContacts'], 's');
-            $query->addQueryParam($idp['supportContacts'], 's');
-            $query->addQueryParam($idp['SingleSignOnService'], 's');
-            $result = $dbManager->executeStatement(false, $query);
-
-            return array(false, NULL);
         }
     }
 

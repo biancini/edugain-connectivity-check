@@ -5,6 +5,9 @@ namespace spec;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
+require_once '../../utils/DBManager.php';
+require_once '../../utils/QueryBuilder.php';
+
 class DBManagerSpec extends ObjectBehavior {
     function it_is_initializable($mysqli) {
         $mysqli->beADoubleOf('mysqli');
