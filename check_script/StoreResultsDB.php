@@ -81,10 +81,12 @@ class StoreResultsDB {
 
             if ($result->num_rows <= 0) {
                 $query = new QueryBuilder();
-                $query->setSql("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, updated) VALUES (?, ?, ?, 1)");
+                $query->setSql("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, sgDelegateEmail, sgDeputyEmail, updated) VALUES (?, ?, ?, ?, ?, 1)");
                 $query->addQueryParam($fed['name'], 's');
                 $query->addQueryParam($fed['email'], 's');
                 $query->addQueryParam($fed['reg_auth'], 's');
+                $query->addQueryParam($fed['tsg_delegate'][0][2], 's');
+                $query->addQueryParam($fed['tsg_deputy'][0][2], 's');
                 $this->dbManager->executeStatement(false, $query);
 
                 continue;
@@ -108,6 +110,22 @@ class StoreResultsDB {
                     $query = new QueryBuilder();
                     $query->setSql("UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?");
                     $query->addQueryParam($fed['email'], 's');
+                    $query->addQueryParam($fed['reg_auth'], 's');
+                    $this->dbManager->executeStatement(false, $query);
+                }
+
+                if (in_array("tsg_delegate", $fed)) {
+                    $query = new QueryBuilder();
+                    $query->setSql("UPDATE Federations SET sgDelegateEmail = ? WHERE registrationAuthority = ?");
+                    $query->addQueryParam($fed['tsg_delegate'][0][2], 's');
+                    $query->addQueryParam($fed['reg_auth'], 's');
+                    $this->dbManager->executeStatement(false, $query);
+                }
+
+                if (in_array("tsg_deputy", $fed)) {
+                    $query = new QueryBuilder();
+                    $query->setSql("UPDATE Federations SET sgDeputyEmail = ? WHERE registrationAuthority = ?");
+                    $query->addQueryParam($fed['tsg_deputy'][0][2], 's');
                     $query->addQueryParam($fed['reg_auth'], 's');
                     $this->dbManager->executeStatement(false, $query);
                 }

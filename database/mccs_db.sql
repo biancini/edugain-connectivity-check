@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS Federations
 	emailAddress VARCHAR(255) NULL,
 	registrationAuthority VARCHAR(255) NOT NULL,
 	updated BOOLEAN NOT NULL DEFAULT 0,
+   sgDelegateEmail VARCHAR(255) NULL,
+   sgDeputyEmail VARCHAR(255) NULL,
 	UNIQUE (registrationAuthority),
 	PRIMARY KEY (registrationAuthority)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
