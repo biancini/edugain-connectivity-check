@@ -69,10 +69,11 @@ app.service('EccsJsonAPI', function($http) {
         apis.getFedStatistics = function () {
             return $http.get(apis.urlFeds).then(function (response) {
                 var items = [];
+                console.log(response.data.results);
                 response.data.results.forEach(function (result) {
                     var curitem = undefined;
                     items.forEach(function (item) {
-                        if (item.registrationAuthority === result.registrationAuthority) {
+                        if (item.checkDate == result.checkDate && item.registrationAuthority === result.registrationAuthority) {
                             curitem = item;
                         }
                     });
