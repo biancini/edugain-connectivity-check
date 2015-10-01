@@ -50,4 +50,9 @@ class QueryBuilderSpec extends ObjectBehavior {
 
         $this->getQuerySql()->shouldReturn("SELECT * FROM TABLE ORDER BY field");
     }
+
+    function it_addQueryParam_works() {
+        $this->addQueryParam('value', 's');
+        $this->getQueryParams()->shouldReturn(array('s', 'value'));
+    }
 }

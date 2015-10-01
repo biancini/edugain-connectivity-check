@@ -39,8 +39,8 @@ class IdpChecks {
         $regexp = "/^sp_\d/";
         $confArrayKeys = array_keys($confArray);
         $spsKeys[] = preg_grep($regexp, $confArrayKeys);
-        foreach ($spsKeys as $key => $value) {
-            foreach($value as $sp => $val) {
+        foreach (array_keys($spsKeys) as $key) {
+            foreach(array_values($value) as $val) {
                 $this->spEntityIDs[] = $confArray[$val]['entityID'];
                 $this->spACSurls[] = $confArray[$val]['acs_url'];
             }
