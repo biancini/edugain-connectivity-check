@@ -89,7 +89,7 @@ Apache >= 2.4 :
 00 5 * * * cd /opt/MCCS/check_script; /usr/bin/php mccs.php > /var/log/eccs.log
 ```
   
-10. Open a web browser and go to the MCCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
+10. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
 11. Enjoy yourself
 
