@@ -76,31 +76,24 @@ class MailUtils {
         $template_html = $twig->loadTemplate('mail_4_fed_op.html');
         $template_txt  = $twig->loadTemplate('mail_4_fed_op.txt');
 
-
-        $idp_ok = (!empty($fed_data['idp_ok'])) ? $fed_data['idp_ok'] : 0;
-        $idp_form_invalid = (!empty($fed_data['idp_form_invalid'])) ? $fed_data['idp_form_invalid'] : 0;
-        $idp_curl_error = (!empty($fed_data['idp_curl_error'])) ? $fed_data['idp_curl_error'] : 0;
-        $idp_http_error = (!empty($fed_data['idp_http_error'])) ? $fed_data['idp_http_error'] : 0;
-        $idp_disabled = (!empty($fed_data['idp_disabled'])) ? $fed_data['idp_disabled'] : 0;
-
         $body = $template_html->render(array(
             'federationName'   => $fed_data['name'],
             'reg_auth'         => $fed_data['regAuth'],
-            'idp_ok'           => $idp_ok,
-            'idp_form_invalid' => $idp_form_invalid,
-            'idp_curl_error'   => $idp_curl_error,
-            'idp_http_error'   => $idp_http_error,
-            'idp_disabled'     => $idp_disabled,
+            'idp_ok'           => $fed_data['idp_ok'],
+            'idp_form_invalid' => $fed_data['idp_form_invalid'],
+            'idp_curl_error'   => $fed_data['idp_curl_error'],
+            'idp_http_error'   => $fed_data['idp_http_error'],
+            'idp_disabled'     => $fed_data['idp_disabled'],
         ));
 
         $altBody = $template_txt->render(array(
             'federationName'   => $fed_data['name'],
             'reg_auth'         => $fed_data['regAuth'],
-            'idp_ok'           => $idp_ok,
-            'idp_form_invalid' => $idp_form_invalid,
-            'idp_curl_error'   => $idp_curl_error,
-            'idp_http_error'   => $idp_http_error,
-            'idp_disabled'     => $idp_disabled,
+            'idp_ok'           => $fed_data['idp_ok'],
+            'idp_form_invalid' => $fed_data['idp_form_invalid'],
+            'idp_curl_error'   => $fed_data['idp_curl_error'],
+            'idp_http_error'   => $fed_data['idp_http_error'],
+            'idp_disabled'     => $fed_data['idp_disabled'],
         ));
 
 

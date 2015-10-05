@@ -38,6 +38,11 @@ while ($cur_federation = $fed_result->fetch_assoc()) {
     $query->addQueryParam($date, 's');
     $result = $dbManager->executeStatement(true, $query);
     $fed_data = array();
+    $fed_data['idp_ok'] = 0;
+    $fed_data['idp_form_invalid'] = 0;
+    $fed_data['idp_curl_error'] = 0;
+    $fed_data['idp_http_error'] = 0;
+    $fed_data['idp_disabled'] = 0;
     while ($cur_stat = $result->fetch_assoc()) {
        $fed_data['name'] = $cur_federation['federationName'];
        $fed_data['regAuth'] = $cur_federation['registrationAuthority'];
@@ -70,9 +75,9 @@ while ($cur_federation = $fed_result->fetch_assoc()) {
     if ((!empty($fed_data['emailAddress']) ||
          !empty($fed_data['sgDeputyEmail']) ||
          !empty($fed_data['sgDelegateEmail'])) &&
-         !empty($fed_data['idp_form_invalid']) ||
-         !empty($fed_data['idp_curl_error']) ||
-         !empty($fed_data['idp_http_error']) ) {
-           $mailer->sendEmail($email_properties, $fed_data);
+        ($fed_data['idp_form_invalid'] != 0 ||
+         $fed_data['idp_curl_error'] != 0 ||
+         $fed_data['idp_http_error'] != 0 )) {
+            $mailer->sendEmail($email_properties, $fed_data);
     }
 } 
