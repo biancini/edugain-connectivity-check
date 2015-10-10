@@ -1,0 +1,40 @@
+<html>
+   <head>
+      <title>[ECCS] Mail for Federation Operator</title>
+   </head>
+   <body>
+      <p>
+      Hi Federation Operator,
+
+      I'm writing to you to inform on a new eduGAIN Service that we, as Enabling Users Task, have developed in the previous months.
+
+      The main purpose that we are trying to achieve is to increase the service overall quality and user experience of the eduGAIN interfederation service
+      by making Federation and Identity Provider operators aware of configuration problems on their IdPs. 
+      In particular our service, checks if an IdP properly loads and consumes SAML2 metadata which contains the eduGAIN Service Providers (SP).
+      You can find more details on the official service wiki page: https://wiki.edugain.org/EduGAIN_Connectivity_Check
+
+      Each Federation operator can found the overall results of every federation by following the URL:
+      - https://technical.edugain.org/eccs
+
+      But we think that you can find more useful an URL customized for your specific Federation so you can use the following link to speed up your control:
+      - https://technical.edugain.org/eccs/?registrationAuthority={{ reg_auth }}
+
+      We want to give you, with this email, an overall view on your federation so that you can be aware on how your federation answering to the interfederation eduGAIN.
+      Here you can find the stats that we have collected for you on your Federation:
+
+      IdP OK:                   {{ idp_ok }}
+      IdP with an invalid form: {{ idp_form_invalid }}
+      IdP with a CURL Error:    {{ idp_curl_error }}
+      IdP with a HTTP Error:    {{ idp_http_error }}
+      IdP Disabled:             {{ idp_disabled }}
+
+      We have written to you because we have found at least an IdP that has a problem with eduGAIN metadata.
+      With this email we ask you to check yourself the truth of our assertion and take the right actions to correct the problem
+      or to ask us to disable the entities from the future check of eduGAIN Connectivity Check Service.
+
+      Thank you so much for all your availability.
+
+      Best Regards,
+      Admin of the service 
+   </body>
+</html>

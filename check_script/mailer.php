@@ -22,8 +22,10 @@ require_once '../utils/DBManager.php';
 $mailer = new MailUtils();
 $dbManager = new DBManager();
 
-$conf_array = parse_ini_file(dirname(__FILE__) . 'properties.ini.php', true);
+$conf_array = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
 $email_properties = $conf_array['email'];
+
+$date = date("Y-m-d");
 
 $query = new QueryBuilder();
 $query->setSql("SELECT * FROM Federations");
@@ -31,19 +33,51 @@ $fed_result = $dbManager->executeStatement(true, $query);
 
 while ($cur_federation = $fed_result->fetch_assoc()) { 
     $query = new QueryBuilder();
-    $query->setSql("SELECT * FROM EntityDescriptors WHERE registrationAuthority = ? AND ignoreEntity = 0 AND  currentResult <> '1 - OK' AND  previousResult <> '1 - OK'");
+    $query->setSql("SELECT * FROM FederationStats WHERE registrationAuthority = ? AND checkDate = ?");
     $query->addQueryParam($cur_federation['registrationAuthority'], 's');
+    $query->addQueryParam($date, 's');
     $result = $dbManager->executeStatement(true, $query);
-    $idps = array();
-    while ($cur_idp = $result->fetch_assoc()) {
-        $idps[$cur_idp['entityID']] = array();
-        $idps[$cur_idp['entityID']]['name'] = $cur_idp['displayName'];
-        $idps[$cur_idp['entityID']]['current_status'] = substr($cur_idp['currentResult'], 4);
-        $idps[$cur_idp['entityID']]['previous_status'] = substr($cur_idp['previousResult'], 4);
-        $idps[$cur_idp['entityID']]['tech_contacts'] = explode(",", $cur_idp['technicalContacts']);
+    $fed_data = array();
+    $fed_data['idp_ok'] = 0;
+    $fed_data['idp_form_invalid'] = 0;
+    $fed_data['idp_curl_error'] = 0;
+    $fed_data['idp_http_error'] = 0;
+    $fed_data['idp_disabled'] = 0;
+    while ($cur_stat = $result->fetch_assoc()) {
+       $fed_data['name'] = $cur_federation['federationName'];
+       $fed_data['regAuth'] = $cur_federation['registrationAuthority'];
+       $fed_data['emailAddress'] = $cur_federation['emailAddress'];
+       $fed_data['sgDeputyEmail'] = $cur_federation['sgDeputyEmail'];
+       $fed_data['sgDelegateEmail'] = $cur_federation['sgDelegateEmail'];
+       switch($cur_stat['currentResult']){
+         case "1 - OK":
+            $fed_data['idp_ok'] = $cur_stat['numIdPs'];
+            break;
+
+         case "2 - FORM-Invalid":
+            $fed_data['idp_form_invalid'] = $cur_stat['numIdPs'];
+            break;
+
+         case "3 - CURL-Error":
+            $fed_data['idp_curl_error'] = $cur_stat['numIdPs'];
+            break;
+
+         case "3 - HTTP-Error":
+            $fed_data['idp_http_error'] = $cur_stat['numIdPs'];
+            break;
+
+         case NULL:
+            $fed_data['idp_disabled'] = $cur_stat['numIdPs'];
+            break;
+        }
     }
 
-    if (!empty($cur_federation['emailAddress']) && count($idps) > 0) {
-        $mailer->sendEmail($email_properties, $cur_federation['emailAddress'], $idps);
+    if ((!empty($fed_data['emailAddress']) ||
+         !empty($fed_data['sgDeputyEmail']) ||
+         !empty($fed_data['sgDelegateEmail'])) &&
+        ($fed_data['idp_form_invalid'] != 0 ||
+         $fed_data['idp_curl_error'] != 0 ||
+         $fed_data['idp_http_error'] != 0 )) {
+            $mailer->sendEmail($email_properties, $fed_data);
     }
 } 

@@ -16,9 +16,10 @@
 # (GÉANT).
             
 include (dirname(__FILE__)."/../PHPMailer/PHPMailerAutoload.php");
+include (dirname(__FILE__)."/../Twig/lib/Twig/Autoloader.php");
 
 class MailUtils {
-    function sendEmail($emailProperties, $recipient, $idps) {
+    function sendEmail($emailProperties, $fed_data) {
         $mail = new PHPMailer;
         //$mail->SMTPDebug = 3; // Enable verbose debug output
 
@@ -42,44 +43,62 @@ class MailUtils {
         $mail->From = $emailProperties['from'];
         $mail->FromName = 'eduGAIN Connectivity Check Service';
 
-        if (!empty($emailProperties['test_recipient'])) {
+ /*        if (!empty($emailProperties['test_recipient'])) {
             $mail->addAddress($emailProperties['test_recipient']);
         }
         else {
             $mail->addAddress($recipient);
         }
+*/
+
+        if (!empty($fed_data['sgDeputyEmail'])){
+            $mail->addAddress($fed_data['sgDeputyEmail']);
+        }
+        if (!empty($fed_data['sgDelegateEmail'])){
+            $mail->addAddress($fed_data['sgDelegateEmail']);
+        }
+        if (!empty($fed_data['emailAddress'])){
+            $mail->addAddress($fed_data['emailAddress']);
+        }
+
+
         $mail->addReplyTo('eccs@edugain.net');
         $mail->CharSet = 'UTF-8';
         $mail->isHTML(true);
 
         $mail->Subject = '[ECCS] Some IdP is not consuming metadata correctly';
-        $altBody  = 'The eduGAIN Connectivity Check service identified some IdP from your federation that seem to not being consuming correctly the eduGAIN metadata.';
-        $body  = '<p>'.$altBody.'<br/></p>';
 
-        $altBody .= '\n\n';
-        $body .= '<table border="1">';
-        $body .= '<thead><td><b>IdP name</b></td><td><b>Current Status</b></td><td><b>Previous Status</b></td><td><b>Technical Concact</b></td><td><b>Link</b></td></thead>';
-        foreach ($idps as $curEntityID => $vals) {
-            $altBody .= $vals['name'] . '('.$vals['current_status'].')\n';
-            $body .= '<tr>';
-            $body .= '<td>' . $vals['name'] . '</td>';
-            $body .= '<td>' . $vals['current_status'] . '</td>';
-            $body .= '<td>' . $vals['previous_status'] . '</td>';
-            $body .= '<td>';
-            foreach ($vals['tech_contacts'] as $contact) {
-                $body .=  '<a href="mailto:' . $contact . '">' . $contact . '</a><br/>';
-            }
-            $body .= '</td>';
-            $body .= '<td><a href="'.$emailProperties['baseurl'].'/test.php?f_entityID='.$curEntityID.'">View last checks</a></td>';
-            $body .= '</tr>';
-        }
-        $altBody .= '\nVisit eduGAIN Connectivity Check Service at ' . $emailProperties['baseurl'] . ' to understand more.\nThank you for your cooperation.\nRegards.';
-        $body .= '</table>';
-        $body .= '<p><br/>Thank you for your cooperation.<br/>Regards.</p>';
+        Twig_Autoloader::register();
 
+        $loader = new Twig_Loader_Filesystem(dirname(__FILE__)."/../templates");
+        $twig = new Twig_Environment($loader);
+
+        $template_html = $twig->loadTemplate('mail_4_fed_op.html');
+        $template_txt  = $twig->loadTemplate('mail_4_fed_op.txt');
+
+        $body = $template_html->render(array(
+            'federationName'   => $fed_data['name'],
+            'reg_auth'         => $fed_data['regAuth'],
+            'idp_ok'           => $fed_data['idp_ok'],
+            'idp_form_invalid' => $fed_data['idp_form_invalid'],
+            'idp_curl_error'   => $fed_data['idp_curl_error'],
+            'idp_http_error'   => $fed_data['idp_http_error'],
+            'idp_disabled'     => $fed_data['idp_disabled'],
+        ));
+
+        $altBody = $template_txt->render(array(
+            'federationName'   => $fed_data['name'],
+            'reg_auth'         => $fed_data['regAuth'],
+            'idp_ok'           => $fed_data['idp_ok'],
+            'idp_form_invalid' => $fed_data['idp_form_invalid'],
+            'idp_curl_error'   => $fed_data['idp_curl_error'],
+            'idp_http_error'   => $fed_data['idp_http_error'],
+            'idp_disabled'     => $fed_data['idp_disabled'],
+        ));
+
+
+        $mail->Body = $body;
         $mail->AltBody = $altBody;
-        $mail->Body    = $body;
-
         return $mail->send();
     }
 }

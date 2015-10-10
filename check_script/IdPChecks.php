@@ -99,7 +99,7 @@ class IdpChecks {
 
         if ($ignoreEntity) {
             // update EntityDescriptors
-            $this->storeResultsDb->updateDisabledEntities();
+            $this->storeResultsDb->updateDisabledEntities($idp['entityID']);
             print "Entity " . $idp['entityID'] . " ignored.\n";
             return;
         }
