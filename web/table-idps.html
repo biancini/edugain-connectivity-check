@@ -84,9 +84,15 @@
           <br ng-hide="$last"/>
         </span>
       </td>
-      <td>{{ idp.lastCheck }}</td>
-      <td>{{ (idp.currentResult) ? idp.currentResult : '' }}</td>
-      <td><a href="test.html?entityid={{idp.entityID}}">View</a></td>
+      <td ng-show="idp.css_class != 'silver'">{{ idp.lastCheck }}</td>
+      <td ng-show="idp.css_class != 'silver'">{{ (idp.currentResult) ? idp.currentResult : '' }}</td>
+      <td ng-show="idp.css_class != 'silver'"><a href="test.html?entityid={{idp.entityID}}">View</a></td>
+      <td ng-show="idp.css_class == 'silver'" colspan="2">{{ idp.ignoreReason }}</td>
+      <td ng-show="idp.css_class == 'silver'">
+        <span ng-repeat="test in testlist">
+            <nobr><strong>SP</strong> <a href="services/runtest.php?acsUrl={{ test.acsUrl }}&serviceLocation={{ idp.serviceLocation }}&spEntityID={{ test.spEntityID }}">{{ test.name }}</a></nobr><br/>
+        </span>
+      </td>
     </tr>
   </tbody>
 </table>

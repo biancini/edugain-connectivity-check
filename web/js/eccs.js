@@ -29,6 +29,7 @@ app.service('EccsJsonAPI', function($http) {
         var apis = {
             urlIdp: 'services/json_api.php?action=entities&rpp=All',
             urlTest: 'services/json_api.php?action=checks&rpp=All',
+            urlTestList: 'services/json_api.php?action=testlist',
             urlCheck: 'services/json_api.php?action=checkhtml&checkid=',
             urlFeds: 'services/json_api.php?action=fedstats'
         };
@@ -50,6 +51,12 @@ app.service('EccsJsonAPI', function($http) {
                     });
                 });
     
+                return response.data.results;
+            });
+        };
+
+        apis.getTestList = function () {
+            return $http.get(apis.urlTestList).then(function (response) {
                 return response.data.results;
             });
         };
