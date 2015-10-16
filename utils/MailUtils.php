@@ -50,23 +50,22 @@ class MailUtils {
             $mail->addAddress($recipient);
         }
 */
-
         if (!empty($fed_data['sgDeputyEmail'])){
             $mail->addAddress($fed_data['sgDeputyEmail']);
         }
         if (!empty($fed_data['sgDelegateEmail'])){
             $mail->addAddress($fed_data['sgDelegateEmail']);
         }
-        if (!empty($fed_data['emailAddress'])){
+        /*if (!empty($fed_data['emailAddress'])){
             $mail->addAddress($fed_data['emailAddress']);
-        }
+        }*/
 
 
         $mail->addReplyTo('eccs@edugain.net');
         $mail->CharSet = 'UTF-8';
         $mail->isHTML(true);
 
-        $mail->Subject = '[ECCS] Some IdP is not consuming metadata correctly';
+        $mail->Subject = '[ECCS] Non-working eduGAIN IdPs in '.$fed_data['name'];
 
         Twig_Autoloader::register();
 
@@ -77,13 +76,22 @@ class MailUtils {
         $template_txt  = $twig->loadTemplate('mail_4_fed_op.txt');
 
         $body = $template_html->render(array(
-            'federationName'   => $fed_data['name'],
-            'reg_auth'         => $fed_data['regAuth'],
-            'idp_ok'           => $fed_data['idp_ok'],
-            'idp_form_invalid' => $fed_data['idp_form_invalid'],
-            'idp_curl_error'   => $fed_data['idp_curl_error'],
-            'idp_http_error'   => $fed_data['idp_http_error'],
-            'idp_disabled'     => $fed_data['idp_disabled'],
+            'federationName'     => $fed_data['name'],
+            'reg_auth'           => $fed_data['regAuth'],
+            'idp_ok'             => $fed_data['idp_ok'],
+            'idp_form_invalid'   => $fed_data['idp_form_invalid'],
+            'idp_curl_error'     => $fed_data['idp_curl_error'],
+            'idp_http_error'     => $fed_data['idp_http_error'],
+            'idp_disabled'       => $fed_data['idp_disabled'],
+            'sg_deputy_name'     => $fed_data['sgDeputyName'],
+            'sg_deputy_surname'  => $fed_data['sgDeputySurname'],
+            'sg_deputy_email'    => $fed_data['sgDeputyEmail'],
+            'sg_delegate_name'   => $fed_data['sgDelegateName'],
+            'sg_delegate_surname'=> $fed_data['sgDelegateSurname'],
+            'sg_delegate_email'  => $fed_data['sgDelegateEmail'],
+            //'giveNname'          => (!empty($fed_data['sgDeputyName'])) ? $fed_data['sgDeputyName'] : $fed_data['sgDelegateName'],
+            //'surname'       => (!empty($fed_data['sgDeputySurname'])) ? $fed_data['sgDeputySurname'] : $fed_data['sgDelegateSurname'],
+            //'deputyORdelegate' => (!empty($fed_data['sgDeputyEmail'])) ? "deputy" : "delegate",
         ));
 
         $altBody = $template_txt->render(array(
@@ -94,11 +102,21 @@ class MailUtils {
             'idp_curl_error'   => $fed_data['idp_curl_error'],
             'idp_http_error'   => $fed_data['idp_http_error'],
             'idp_disabled'     => $fed_data['idp_disabled'],
+            'sg_deputy_name'     => $fed_data['sgDeputyName'],
+            'sg_deputy_surname'  => $fed_data['sgDeputySurname'],
+            'sg_deputy_email'    => $fed_data['sgDeputyEmail'],
+            'sg_delegate_name'   => $fed_data['sgDelegateName'],
+            'sg_delegate_surname'=> $fed_data['sgDelegateSurname'],
+            'sg_delegate_email'  => $fed_data['sgDelegateEmail'],
+/*            'givenName'        => (!empty($fed_data['sgDeputyName'])) ? $fed_data['sgDeputyName'] : $fed_data['sgDelegateName'],
+            'surname'          => (!empty($fed_data['sgDeputySurname'])) ? $fed_data['sgDeputySurname'] : $fed_data['sgDelegateSurname'],
+            'deputyORdelegate' => (!empty($fed_data['sgDeputyEmail'])) ? "deputy" : "delegate",*/
         ));
 
 
         $mail->Body = $body;
         $mail->AltBody = $altBody;
-        return $mail->send();
+        print_r($mail->AltBody);
+        //return $mail->send();
     }
 }

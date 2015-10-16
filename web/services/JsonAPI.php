@@ -105,6 +105,7 @@ class JsonAPI extends EccsService {
                 'technicalContacts' => $row['technicalContacts'],
                 'supportContacts' => $row['supportContacts'],
                 'ignoreEntity' => ($row['ignoreEntity'] == 1),
+                'ignoreReason' => $row['ignoreReason'],
                 'lastCheck' => $row['lastCheck'],
                 'currentResult' => substr($row['currentResult'], 4),
                 'previousResult' => substr($row['previousResult'], 4),
@@ -240,6 +241,28 @@ class JsonAPI extends EccsService {
         );
     }
 
+    private function getTestList() {
+        $confArray = parse_ini_file('properties.ini.php', true);
+        $entities = array();
+
+        $regexp = "/^sp_\d/";
+        $confArrayKeys = array_keys($confArray);
+        $spsKeys[] = preg_grep($regexp, $confArrayKeys);
+        foreach ($spsKeys as $key => $value) {
+            foreach($value as $sp => $val) {
+                $entity = array();
+                $entity['name'] = $confArray[$val]['name'];
+                $entity['spEntityID'] = $confArray[$val]['entityID'];
+                $entity['acsUrl'] = $confArray[$val]['acs_url'];
+                array_push($entities, $entity);
+            }
+        }
+    
+        return array(
+            'results' => $entities
+        );
+    }
+
     public function handle() {
         $action = $this->getParameter('action', '');
         $return = NULL;
@@ -255,6 +278,9 @@ class JsonAPI extends EccsService {
         }
         elseif ($action == 'fedstats') {
             $return = $this->getFederationStatistics();
+        }
+        elseif ($action == 'testlist') {
+            $return = $this->getTestList();
         }
         else {
             $message = "Wrong action, valid actions are entities, checks, checkhtml, fedstats.";

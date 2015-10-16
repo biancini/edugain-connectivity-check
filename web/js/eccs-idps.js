@@ -42,9 +42,12 @@ app.controller('IdpsController', function ($scope, EccsJsonAPI, Filtering, Sorti
         $scope.pagination.groupToPages($scope.sorting.sortedItems);
     };
 
-    var promise = $scope.jsonApi.getEntities();
-    promise.then(function(results) {
-        $scope.items = results;
-        $scope.showResults();
+    $scope.jsonApi.getTestList().then(function(results) {
+        $scope.testlist = results;
+
+        $scope.jsonApi.getEntities().then(function(results) {
+            $scope.items = results;
+            $scope.showResults();
+        });
     });
 });
