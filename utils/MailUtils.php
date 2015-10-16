@@ -77,6 +77,7 @@ class MailUtils {
         $templateTxt  = $twig->loadTemplate('mail_text_template.txt');
 
         $body = $templateHtml->render(array(
+            'eccs_baseUrl'       => $emailProperties['baseurl'],
             'federationName'     => $fedData['name'],
             'reg_auth'           => $fedData['regAuth'],
             'idp_ok'             => $fedData['idp_ok'],
@@ -93,6 +94,7 @@ class MailUtils {
         ));
 
         $altBody = $templateTxt->render(array(
+            'eccs_baseUrl'       => $emailProperties['baseurl'],
             'federationName'     => $fedData['name'],
             'reg_auth'           => $fedData['regAuth'],
             'idp_ok'             => $fedData['idp_ok'],

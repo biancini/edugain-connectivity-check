@@ -26,19 +26,7 @@ CREATE TABLE IF NOT EXISTS Federations
 	PRIMARY KEY (registrationAuthority)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
-INSERT IGNORE INTO Federations (federationName, emailAddress, registrationAuthority) VALUES
-	('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
-
-INSERT IGNORE INTO Federations (federationName, 
-                                emailAddress,
-                                registrationAuthority,
-                                updated,
-                                sgDelegateName,
-                                sgDelegateSurname,
-                                sgDelegateEmail,
-                                sgDeputyName,
-                                sgDeputySurname,
-                                sgDeputyEmail) VALUES
+INSERT IGNORE INTO Federations (federationName, emailAddress, registrationAuthority, updated, sgDelegateName, sgDelegateSurname, sgDelegateEmail, sgDeputyName, sgDeputySurname, sgDeputyEmail) VALUES
    ('eduGAIN', 'eduGAIN-ot@edugain.org', '*','1',NULL,NULL,NULL,NULL,NULL,NULL);
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors

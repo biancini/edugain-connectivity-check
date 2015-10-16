@@ -22,7 +22,7 @@ The checks run automatically once a day and the results of every federation are 
    ***********************************
    eduGAIN Connectivity Check Service
 
-   https://technical.edugain.org/eccs
+   {{ eccs_baseUrl }}
    ***********************************
 
 

@@ -118,6 +118,25 @@ UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation exclud
 UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
 ```
 
+# How to send emails to eduGAIN Steering Group members
+1. Set up the [email] properties inside **check_script** folder:
+
+[email]
+host = smtp.server.edugain.net                           (your mail server)
+port = 25                                                (port used to send emails)
+tls = true                                               (set to "true" if you use TLS)
+user = username                                          (your username)
+password = password                                      (your password)
+from = edugain-integration@geant.net                     (leave it as is)
+replyTo = edugain-integration@geant.net                  (leave it as is)
+baseurl = https://server-hosting-eccs.edugain.net/eccs   (change with the correct value)
+test_recipient = test.user@geant.net                     (leave it empty to send email to delegate/deputy)
+
+2. Run the command:
+
+``` cd /opt/edugain-connectivity-check/check_script ; /usr/bin/mailer.php ```
+
+
 # How to test the code
 The code developed can be easily tested with automated testing tools like PHPspec or AngularJS testing.
 To test the various components do as explained in the following:
