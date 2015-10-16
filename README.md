@@ -129,16 +129,9 @@ For the AngularJS web interface, you can use karma:
 # apt-get install npm nodejs 
 # npm install -g karma-cli
 # npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage karma-chai-as-promised
-# npm install -g karma-chrome-launcher
 
 # cd tests/view/
 # karma start karma.config.js
-```
-
-Now you can connect your browser to the following url http://hostname:9876 (where hostname is your host name).
-
-```sh
-# karma run karma.config.js
 ```
 
 The output for the command should show all tests passed with success:
