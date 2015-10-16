@@ -16,12 +16,18 @@ CREATE TABLE IF NOT EXISTS Federations
 	emailAddress VARCHAR(255) NULL,
 	registrationAuthority VARCHAR(255) NOT NULL,
 	updated BOOLEAN NOT NULL DEFAULT 0,
+   sgDelegateName VARCHAR(255) NULL,
+   sgDelegateSurname VARCHAR(255) NULL,
+   sgDelegateEmail VARCHAR(255) NULL,
+   sgDeputyName VARCHAR(255) NULL,
+   sgDeputySurname VARCHAR(255) NULL,
+   sgDeputyEmail VARCHAR(255) NULL,
 	UNIQUE (registrationAuthority),
 	PRIMARY KEY (registrationAuthority)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
-INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
-	('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
+INSERT IGNORE INTO Federations (federationName, emailAddress, registrationAuthority, updated, sgDelegateName, sgDelegateSurname, sgDelegateEmail, sgDeputyName, sgDeputySurname, sgDeputyEmail) VALUES
+   ('eduGAIN', 'eduGAIN-ot@edugain.org', '*','1',NULL,NULL,NULL,NULL,NULL,NULL);
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors
 (
@@ -57,3 +63,18 @@ CREATE TABLE IF NOT EXISTS EntityChecks
 	FOREIGN KEY (entityID) REFERENCES EntityDescriptors(entityID) ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (id)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
+
+CREATE TABLE IF NOT EXISTS FederationStats
+(
+  checkDate DATE NOT NULL,
+  registrationAuthority VARCHAR(255) NOT NULL,
+  currentResult VARCHAR(16) NULL default NULL,
+  numIdPs INTEGER
+) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
+
+CREATE OR REPLACE VIEW FederationStatsView AS
+   SELECT `EntityDescriptors`.`registrationAuthority` AS `registrationAuthority`,
+   `EntityDescriptors`.`currentResult` AS `currentResult`,
+   count(0) AS `numIdPs`
+   FROM `EntityDescriptors`
+   GROUP BY `EntityDescriptors`.`registrationAuthority`, `EntityDescriptors`.`currentResult`;

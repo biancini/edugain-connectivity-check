@@ -15,23 +15,12 @@
 # Framework Programme (FP7/2007-2013) under grant agreement nº 238875
 # (GÉANT).
 
-require_once 'IdPChecks.php';
-
-$micTime = microtime();
-$micTime = explode(" ", $micTime);
-$micTime = $micTime[1] + $micTime[0];
-$startTime = $micTime;
-
-$worker = new IdpChecks;
-$terminated = $worker->executeAllChecks();
-
-if ($terminated) {
-    $micTime = microtime();
-    $micTime = explode(" ",$micTime);
-    $micTime = $micTime[1] + $micTime[0];
-    $endtime = $micTime;
-    $totalExecutionTime = ($endtime - $startTime);
-    print "\n\nTotal Executaion Time ".$totalExecutionTime." seconds.\n";
+require_once 'JsonAPI.php';
+    
+$handler = new JsonAPI();
+try {
+    print json_encode($handler->handle()); 
 }
-
-?>
+catch (Exception $e) {
+    print $e->getMessage();
+}

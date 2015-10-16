@@ -1,7 +1,7 @@
 <?php
-# Copyright 2015 Géant Association
+# Copyright 2015 GÃ©ant Association
 #
-# Licensed under the GÉANT Standard Open Source (the "License")
+# Licensed under the GÃ‰ANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
 # 
 # Unless required by applicable law or agreed to in writing, software
@@ -11,13 +11,16 @@
 # limitations under the License.
 #
 # This software was developed by Consortium GARR. The research leading to
-# these results has received funding from the European Community¹s Seventh
-# Framework Programme (FP7/2007-2013) under grant agreement nº 238875
-# (GÉANT).
+# these results has received funding from the European CommunityÂ¹s Seventh
+# Framework Programme (FP7/2007-2013) under grant agreement nÂº 238875
+# (GÃ‰ANT).
 
-require_once 'Mailer.php';
+require_once 'CheckHtml.php';
 
-$mailer = new Mailer();
-$mailer->notifyAllFederations();
-
-?>
+$handler = new CheckHtml();
+try {
+    print $handler->handle();
+}
+catch (Exception $e) {
+    print $e->getMessage();
+}

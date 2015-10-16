@@ -1,3 +1,7 @@
+;<?php
+;die();
+;/*
+
 ; This configuration file contains information to
 ; connect to the MySQL database used to store
 ; metadata and idp check information.
@@ -39,6 +43,9 @@ port = 25
 tls = true
 user = username
 password = password
-from = mccs@edugain.net
+from = edugain-integration@geant.net
+replyTo = edugain-integration@geant.net
 baseurl = https://server-hosting-mccs.edugain.net/mccs
-test_recipient = 
+test_recipient = test.user@geant.net
+
+;*/

@@ -15,65 +15,65 @@ eduGAIN Connectivity Check Service
 
 0. Install the requiremets packages:
 
-        sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
+        # sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
 
 1. Install the requirements libraries:
-      
-        sudo apt-get install php5-curl php5-json php5-mysqlnd
+
+        # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
 2. Be sure to have enabled mod_alias apache module: 
 
-        sudo a2enmod alias
+        # sudo a2enmod alias
 
 3. Retrieve the service code and put it into the `/opt` directory
-
-        git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
+        
+        # git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
 
 4. Create a new site for ECCS on the Apache instance:
 
-        vim /etc/apache2/sites-available/eccs.conf
-   
+        # vim /etc/apache2/sites-available/eccs.conf
+
         Apache < 2.4 : 
 
         <IfModule mod_alias.c>
-            Alias /eccs /opt/edugain-connectivity-check/web
+           Alias /eccs /opt/edugain-connectivity-check/web
 
-            <Directory /opt/edugain-connectivity-check/web>
-                Options Indexes MultiViews FollowSymLinks
-                Order deny,allow
-                Allow from all
-            </Directory>
+           <Directory /opt/edugain-connectivity-check/web>
+              Options Indexes MultiViews FollowSymLinks
+              Order deny,allow
+              Allow from all
+           </Directory>
         </IfModule>
 
-        
+
         Apache >= 2.4 :
 
         <IfModule mod_alias.c>
-            Alias /eccs /opt/edugain-connectivity-check/web
+           Alias /eccs /opt/edugain-connectivity-check/web
 
-            <Directory /opt/edugain-connectivity-check/web>
-                Options Indexes MultiViews FollowSymLinks
-                Require all granted
-            </Directory>
+           <Directory /opt/edugain-connectivity-check/web>
+              Options Indexes MultiViews FollowSymLinks
+              Require all granted
+           </Directory>
         </IfModule>
 
 5. Enable the new apache site:
 
-        sudo a2ensite eccs.conf ; service apache2 reload
+        # sudo a2ensite eccs.conf ; service apache2 reload
 
 6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
+        
+        # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
 
-        mysql -u root -pPASSWORD < /opt/mccs/database/mccs_db.sql
-
-7. Copy the **properties.ini.example** to **properties.ini** in the folder **check_script** and change it with your DB and Mail parameters.
+7. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
 
 8. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **web** and change it with your DB parameters (in this case the user created should only have SELECT grant on the tables of the database).
 
 9. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
-        00 5 * * * root /usr/bin/php /opt/mccs/check_script/mccs.php > /var/log/eccs.log
+        00 8 * * * cd /opt/edugain-connectivity-check/check_script; /usr/bin/php mccs.php > /var/log/eccs.log
   
-10. Open a web browser and go to the MCCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
+10. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
 11. Enjoy yourself
 
@@ -92,4 +92,64 @@ eduGAIN Connectivity Check Service
 
 4. HOWTO Disable more than one Federation on the service's database:
 
-         UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
+        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
+
+# How to send emails to eduGAIN Steering Group members
+1. Configure the [email] settings inside the **properties.ini.php** file of the **check_script** folder:
+
+        [email]
+        host = smtp.server.edugain.net                           (your mail server)
+        port = 25                                                (port used to send emails)
+        tls = true                                               (set to "true" if you use TLS)
+        user = username                                          (your username)
+        password = password                                      (your password)
+        from = edugain-integration@geant.net                     (leave it as is)
+        replyTo = edugain-integration@geant.net                  (leave it as is)
+        baseurl = https://server-hosting-eccs.edugain.net/eccs   (change with the correct value)
+        test_recipient = test.user@geant.net                     (leave it empty to send email to delegate/deputy)
+
+2. Run the command:
+
+        cd /opt/edugain-connectivity-check/check_script ; /usr/bin/mailer.php
+
+
+# How to test the code
+The code developed can be easily tested with automated testing tools like PHPspec or AngularJS testing.
+To test the various components do as explained in the following:
+
+## View
+For the AngularJS web interface, you can use karma:
+
+```sh
+# apt-get install npm nodejs 
+# npm install -g karma-cli
+# npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage karma-chai-as-promised
+
+# cd tests/view/
+# karma start karma.config.js
+```
+
+The output for the command should show all tests passed with success:
+
+```sh
+[DEBUG] config - Loading config /opt/edugain-connectivity-check/tests/view/karma.config.js
+Chrome 44.0.2403 (Windows 10 0.0.0): Executed 18 of 18 SUCCESS (0.155 secs / 0.094 secs)
+```
+
+## Json
+For the Json API used by the webpage, you can use PHPSpec:
+
+```sh
+# cd tests/apis/
+# curl http://getcomposer.org/installer | php
+# php composer.phar install
+# ./bin/phpspec run
+```
+
+The output for the command should show all tests passed with success:
+
+```sh
+4 specs
+32 examples (32 passed)
+96ms
+```

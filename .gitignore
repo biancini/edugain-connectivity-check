@@ -1,2 +1,10 @@
 properties.ini
 properties.ini.php
+composer.lock
+composer.phar
+**/bin/**
+**/vendor/**
+coverage.xml
+junit.xml
+**/reports/**
+**/node_modules/**

@@ -1,5 +1,5 @@
 ;<?php
-;die();
+;throw new Exception("Should not be here.");
 ;/*
 
 ; This configuration file contains information to
