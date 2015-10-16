@@ -27,11 +27,11 @@ eduGAIN Connectivity Check Service
 
 3. Retrieve the service code and put it into the `/opt` directory
         
-        git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
+        # git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
 
 4. Create a new site for ECCS on the Apache instance:
 
-        vim /etc/apache2/sites-available/eccs.conf
+        # vim /etc/apache2/sites-available/eccs.conf
 
         Apache < 2.4 : 
 
@@ -95,7 +95,7 @@ eduGAIN Connectivity Check Service
         UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
 
 # How to send emails to eduGAIN Steering Group members
-1. Set up the [email] properties inside **check_script** folder:
+1. Configure the [email] settings inside the **properties.ini.php** file of the **check_script** folder:
 
         [email]
         host = smtp.server.edugain.net                           (your mail server)
