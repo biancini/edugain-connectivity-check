@@ -43,8 +43,9 @@ port = 25
 tls = true
 user = username
 password = password
-from = mccs@edugain.net
+from = edugain-integration@geant.net
+replyTo = edugain-integration@geant.net
 baseurl = https://server-hosting-mccs.edugain.net/mccs
-test_recipient = 
+test_recipient = test.user@geant.net
 
 ;*/
