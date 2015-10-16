@@ -76,7 +76,7 @@ Apache >= 2.4 :
 6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
         
 ```sh
-# mysql -u root -pPASSWORD < /opt/mccs/database/mccs_db.sql
+# mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
 ```
 
 7. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
@@ -86,7 +86,7 @@ Apache >= 2.4 :
 9. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
 ```cron
-00 5 * * * cd /opt/MCCS/check_script; /usr/bin/php mccs.php > /var/log/eccs.log
+00 8 * * * cd /opt/edugain-connectivity-check/check_script; /usr/bin/php mccs.php > /var/log/eccs.log
 ```
   
 10. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
@@ -158,7 +158,7 @@ For the AngularJS web interface, you can use karma:
 The output for the command should show all tests passed with success:
 
 ```sh
-[DEBUG] config - Loading config /opt/MCCS/tests/view/karma.config.js
+[DEBUG] config - Loading config /opt/edugain-connectivity-check/tests/view/karma.config.js
 Chrome 44.0.2403 (Windows 10 0.0.0): Executed 18 of 18 SUCCESS (0.155 secs / 0.094 secs)
 ```
 
