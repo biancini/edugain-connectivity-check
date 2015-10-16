@@ -134,7 +134,9 @@ test_recipient = test.user@geant.net                     (leave it empty to send
 
 2. Run the command:
 
-``` cd /opt/edugain-connectivity-check/check_script ; /usr/bin/mailer.php ```
+```sh
+cd /opt/edugain-connectivity-check/check_script ; /usr/bin/mailer.php
+```
 
 
 # How to test the code
