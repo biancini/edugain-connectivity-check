@@ -16,14 +16,30 @@ CREATE TABLE IF NOT EXISTS Federations
 	emailAddress VARCHAR(255) NULL,
 	registrationAuthority VARCHAR(255) NOT NULL,
 	updated BOOLEAN NOT NULL DEFAULT 0,
+   sgDelegateName VARCHAR(255) NULL,
+   sgDelegateSurname VARCHAR(255) NULL,
    sgDelegateEmail VARCHAR(255) NULL,
+   sgDeputyName VARCHAR(255) NULL,
+   sgDeputySurname VARCHAR(255) NULL,
    sgDeputyEmail VARCHAR(255) NULL,
 	UNIQUE (registrationAuthority),
 	PRIMARY KEY (registrationAuthority)
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
-INSERT IGNORE INTO `Federations` (`federationName`, `emailAddress`, `registrationAuthority`) VALUES
+INSERT IGNORE INTO Federations (federationName, emailAddress, registrationAuthority) VALUES
 	('eduGAIN', 'eduGAIN-ot@edugain.org', '*');
+
+INSERT IGNORE INTO Federations (federationName, 
+                                emailAddress,
+                                registrationAuthority,
+                                updated,
+                                sgDelegateName,
+                                sgDelegateSurname,
+                                sgDelegateEmail,
+                                sgDeputyName,
+                                sgDeputySurname,
+                                sgDeputyEmail) VALUES
+   ('eduGAIN', 'eduGAIN-ot@edugain.org', '*','1',NULL,NULL,NULL,NULL,NULL,NULL);
 
 CREATE TABLE IF NOT EXISTS EntityDescriptors
 (
