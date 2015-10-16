@@ -50,8 +50,8 @@ class DBManager {
     private function refValues($arr){
         if (strnatcmp(phpversion(), '5.3') >= 0) {
             $refs = array();
-            foreach($arr as $key => $value) {
-                $refs[$key] = &$value;
+            foreach(array_keys($arr) as $key) {
+                $refs[$key] = &$arr[$key];
             }
             return $refs;
         }

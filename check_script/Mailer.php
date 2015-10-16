@@ -93,6 +93,7 @@ class Mailer {
         $query->setSql("SELECT * FROM FederationStats WHERE registrationAuthority = ? AND checkDate = ?");
         $query->addQueryParam($fedData['regAuth'], 's');
         $query->addQueryParam($date, 's');
+
         $result = $this->dbManager->executeStatement(true, $query);
   
         return $this->collectIdPstatsForFed($result);
