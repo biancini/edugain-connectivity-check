@@ -76,7 +76,6 @@ app.service('EccsJsonAPI', function($http) {
         apis.getFedStatistics = function () {
             return $http.get(apis.urlFeds).then(function (response) {
                 var items = [];
-                console.log(response.data.results);
                 response.data.results.forEach(function (result) {
                     var curitem = undefined;
                     items.forEach(function (item) {

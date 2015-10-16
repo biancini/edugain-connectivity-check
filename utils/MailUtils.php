@@ -19,7 +19,7 @@ include (dirname(__FILE__)."/../PHPMailer/PHPMailerAutoload.php");
 include (dirname(__FILE__)."/../Twig/lib/Twig/Autoloader.php");
 
 class MailUtils {
-    function sendEmail($emailProperties, $fed_data) {
+    function sendEmail($emailProperties, $fedData) {
         $mail = new PHPMailer;
         //$mail->SMTPDebug = 3; // Enable verbose debug output
 
@@ -50,14 +50,14 @@ class MailUtils {
             $mail->addAddress($recipient);
         }
 */
-        if (!empty($fed_data['sgDeputyEmail'])){
-            $mail->addAddress($fed_data['sgDeputyEmail']);
+        if (!empty($fedData['sgDeputyEmail'])){
+            $mail->addAddress($fedData['sgDeputyEmail']);
         }
-        if (!empty($fed_data['sgDelegateEmail'])){
-            $mail->addAddress($fed_data['sgDelegateEmail']);
+        if (!empty($fedData['sgDelegateEmail'])){
+            $mail->addAddress($fedData['sgDelegateEmail']);
         }
-        /*if (!empty($fed_data['emailAddress'])){
-            $mail->addAddress($fed_data['emailAddress']);
+        /*if (!empty($fedData['emailAddress'])){
+            $mail->addAddress($fedData['emailAddress']);
         }*/
 
 
@@ -65,52 +65,52 @@ class MailUtils {
         $mail->CharSet = 'UTF-8';
         $mail->isHTML(true);
 
-        $mail->Subject = '[ECCS] Non-working eduGAIN IdPs in '.$fed_data['name'];
+        $mail->Subject = '[ECCS] Non-working eduGAIN IdPs in '.$fedData['name'];
 
         Twig_Autoloader::register();
 
         $loader = new Twig_Loader_Filesystem(dirname(__FILE__)."/../templates");
         $twig = new Twig_Environment($loader);
 
-        $template_html = $twig->loadTemplate('mail_4_fed_op.html');
-        $template_txt  = $twig->loadTemplate('mail_4_fed_op.txt');
+        $templateHtml = $twig->loadTemplate('mail_4_fed_op.html');
+        $templateTxt  = $twig->loadTemplate('mail_4_fed_op.txt');
 
-        $body = $template_html->render(array(
-            'federationName'     => $fed_data['name'],
-            'reg_auth'           => $fed_data['regAuth'],
-            'idp_ok'             => $fed_data['idp_ok'],
-            'idp_form_invalid'   => $fed_data['idp_form_invalid'],
-            'idp_curl_error'     => $fed_data['idp_curl_error'],
-            'idp_http_error'     => $fed_data['idp_http_error'],
-            'idp_disabled'       => $fed_data['idp_disabled'],
-            'sg_deputy_name'     => $fed_data['sgDeputyName'],
-            'sg_deputy_surname'  => $fed_data['sgDeputySurname'],
-            'sg_deputy_email'    => $fed_data['sgDeputyEmail'],
-            'sg_delegate_name'   => $fed_data['sgDelegateName'],
-            'sg_delegate_surname'=> $fed_data['sgDelegateSurname'],
-            'sg_delegate_email'  => $fed_data['sgDelegateEmail'],
-            //'giveNname'          => (!empty($fed_data['sgDeputyName'])) ? $fed_data['sgDeputyName'] : $fed_data['sgDelegateName'],
-            //'surname'       => (!empty($fed_data['sgDeputySurname'])) ? $fed_data['sgDeputySurname'] : $fed_data['sgDelegateSurname'],
-            //'deputyORdelegate' => (!empty($fed_data['sgDeputyEmail'])) ? "deputy" : "delegate",
+        $body = $templateHtml->render(array(
+            'federationName'     => $fedData['name'],
+            'reg_auth'           => $fedData['regAuth'],
+            'idp_ok'             => $fedData['idp_ok'],
+            'idp_form_invalid'   => $fedData['idp_form_invalid'],
+            'idp_curl_error'     => $fedData['idp_curl_error'],
+            'idp_http_error'     => $fedData['idp_http_error'],
+            'idp_disabled'       => $fedData['idp_disabled'],
+            'sg_deputy_name'     => $fedData['sgDeputyName'],
+            'sg_deputy_surname'  => $fedData['sgDeputySurname'],
+            'sg_deputy_email'    => $fedData['sgDeputyEmail'],
+            'sg_delegate_name'   => $fedData['sgDelegateName'],
+            'sg_delegate_surname'=> $fedData['sgDelegateSurname'],
+            'sg_delegate_email'  => $fedData['sgDelegateEmail'],
+            //'giveNname'          => (!empty($fedData['sgDeputyName'])) ? $fedData['sgDeputyName'] : $fedData['sgDelegateName'],
+            //'surname'       => (!empty($fedData['sgDeputySurname'])) ? $fedData['sgDeputySurname'] : $fedData['sgDelegateSurname'],
+            //'deputyORdelegate' => (!empty($fedData['sgDeputyEmail'])) ? "deputy" : "delegate",
         ));
 
-        $altBody = $template_txt->render(array(
-            'federationName'   => $fed_data['name'],
-            'reg_auth'         => $fed_data['regAuth'],
-            'idp_ok'           => $fed_data['idp_ok'],
-            'idp_form_invalid' => $fed_data['idp_form_invalid'],
-            'idp_curl_error'   => $fed_data['idp_curl_error'],
-            'idp_http_error'   => $fed_data['idp_http_error'],
-            'idp_disabled'     => $fed_data['idp_disabled'],
-            'sg_deputy_name'     => $fed_data['sgDeputyName'],
-            'sg_deputy_surname'  => $fed_data['sgDeputySurname'],
-            'sg_deputy_email'    => $fed_data['sgDeputyEmail'],
-            'sg_delegate_name'   => $fed_data['sgDelegateName'],
-            'sg_delegate_surname'=> $fed_data['sgDelegateSurname'],
-            'sg_delegate_email'  => $fed_data['sgDelegateEmail'],
-/*            'givenName'        => (!empty($fed_data['sgDeputyName'])) ? $fed_data['sgDeputyName'] : $fed_data['sgDelegateName'],
-            'surname'          => (!empty($fed_data['sgDeputySurname'])) ? $fed_data['sgDeputySurname'] : $fed_data['sgDelegateSurname'],
-            'deputyORdelegate' => (!empty($fed_data['sgDeputyEmail'])) ? "deputy" : "delegate",*/
+        $altBody = $templateTxt->render(array(
+            'federationName'   => $fedData['name'],
+            'reg_auth'         => $fedData['regAuth'],
+            'idp_ok'           => $fedData['idp_ok'],
+            'idp_form_invalid' => $fedData['idp_form_invalid'],
+            'idp_curl_error'   => $fedData['idp_curl_error'],
+            'idp_http_error'   => $fedData['idp_http_error'],
+            'idp_disabled'     => $fedData['idp_disabled'],
+            'sg_deputy_name'     => $fedData['sgDeputyName'],
+            'sg_deputy_surname'  => $fedData['sgDeputySurname'],
+            'sg_deputy_email'    => $fedData['sgDeputyEmail'],
+            'sg_delegate_name'   => $fedData['sgDelegateName'],
+            'sg_delegate_surname'=> $fedData['sgDelegateSurname'],
+            'sg_delegate_email'  => $fedData['sgDelegateEmail'],
+/*            'givenName'        => (!empty($fedData['sgDeputyName'])) ? $fedData['sgDeputyName'] : $fedData['sgDelegateName'],
+            'surname'          => (!empty($fedData['sgDeputySurname'])) ? $fedData['sgDeputySurname'] : $fedData['sgDelegateSurname'],
+            'deputyORdelegate' => (!empty($fedData['sgDeputyEmail'])) ? "deputy" : "delegate",*/
         ));
 
 

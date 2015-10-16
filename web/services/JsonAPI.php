@@ -248,8 +248,8 @@ class JsonAPI extends EccsService {
         $regexp = "/^sp_\d/";
         $confArrayKeys = array_keys($confArray);
         $spsKeys[] = preg_grep($regexp, $confArrayKeys);
-        foreach ($spsKeys as $key => $value) {
-            foreach($value as $sp => $val) {
+        foreach (array_values($spsKeys) as $value) {
+            foreach(array_values($value) as $val) {
                 $entity = array();
                 $entity['name'] = $confArray[$val]['name'];
                 $entity['spEntityID'] = $confArray[$val]['entityID'];
