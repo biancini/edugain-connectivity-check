@@ -15,69 +15,69 @@ eduGAIN Connectivity Check Service
 
 0. Install the requiremets packages:
 
-  ````sh
-# sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
-  ````
+        ```
+        # sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
+        ```
 
 1. Install the requirements libraries:
 
-  ````sh      
-# sudo apt-get install php5-curl php5-json php5-mysqlnd
-  ````
+        ```      
+        # sudo apt-get install php5-curl php5-json php5-mysqlnd
+        ```
 
 2. Be sure to have enabled mod_alias apache module: 
 
-  ````sh
-# sudo a2enmod alias
-  ````
+        ```
+        # sudo a2enmod alias
+        ```
 
 3. Retrieve the service code and put it into the `/opt` directory
         
-  ````sh
-git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
-  ```` 
+        ```
+        git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
+        ```
 
 4. Create a new site for ECCS on the Apache instance:
 
-  ````apache
-vim /etc/apache2/sites-available/eccs.conf
+        ```
+        vim /etc/apache2/sites-available/eccs.conf
 
-Apache < 2.4 : 
+        Apache < 2.4 : 
 
-<IfModule mod_alias.c>
-   Alias /eccs /opt/edugain-connectivity-check/web
+        <IfModule mod_alias.c>
+           Alias /eccs /opt/edugain-connectivity-check/web
 
-   <Directory /opt/edugain-connectivity-check/web>
-      Options Indexes MultiViews FollowSymLinks
-      Order deny,allow
-      Allow from all
-   </Directory>
-</IfModule>
+           <Directory /opt/edugain-connectivity-check/web>
+              Options Indexes MultiViews FollowSymLinks
+              Order deny,allow
+              Allow from all
+           </Directory>
+        </IfModule>
 
 
-Apache >= 2.4 :
+        Apache >= 2.4 :
 
-<IfModule mod_alias.c>
-   Alias /eccs /opt/edugain-connectivity-check/web
+        <IfModule mod_alias.c>
+           Alias /eccs /opt/edugain-connectivity-check/web
 
-   <Directory /opt/edugain-connectivity-check/web>
-          Options Indexes MultiViews FollowSymLinks
-          Require all granted
-   </Directory>
-</IfModule>
-  ````
+           <Directory /opt/edugain-connectivity-check/web>
+              Options Indexes MultiViews FollowSymLinks
+              Require all granted
+           </Directory>
+        </IfModule>
+        ```
 
 5. Enable the new apache site:
 
-  ````sh
-# sudo a2ensite eccs.conf ; service apache2 reload
-  ````
+        ```
+        # sudo a2ensite eccs.conf ; service apache2 reload
+        ```
 
 6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
         
-  ````sh
-# mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
-  ````
+        ```
+        # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
+        ```
 
 7. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
 
@@ -85,9 +85,9 @@ Apache >= 2.4 :
 
 9. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
-  ````cron
-00 8 * * * cd /opt/edugain-connectivity-check/check_script; /usr/bin/php mccs.php > /var/log/eccs.log
-  ````
+        ```
+        00 8 * * * cd /opt/edugain-connectivity-check/check_script; /usr/bin/php mccs.php > /var/log/eccs.log
+        ```
   
 10. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
@@ -96,49 +96,49 @@ Apache >= 2.4 :
 # Useful notes
 1. HOWTO Disable an entity on the service's database:
 
-  ````sql
-UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect', currentResult = NULL, previousResult = NULL WHERE entityID = 'https://idp-test-1.example.org/SSO/saml2/idp';
-  ````
+        ```
+        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect', currentResult = NULL, previousResult = NULL WHERE entityID = 'https://idp-test-1.example.org/SSO/saml2/idp';
+        ```
 
 2. HOWTO Disable more than one entity on the service's database:
 
-  ````sql
-UPDATE EntityDescriptors SET ignoreReason = 'Due to SSL issues', ignoreEntity = 1, currentResult = NULL, previousResult = NULL WHERE entityID IN ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
-  ````
+        ```
+        UPDATE EntityDescriptors SET ignoreReason = 'Due to SSL issues', ignoreEntity = 1, currentResult = NULL, previousResult = NULL WHERE entityID IN ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
+        ```
 
 3. HOWTO Disable an entire Federation on the service's database:
 
-  ````sql
-UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority = 'https://registrationAuthority_1.example.org';
-  ````
+        ```
+        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority = 'https://registrationAuthority_1.example.org';
+        ```
 
 4. HOWTO Disable more than one Federation on the service's database:
 
-  ````sql
-UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
-  ````
+        ```
+        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
+        ```
 
 # How to send emails to eduGAIN Steering Group members
 1. Set up the [email] properties inside **check_script** folder:
 
-  ````php
-[email]
-host = smtp.server.edugain.net                           (your mail server)
-port = 25                                                (port used to send emails)
-tls = true                                               (set to "true" if you use TLS)
-user = username                                          (your username)
-password = password                                      (your password)
-from = edugain-integration@geant.net                     (leave it as is)
-replyTo = edugain-integration@geant.net                  (leave it as is)
-baseurl = https://server-hosting-eccs.edugain.net/eccs   (change with the correct value)
-test_recipient = test.user@geant.net                     (leave it empty to send email to delegate/deputy)
-  ````
+        ```
+        [email]
+        host = smtp.server.edugain.net                           (your mail server)
+        port = 25                                                (port used to send emails)
+        tls = true                                               (set to "true" if you use TLS)
+        user = username                                          (your username)
+        password = password                                      (your password)
+        from = edugain-integration@geant.net                     (leave it as is)
+        replyTo = edugain-integration@geant.net                  (leave it as is)
+        baseurl = https://server-hosting-eccs.edugain.net/eccs   (change with the correct value)
+        test_recipient = test.user@geant.net                     (leave it empty to send email to delegate/deputy)
+        ```
 
 2. Run the command:
 
-  ````sh
-cd /opt/edugain-connectivity-check/check_script ; /usr/bin/mailer.php
-  ````
+        ```
+        cd /opt/edugain-connectivity-check/check_script ; /usr/bin/mailer.php
+        ```
 
 
 # How to test the code
