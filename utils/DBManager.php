@@ -31,7 +31,7 @@ class DBManager {
             $confArray = parse_ini_file('properties.ini.php', true);
             $dbConnection = $confArray['db_connection'];
 
-            if (isset($dbConnection['db_sock'])) {
+            if (isset($dbConnection['db_sock']) && !empty($dbConnection['db_sock'])) {
                 $mysqli = new mysqli(null, $dbConnection['db_user'], $dbConnection['db_password'], $dbConnection['db_name'], null, $dbConnection['db_sock']);
             }
             else {

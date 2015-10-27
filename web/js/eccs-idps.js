@@ -29,6 +29,7 @@ app.controller('IdpsController', function ($scope, EccsJsonAPI, Filtering, Sorti
             }
         }
 
+        $scope.pagination.setPage(1);
         $scope.showResults();
     });
 
