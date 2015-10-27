@@ -33,6 +33,7 @@ app.controller('TestsController', function ($scope, EccsJsonAPI, Filtering, Sort
             }
         }
 
+        $scope.pagination.setPage(1);
         $scope.showResults();
     });
 

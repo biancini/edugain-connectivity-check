@@ -16,7 +16,7 @@
   (GÉANT).
 -->
 
-<form ng-submit="filtering.search(filters); showResults(pagination.itemsPerPage)">
+<form ng-submit="filtering.search(filters); pagination.setPage(1); showResults(pagination.itemsPerPage)">
 <table class="list_table">
   <thead>
     <th custom-sort order="'entityID'" sorting="sorting" update-fn="showResults(pagination.itemsPerPage)">entityID</td>
