@@ -243,6 +243,10 @@ class JsonAPI extends EccsService {
 
     private function getTestList() {
         $confArray = parse_ini_file('properties.ini.php', true);
+        if (empty($confArray)){
+           throw new Exception("'web/services/properties.ini.php' is missing or the 'mccs.php' script is running under the wrong directory.");
+        }
+ 
         $entities = array();
 
         $regexp = "/^sp_\d/";

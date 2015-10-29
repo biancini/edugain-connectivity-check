@@ -28,6 +28,9 @@ class Mailer {
         $this->mailer = new MailUtils();
         $this->dbManager = new DBManager();
         $this->confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
+        if (empty($this->confArray)){
+            throw new Exception("'check_script/properties.ini.php' is missing or the 'mccs.php' script is running under the wrong directory.");
+        }
     }
 
     function sendMailToFederation($fedData) {
