@@ -22,6 +22,10 @@ class GetDataFromJson {
 
     public function __construct() {
         $confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
+        if (empty($confArray)){
+           throw new Exception("'check_script/properties.ini.php' is missing or the 'mccs.php' script is running under the wrong directory.");
+        }
+ 
         $this->edugainFedsUrl = $confArray['edugain_db_json']['json_feds_url'];
         $this->edugainIdpsUrl = $confArray['edugain_db_json']['json_idps_url'];
 

@@ -29,6 +29,10 @@ class IdpChecks {
 
     public function __construct() {
         $confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
+        if(empty($confArray)){
+            throw new Exception("'check_script/properties.ini.php' is missing or the 'mccs.php' script is running under the wrong directory.");
+
+        }
 
         $this->storeResultsDb = new StoreResultsDb();
         $this->getDataFromJson = new GetDataFromJson();

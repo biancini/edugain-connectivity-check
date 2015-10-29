@@ -67,11 +67,11 @@ eduGAIN Connectivity Check Service
 
 7. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
 
-8. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **web** and change it with your DB parameters (in this case the user created should only have SELECT grant on the tables of the database).
+8. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **web/services** and change it with your DB parameters (in this case the user created should only have SELECT grant on the tables of the database).
 
 9. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
-        00 8 * * * cd /opt/edugain-connectivity-check/check_script; /usr/bin/php mccs.php > /var/log/eccs.log
+        00 8 * * * cd /opt/edugain-connectivity-check/check_script ; /usr/bin/php mccs.php > /var/log/eccs.log
   
 10. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
