@@ -29,10 +29,10 @@ class DBManager {
         }
         else {
             $confArray = parse_ini_file('properties.ini.php', true);
-         
             if (empty($confArray)){
                throw new Exception("'check_script/properties.ini.php' is missing or the 'mccs.php' script is running under the wrong directory.");
             }
+
             $dbConnection = $confArray['db_connection'];
 
             if (isset($dbConnection['db_sock']) && !empty($dbConnection['db_sock'])) {
