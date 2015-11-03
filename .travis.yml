@@ -1,0 +1,30 @@
+---
+# This is an example .travis.
+# If you've forked this repo, please make sure  to change the notifications section
+
+language: bash
+sudo: required
+
+before_install:
+  - apt-get install npm nodejs curl
+  - npm install -g karma-cli
+  - npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage karma-chai-as-promised
+  - cd tests/apis/
+  - curl http://getcomposer.org/installer | php
+  - php composer.phar install
+  - cd ../../
+
+install:
+  - cd tests/view/
+  - karma start karma.config.js
+  - cd ../../
+  - cd tests/apis/
+  - ./bin/phpspec run
+
+notifications:
+  slack:
+    rooms:
+      - garr-lab:O5FCSJXgreOSkzCn6rXW7AZJ#devops
+    on_success: always
+    on_failure: always
+    on_start: always
