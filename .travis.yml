@@ -14,6 +14,7 @@ before_install:
   - cd tests/apis/
   - curl http://getcomposer.org/installer | php
   - php composer.phar install
+  - php composer.phar update henrikbjorn/phpspec-code-coverage
   - cd ../../
 
 install:
