@@ -6,6 +6,7 @@ language: bash
 sudo: required
 
 before_install:
+  - sudo apt-get update
   - sudo apt-get install npm nodejs curl
   - sudo npm install -g karma-cli
   - sudo npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage karma-chai-as-promised
