@@ -25,7 +25,7 @@ class JsonAPISpec extends ObjectBehavior {
     }
 
     function getMatchers() {
-        return [
+        $obj = [
             'elementLike' => function ($result, $element) {
                 foreach($element as $key => $val) {
                     if ($val != $result[$key]) {
@@ -35,6 +35,7 @@ class JsonAPISpec extends ObjectBehavior {
                 return true;
             },
         ];
+        return $obj;
     }
 
     function _generate_entity($entityid, $ignore = 0, $currentResult = '1 - OK', $previousResult = '1 - OK') {
