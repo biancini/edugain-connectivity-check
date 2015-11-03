@@ -4,21 +4,22 @@ namespace spec;
 
 use PhpSpec\ObjectBehavior;
 
+require_once '../../check_script/GetFile.php';
+
 class GetDataFromJsonSpec extends ObjectBehavior {
     function it_is_initializable() {
         $this->shouldHaveType('GetDataFromJson');
     }
 
-    function it_obtainFederationsList_works() {
+    function it_obtainFederationsList_works($getFile) {
         $confArray = array('edugain_db_json' => array('json_feds_url' => 'http://feds-url.com', 'json_idps_url' => 'http://idp-url.com'));
-        $arrContextOptions = array();
-        $this->beConstructedWith($confArray);
+        $getFile->beADoubleOf('GetFile');
+        $getFile->getFileFromUrl('http://feds-url.com')->shouldBeCalled()->willReturn('{ "federation": "value" }');
+        $this->beConstructedWith($confArray, $getFile);
 
-        //$this->get_file = function ($url) { return "ciao"; };
-        $this->get_file('http://feds-url.com')->shouldBeCalled()->willReturn("ciao");
-        $this->obtainFederationsList();
+        $returned = $this->obtainFederationsList();
 
-        //$this->getQuerySql()->shouldReturn("SELECT * FROM table WHERE sql_name = ?");
-        //$this->getQueryParams()->shouldReturn(array('s', 'value'));
+        $returned->shouldBeArray();
+        $returned->shouldHaveKeyWithValue('federation', 'value');
     }
 }

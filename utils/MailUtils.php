@@ -55,9 +55,9 @@ class MailUtils {
               $mail->addAddress($fedData['sgDelegateEmail']);
            }
 
-           if (!empty($fedData['emailAddress']) and
-              empty($fedData['sgDeputyEmail']) and
-              empty($fedData['sgDelegateEmail']) ) {
+           if (!empty($fedData['emailAddress']) &&
+                empty($fedData['sgDeputyEmail']) &&
+                empty($fedData['sgDelegateEmail'])) {
                  $mail->addAddress($fedData['emailAddress']);
            }
         }

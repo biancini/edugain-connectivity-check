@@ -9,8 +9,9 @@ use PhpSpec\Exception\Example\FailureException;
 require_once '../../utils/DBManager.php';
 
 class JsonAPISpec extends ObjectBehavior {
-    function it_is_initializable($dbManager) {
+    function it_is_initializable($dbManager, $requestParams) {
         $dbManager->beADoubleOf('DBManager');
+        $requestParams = NULL;
         $this->beConstructedWith($dbManager);
 
         $this->shouldHaveType('JsonAPI');
@@ -44,6 +45,7 @@ class JsonAPISpec extends ObjectBehavior {
             'technicalContacts' => "technicalContacts value",
             'supportContacts' => "supportContacts value",
             'ignoreEntity' => $ignore,
+            'ignoreReason' => NULL,
             'lastCheck' => "lastCheck value",
             'currentResult' => $currentResult,
             'previousResult' => $previousResult,
