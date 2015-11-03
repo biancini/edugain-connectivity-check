@@ -8,10 +8,14 @@ sudo: required
 before_install:
   - sudo curl -sL https://deb.nodesource.com/setup | sudo bash -
   - sudo apt-get update
-  - sudo apt-get install -y nodejs curl php5 php5-xdebug
+  - sudo apt-get install -y nodejs curl php5 php5-xdebug php5-mysqlnd php5-mysql php5-curl php5-json
   - sudo npm install -g karma-cli
   - sudo npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage karma-chai-as-promised karma-jasmine
   - cd tests/apis/
+  - curl http://getcomposer.org/installer | php
+  - php composer.phar install
+  - cd ../../
+  - cd tests/script/
   - curl http://getcomposer.org/installer | php
   - php composer.phar install
   - cd ../../
@@ -22,6 +26,10 @@ install:
   - cd ../../
   - cd tests/apis/
   - ./bin/phpspec run
+  - cd ../../
+  - cd tests/script/
+  - ./bin/phpspec run
+  - cd ../../
 
 notifications:
   slack:
