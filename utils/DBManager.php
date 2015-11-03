@@ -81,7 +81,8 @@ class DBManager {
         if ($r && !$resultset) {
             throw new Exception('ERROR ' . mysqli_error($this->mysqli));
         }
-        return ($r) ? $resultset : (($resultset) ? $resultset->fetch_row()[0] : 1);
+        $rr = ($resultset) ? $resultset->fetch_row() : null;
+        return ($r) ? $resultset : (($rr) ? $rr[0] : 1);
     }
 
     public function escapeStringChars($string) {
