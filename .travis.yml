@@ -8,13 +8,12 @@ sudo: required
 before_install:
   - sudo curl -sL https://deb.nodesource.com/setup | sudo bash -
   - sudo apt-get update
-  - sudo apt-get install -y nodejs curl php5
+  - sudo apt-get install -y nodejs curl php5 php5-xdebug
   - sudo npm install -g karma-cli
   - sudo npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage karma-chai-as-promised karma-jasmine
   - cd tests/apis/
   - curl http://getcomposer.org/installer | php
   - php composer.phar install
-  - php composer.phar update henrikbjorn/phpspec-code-coverage
   - cd ../../
 
 install:
