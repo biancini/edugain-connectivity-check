@@ -81,7 +81,7 @@ class DBManager {
         if ($r && !$resultset) {
             throw new Exception('ERROR ' . mysqli_error($this->mysqli));
         }
-        $rr = ($resultset) ? $resultset->fetch_row() : null;
+        $rr = ($resultset != NULL) ? $resultset->fetch_row() : NULL;
         return ($r) ? $resultset : (($rr) ? $rr[0] : 1);
     }
 
