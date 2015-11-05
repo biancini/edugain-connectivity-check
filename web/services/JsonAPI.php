@@ -109,6 +109,7 @@ class JsonAPI extends EccsService {
                 'lastCheck' => $row['lastCheck'],
                 'currentResult' => substr($row['currentResult'], 4),
                 'previousResult' => substr($row['previousResult'], 4),
+                'serviceLocation' => $row['serviceLocation'],
                 'css_class' => ($row['ignoreEntity'] == 1) ? 'silver' : $this->computeCssClass($row['currentResult']),
             );
     

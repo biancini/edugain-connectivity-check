@@ -99,8 +99,7 @@ module.exports = function(config) {
         'karma-chai-as-promised',
         'karma-phantomjs-launcher',
         'karma-coverage',
-        'karma-junit-reporter',
-        'karma-chrome-launcher'
+        'karma-junit-reporter'
     ]
   })
 }
