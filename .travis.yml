@@ -20,7 +20,7 @@ before_install:
   - php composer.phar install
   - cd ../../
 
-install:
+script:
   - cd tests/view/
   - karma start karma.config.js
   - cd ../../
