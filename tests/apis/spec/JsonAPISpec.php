@@ -49,6 +49,7 @@ class JsonAPISpec extends ObjectBehavior {
             'lastCheck' => "lastCheck value",
             'currentResult' => $currentResult,
             'previousResult' => $previousResult,
+            'serviceLocation' => 'serviceLocation value',
         );
     }
 

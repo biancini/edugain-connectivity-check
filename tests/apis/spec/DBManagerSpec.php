@@ -32,11 +32,12 @@ class DBManagerSpec extends ObjectBehavior {
         $this->executeStatement(false, $query, NULL)->shouldReturn(10);
     }
 
-    function it_executeStatement_returns_array_if_resultset($query, $stmt, $mysqli) {
+    function it_executeStatement_returns_array_if_resultset($query, $stmt, $mysqli, $result) {
         $query->beADoubleOf('QueryBuilder');
         $query->getQuerySql()->willReturn("");
         $query->getQueryParams()->willReturn(array());
-        $result = array(1, 2, 3);
+        $result->beADoubleOf('mysqli_result');
+        $result->fetch_row()->willReturn(array(1, 2, 3));
         $stmt->beADoubleOf('mysqli_stmt');
         $stmt->execute()->willReturn(true);
         $stmt->get_result()->willReturn($result);
