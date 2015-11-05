@@ -34,7 +34,12 @@ class GetDataFromJson {
         $jsonEdugainFeds = $this->getFileObj->getFileFromUrl($this->edugainFedsUrl);
  
         if ($jsonEdugainFeds !== false) {
-            $fedsList = json_decode($jsonEdugainFeds, true, 10, JSON_UNESCAPED_UNICODE);
+            if (defined('JSON_UNESCAPED_UNICODE')) {
+                $fedsList = json_decode($jsonEdugainFeds, true, 10, JSON_UNESCAPED_UNICODE);
+            }
+            else {
+                $fedsList = json_decode($jsonEdugainFeds, true, 10);
+            }
         }
  
         if ($fedsList === false) {
