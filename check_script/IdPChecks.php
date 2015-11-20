@@ -57,6 +57,7 @@ class IdpChecks {
 
     function executeAllChecks() {
         $fedsList = $this->getDataFromJson->obtainFederationsList();
+
         $this->storeResultsDb->storeFedsIntoDb($fedsList);
 
         $this->storeResultsDb->cleanOldEntityChecks();
@@ -157,7 +158,7 @@ class IdpChecks {
         } else {
             $patternUsername = '/<input[\s]+[^>]*((type=\s*[\'"](text|email)[\'"]|user)|(name=\s*[\'"](name)[\'"]))[^>]*>/im';
             $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"]|password)[^>]*>/im';
-            $patternNoEdugainMetadata = "/Unable.to.locate(\sissuer.in|).metadata(\sfor|)|no.metadata.found|profile.is.not.configured.for.relying.party|Cannot.locate.entity|fail.to.load.unknown.provider|does.not.recognise.the.service|unable.to.load.provider|Nous.n'avons.pas.pu.(charg|charger).le.fournisseur.de service/ix";
+            $patternNoEdugainMetadata = "/Unable.to.locate(\sissuer.in|).metadata(\sfor|)|no.metadata.found|profile.is.not.configured.for.relying.party|Cannot.locate.entity|fail.to.load.unknown.provider|does.not.recognise.the.service|unable.to.load.provider|Nous.n'avons.pas.pu.(charg|charger).le.fournisseur.de service/i";
 
             if (!preg_match($patternUsername, $html) || !preg_match($patternPassword, $html)) {
 
