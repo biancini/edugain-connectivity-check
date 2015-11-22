@@ -24,7 +24,7 @@ class JsonAPI extends EccsService {
         if ($inputStatus == '1 - OK') {
             $color = 'green';
         }
-        elseif ($inputStatus == '2 - FORM-Invalid') {
+        elseif ($inputStatus == '2 - FORM-Invalid' || $inputStatus == '2 - No-eduGAIN-Metadata') {
             $color = 'yellow';
         }
         elseif ($inputStatus == '3 - HTTP-Error' || $inputStatus == '3 - CURL-Error') {
@@ -94,6 +94,7 @@ class JsonAPI extends EccsService {
     
         $query->appendConditions(" LIMIT " . $offset . " , " . $rowsperpage);
         $query->setSql($sql);
+        
         $result = $this->dbManager->executeStatement(true, $query);
     
         $entities = array();

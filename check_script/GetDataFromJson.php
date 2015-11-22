@@ -32,7 +32,7 @@ class GetDataFromJson {
     function obtainFederationsList() {
         $fedsList = false;
         $jsonEdugainFeds = $this->getFileObj->getFileFromUrl($this->edugainFedsUrl);
- 
+
         if ($jsonEdugainFeds !== false) {
             if (defined('JSON_UNESCAPED_UNICODE')) {
                 $fedsList = json_decode($jsonEdugainFeds, true, 10, JSON_UNESCAPED_UNICODE);
@@ -45,7 +45,7 @@ class GetDataFromJson {
         if ($fedsList === false) {
             throw new Exception("Error fetching JSON eduGAIN Federation members");
         }
- 
+
         return $fedsList;
     }
  

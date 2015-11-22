@@ -78,11 +78,12 @@ class DBManager {
         }
         $stmt->execute();
         $resultset = $stmt->get_result();
+
         if ($r && !$resultset) {
             throw new Exception('ERROR ' . mysqli_error($this->mysqli));
         }
-        $rr = ($resultset != NULL) ? $resultset->fetch_row() : NULL;
-        return ($r) ? $resultset : (($rr) ? $rr[0] : 1);
+
+        return ($r) ? $resultset : (($resultset) ? $resultset->fetch_row()[0] : 1);
     }
 
     public function escapeStringChars($string) {

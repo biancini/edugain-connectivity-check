@@ -81,17 +81,19 @@ class StoreResultsDB {
         $query = new QueryBuilder();
         $query->setSql("UPDATE Federations SET updated = 0");
         $this->dbManager->executeStatement(false, $query);
-
+   
         foreach ($fedsList as $fed) { 
-            //If I find a registrationAuthority value for the federation
-            if ($fed['reg_auth'] === null || $fed['reg_auth'] === '') {
+
+            //If the federation hasn't got a registration authority or its status is not 6 (Production Federation) go to the next one.
+            if ($fed['reg_auth'] === null || $fed['reg_auth'] === '' || $fed['status'] != '6') {
                 continue;
             }
+
             $query = new QueryBuilder();
             $query->setSql("SELECT * FROM Federations WHERE registrationAuthority = ?");
             $query->addQueryParam($fed['reg_auth'], 's');
             $result = $this->dbManager->executeStatement(true, $query);
-
+               
             if ($result->num_rows <= 0) {
                 $query = new QueryBuilder();
                 $query->setSql("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, sgDelegateName, sgDelegateSurname, sgDelegateEmail, sgDeputyName, sgDeputySurname, sgDeputyEmail, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
@@ -186,7 +188,6 @@ class StoreResultsDB {
                 }
             }
         }
-
         $query = new QueryBuilder();
         $query->setSql("DELETE FROM Federations WHERE updated = 0");
         $this->dbManager->executeStatement(false, $query);

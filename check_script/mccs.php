@@ -31,7 +31,7 @@ if ($terminated) {
     $micTime = $micTime[1] + $micTime[0];
     $endtime = $micTime;
     $totalExecutionTime = ($endtime - $startTime);
-    print "\n\nTotal Executaion Time ".$totalExecutionTime." seconds.\n";
+    print "\n\nTotal Executation Time ".$totalExecutionTime." seconds.\n";
 }
 
 ?>

@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS EntityDescriptors
 	displayName VARCHAR(255),
 	ignoreEntity BOOLEAN NOT NULL default 0,
 	lastCheck TIMESTAMP NULL default NULL,
-	currentResult VARCHAR(16) NULL default NULL,
-	previousResult VARCHAR(16) NULL default NULL,
+	currentResult VARCHAR(23) NULL default NULL,
+	previousResult VARCHAR(23) NULL default NULL,
 	technicalContacts BLOB NULL,
 	supportContacts BLOB NULL,
 	updated BOOLEAN NOT NULL DEFAULT 0,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS EntityChecks
 	checkTime TIMESTAMP NOT NULL default CURRENT_TIMESTAMP,
 	checkHtml BLOB NULL,
 	httpStatusCode INTEGER NOT NULL,
-	checkResult VARCHAR(16) NOT NULL,
+	checkResult VARCHAR(23) NOT NULL,
 	checkExec MEDIUMINT NOT NULL default 0,
 	FOREIGN KEY (entityID) REFERENCES EntityDescriptors(entityID) ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (id)
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS FederationStats
 (
   checkDate DATE NOT NULL,
   registrationAuthority VARCHAR(255) NOT NULL,
-  currentResult VARCHAR(16) NULL default NULL,
+  currentResult VARCHAR(23) NULL default NULL,
   numIdPs INTEGER
 ) ENGINE=InnoDB  DEFAULT CHARSET="utf8";
 
