@@ -148,7 +148,7 @@ class GetDataFromJson {
               <samlp:NameIDPolicy AllowCreate="1"/>
            </samlp:AuthnRequest>';
  
-       $samlRequest = preg_replace('/[\s]+/S', " ", $samlRequest);
+       $samlRequest = preg_replace('/[\s]+/S', ' ', $samlRequest);
 
        return urlencode(base64_encode(gzdeflate($samlRequest)));
     }
