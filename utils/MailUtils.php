@@ -83,6 +83,7 @@ class MailUtils {
             'idp_ok'             => $fedData['idp_ok'],
             'idp_form_invalid'   => $fedData['idp_form_invalid'],
             'idp_curl_error'     => $fedData['idp_curl_error'],
+            'idp_no_edugain_md'  => $fedData['idp_no_edugain_md'],
             'idp_http_error'     => $fedData['idp_http_error'],
             'idp_disabled'       => $fedData['idp_disabled'],
             'sg_deputy_name'     => $fedData['sgDeputyName'],
@@ -100,6 +101,7 @@ class MailUtils {
             'idp_ok'             => $fedData['idp_ok'],
             'idp_form_invalid'   => $fedData['idp_form_invalid'],
             'idp_curl_error'     => $fedData['idp_curl_error'],
+            'idp_no_edugain_md'  => $fedData['idp_no_edugain_md'],
             'idp_http_error'     => $fedData['idp_http_error'],
             'idp_disabled'       => $fedData['idp_disabled'],
             'sg_deputy_name'     => $fedData['sgDeputyName'],
@@ -109,7 +111,6 @@ class MailUtils {
             'sg_delegate_surname'=> $fedData['sgDelegateSurname'],
             'sg_delegate_email'  => $fedData['sgDelegateEmail'],
         ));
-
 
         $mail->Body = $body;
         $mail->AltBody = $altBody;
