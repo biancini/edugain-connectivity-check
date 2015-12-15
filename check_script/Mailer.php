@@ -43,7 +43,7 @@ class Mailer {
         }
 
         if ($fedData['idp_form_invalid'] == 0 &&
-            $fedData['idp_no_eduGAIN_md'] == 0 &&
+            $fedData['idp_no_edugain_md'] == 0 &&
             $fedData['idp_curl_error'] == 0 &&
             $fedData['idp_http_error'] == 0 ) {
 
@@ -60,7 +60,7 @@ class Mailer {
 
         $fedData['idp_ok'] = 0;
         $fedData['idp_form_invalid'] = 0;
-        $fedData['idp_no_eduGAIN_md'] = 0;
+        $fedData['idp_no_edugain_md'] = 0;
         $fedData['idp_curl_error'] = 0;
         $fedData['idp_http_error'] = 0;
         $fedData['idp_disabled'] = 0;
@@ -76,7 +76,7 @@ class Mailer {
                     break;
 
                 case "2 - No-eduGAIN-Metadata":
-                    $fedData['idp_no_eduGAIN_md'] = $curStat['numIdPs'];
+                    $fedData['idp_no_edugain_md'] = $curStat['numIdPs'];
                     break;
                 case "3 - CURL-Error":
                     $fedData['idp_curl_error'] = $curStat['numIdPs'];
