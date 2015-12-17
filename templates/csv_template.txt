@@ -1,0 +1,1 @@
+{{federationName}},{{reg_auth}},{{sg_deputy_name}},{{sg_deputy_surname}},{{sg_deputy_email}},{{sg_delegate_name}},{{sg_delegate_surname}},{{sg_delegate_email}},{{idp_ok}},{{idp_form_invalid}},{{idp_curl_error}},{{idp_no_edugain_md}},{{idp_http_error}},{{idp_disabled}},
