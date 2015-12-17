@@ -135,20 +135,21 @@ class GetDataFromJson {
     }
  
     function generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID) {
-        $samlRequest = '
-           <samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+        $samlRequest =
+           '<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
               AssertionConsumerServiceURL="'.$spACSurl.'"
               Destination="'.$httpRedirectServiceLocation.'"
               ID="_'.$id.'"
               IssueInstant="'.$date.'"
               ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Version="2.0">
-              <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
-                  '.$spEntityID.'
-              </saml:Issuer>
+              <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">'
+                  .$spEntityID.
+              '</saml:Issuer>
               <samlp:NameIDPolicy AllowCreate="1"/>
            </samlp:AuthnRequest>';
  
-       $samlRequest = preg_replace('/[\s]+/', ' ', $samlRequest);
+       $samlRequest = preg_replace('/[\s]+/S', ' ', $samlRequest);
+
        return urlencode(base64_encode(gzdeflate($samlRequest)));
     }
 }

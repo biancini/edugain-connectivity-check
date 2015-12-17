@@ -31,11 +31,12 @@ https://technical.edugain.org/eccs/?registrationAuthority={{reg_auth}}
 
 With this email we would like to provide you an overall view on the results for your federation. Find be below the statistics that the ECCS service has collected for your federation:
 
-   IdPs OK:                    {{idp_ok}}
-   IdPs with an invalid form:  {{idp_form_invalid}}
-   IdPs with a CURL Error:     {{idp_curl_error}}
-   IdPs with a HTTP Error:     {{idp_http_error}}
-   IdPs Disabled:              {{idp_disabled}}
+   IdPs OK:                               {{idp_ok}}
+   IdPs with an invalid form:             {{idp_form_invalid}}
+   IdPs with a CURL Error:                {{idp_curl_error}}
+   IdPs with a No-eduGAIN-Metadata Error: {{idp_no_edugain_md}}
+   IdPs with a HTTP Error:                {{idp_http_error}}
+   IdPs Disabled:                         {{idp_disabled}}
 
 As the service is relatively new, we still are fine-tuning the checking mechanism. Therefore, there still might be false positives because the checks are not as trivial as one might think. Therefore, we kindly ask you to review and verify the check results. If you want to exclude your federation or certain IdPs from checks, please let us know.
 
