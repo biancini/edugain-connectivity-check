@@ -9,7 +9,7 @@ eduGAIN Connectivity Check Service
 - **php5-mysql** package any version (tested with 5.5.21)
 - **php5-curl** package any version (tested with 5.5.22)
 - **php5-json** package any version (tested with 1.3.6-1)
-- **Apache2** (with mod-php5) 
+- **Apache2** (with mod-php5)
 
 # HOWTO Install the Service (on Ubuntu architecture)
 
@@ -21,19 +21,19 @@ eduGAIN Connectivity Check Service
 
         # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
-2. Be sure to have enabled mod_alias apache module: 
+2. Be sure to have enabled mod_alias apache module:
 
         # sudo a2enmod alias
 
 3. Retrieve the service code and put it into the `/opt` directory
-        
+
         # git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
 
 4. Create a new site for ECCS on the Apache instance:
 
         # vim /etc/apache2/sites-available/eccs.conf
 
-        Apache < 2.4 : 
+        Apache < 2.4 :
 
         <IfModule mod_alias.c>
            Alias /eccs /opt/edugain-connectivity-check/web
@@ -62,7 +62,7 @@ eduGAIN Connectivity Check Service
         # sudo a2ensite eccs.conf ; service apache2 reload
 
 6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
-        
+
         # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
 
 7. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
@@ -72,30 +72,31 @@ eduGAIN Connectivity Check Service
 9. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
         00 8 * * * cd /opt/edugain-connectivity-check/check_script ; /usr/bin/php mccs.php > /var/log/eccs.log
-  
+
 10. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
 11. Enjoy yourself
 
 # Useful notes
-1. HOWTO Disable an entity on the service's database:
+1. **HOWTO Disable an entity on the service's database:**
 
         UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect', currentResult = NULL, previousResult = NULL WHERE entityID = 'https://idp-test-1.example.org/SSO/saml2/idp';
 
-2. HOWTO Disable more than one entity on the service's database:
+2. **HOWTO Disable more than one entity on the service's database:**
 
         UPDATE EntityDescriptors SET ignoreReason = 'Due to SSL issues', ignoreEntity = 1, currentResult = NULL, previousResult = NULL WHERE entityID IN ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
 
-3. HOWTO Disable one or more Federations from the service's check:
+3. **HOWTO Disable one or more Federations from the service's check:**
 
-        Configure the [disabled_federation] settings inside the **properties.ini.php** file of the **check_script** folder by listing the federations to disabling separated by a comma.
+   Configure the [disabled_federation] settings inside the **properties.ini.php** file of the **check_script** folder by listing the federations that you want disable by separating them with a comma.
 
-        For Example:
-
-        ```php
-        [disabled_federation]
-        reg_auth = "http://www.federation1.nl/,https://www.federation2.dk,http://federation3.no/"
-        ```
+      For Example:
+      
+       [disabled_federation]
+       reg_auth = "http://www.federation1.nl/,https://www.federation2.dk,http://federation3.no/"
+       
+   To **enable again** the federation, remove it from the comma-separated list.
+        
 
 # How to send emails to eduGAIN Steering Group members
 1. Configure the [email] settings inside the **properties.ini.php** file of the **check_script** folder:
@@ -124,7 +125,7 @@ To test the various components do as explained in the following:
 For the AngularJS web interface, you can use karma:
 
 ```sh
-# apt-get install npm nodejs 
+# apt-get install npm nodejs
 # npm install -g karma-cli
 # npm install -g karma-junit-reporter karma-ng-scenario karma-junit-reporter karma-phantomjs-launcher karma-coverage karma-chai-as-promised
 
