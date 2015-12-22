@@ -86,13 +86,13 @@ eduGAIN Connectivity Check Service
 
         UPDATE EntityDescriptors SET ignoreReason = 'Due to SSL issues', ignoreEntity = 1, currentResult = NULL, previousResult = NULL WHERE entityID IN ('https://idp-test-1.example.org/idp/shibboleth', 'https://idp-test-2.example.org/idp/shibboleth');
 
-3. HOWTO Disable an entire Federation on the service's database:
+3. HOWTO Disable one or more Federations from the service's check:
 
-        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority = 'https://registrationAuthority_1.example.org';
+   Configure the [disabled_federation] settings inside the **properties.ini.php** file of the **check_script** folder by listing the federations to disabling separated by a comma.
 
-4. HOWTO Disable more than one Federation on the service's database:
-
-        UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check', currentResult = NULL, previousResult = NULL WHERE registrationAuthority IN ('https://registrationAuthority_1.example.org', 'http://registrationAuthority_2.example.org/');
+   For Example:
+        [disabled_federation]
+        reg_auth = "http://www.federation1.nl/,https://www.federation2.dk,http://federation3.no/"
 
 # How to send emails to eduGAIN Steering Group members
 1. Configure the [email] settings inside the **properties.ini.php** file of the **check_script** folder:
