@@ -26,6 +26,7 @@ class IdpChecks {
     protected $parallel;
     protected $checkHistory;
     protected $verbose;
+    protected $fedsDisabled = array();
 
     public function __construct() {
         $confArray = parse_ini_file(dirname(__FILE__) . '/properties.ini.php', true);
@@ -39,6 +40,7 @@ class IdpChecks {
         $this->parallel = intval($confArray['check_script']['parallel']);
         $this->checkHistory = intval($confArray['check_script']['check_history']);
         $this->verbose = $confArray['check_script']['verbose'];
+        $this->fedsDisabled = explode(',', $confArray['disabled_federation']['reg_auth']);
 
         $regexp = "/^sp_\d/";
         $confArrayKeys = array_keys($confArray);
@@ -48,8 +50,8 @@ class IdpChecks {
                 $this->spEntityIDs[] = $confArray[$val]['entityID'];
                 $this->spACSurls[] = $confArray[$val]['acs_url'];
             }
-        }
- 
+        } 
+
         if (count($this->spEntityIDs) != count($this->spACSurls)) {
             throw new Exception("Configuration error. Please check properties.ini.");
         }
@@ -64,14 +66,15 @@ class IdpChecks {
         $idpList = $this->getDataFromJson->obtainIdPList();
         $this->storeResultsDb->updateIgnoredEntities();
 
-        $count = 1;
+        $count = 0;
+        
         for ($i = 0; $i < $this->parallel; $i++) {
             $pid = pcntl_fork();
             if (!$pid) {
                 //In child
                 $this->storeResultsDb->resetDbConnection();
                 print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-                $this->executeIdPchecks($idpList[$count]);
+                $this->executeIdPchecks($idpList[$count], $this->fedsDisabled);
                 return false;
             }
             $count++;
@@ -79,19 +82,18 @@ class IdpChecks {
 
         while (pcntl_waitpid(0, $status) != -1) { 
             $status = pcntl_wexitstatus($status);
-            if ($count <= count($idpList)) {
+            if ($count < count($idpList)) {
                 $pid = pcntl_fork();
                 if (!$pid) {
                     //In child
                     $this->storeResultsDb->resetDbConnection();
                     print "Executing check for " . $idpList[$count]['entityID'] . "\n";
-                    $this->executeIdPchecks($idpList[$count]);
+                    $this->executeIdPchecks($idpList[$count], $this->fedsDisabled);
                     return false;
                 }
                 $count++;
             } 
         }
-
         // End of all cycles
         $this->storeResultsDb->resetDbConnection();
         $this->storeResultsDb->deleteOldEntities();
@@ -99,8 +101,8 @@ class IdpChecks {
         return true;
     }
 
-    function executeIdPchecks($idp) {
-        list($ignoreEntity, $previousStatus) = $this->storeResultsDb->getEntityPreviousStatus($idp);
+    function executeIdPchecks($idp, $fedsDisabledList) {
+        list($ignoreEntity, $previousStatus) = $this->storeResultsDb->getEntityPreviousStatus($idp, $fedsDisabledList);
 
         if ($ignoreEntity) {
             // update EntityDescriptors
@@ -216,11 +218,12 @@ class IdpChecks {
                     CURLOPT_SSL_VERIFYHOST => false,
                     CURLOPT_COOKIEJAR => "/dev/null",
                     CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_TIMEOUT => 90,
-                    CURLOPT_CONNECTTIMEOUT => 90,
+                    CURLOPT_TIMEOUT => 120,
+                    CURLOPT_CONNECTTIMEOUT => 120,
                     CURLOPT_SSLVERSION => $vers,
                     CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
                 ));
+
                 $html = curl_exec($curl);
 
                 if ($html === false) {
