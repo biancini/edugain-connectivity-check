@@ -88,11 +88,14 @@ eduGAIN Connectivity Check Service
 
 3. HOWTO Disable one or more Federations from the service's check:
 
-   Configure the [disabled_federation] settings inside the **properties.ini.php** file of the **check_script** folder by listing the federations to disabling separated by a comma.
+        Configure the [disabled_federation] settings inside the **properties.ini.php** file of the **check_script** folder by listing the federations to disabling separated by a comma.
 
-   For Example:
+        For Example:
+
+        ```php
         [disabled_federation]
         reg_auth = "http://www.federation1.nl/,https://www.federation2.dk,http://federation3.no/"
+        ```
 
 # How to send emails to eduGAIN Steering Group members
 1. Configure the [email] settings inside the **properties.ini.php** file of the **check_script** folder:
