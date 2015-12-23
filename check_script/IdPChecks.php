@@ -129,6 +129,7 @@ class IdpChecks {
         } else {
             print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
             print "Reason: " . $reason . "\n";
+            if ($reason == '3 - CURL-Error') print "URL: ".$result['samlRequestUrl']."\n";
             print "Messages: " . $result['error'] . "\n\n";
         }
     }
@@ -188,6 +189,7 @@ class IdpChecks {
             'http_code' => $info['http_code'],
             'error' => $error,
             'html' => ($html) ? $html : "",
+            'samlRequestUrl' => $url,
         );
     }
 
