@@ -76,6 +76,29 @@ class MailUtils {
         $templateHtml = $twig->loadTemplate('mail_html_template.html');
         $templateTxt  = $twig->loadTemplate('mail_text_template.txt');
 
+        /* Usefull for CSV file of ECCS Results 
+
+        $templateCSV  = $twig->loadTemplate('cvs_template.txt');
+
+        $csv = $templateCSV->render(array(
+            'eccs_baseUrl'       => $emailProperties['baseurl'],
+            'federationName'     => $fedData['name'],
+            'reg_auth'           => $fedData['regAuth'],
+            'idp_ok'             => $fedData['idp_ok'],
+            'idp_form_invalid'   => $fedData['idp_form_invalid'],
+            'idp_curl_error'     => $fedData['idp_curl_error'],
+            'idp_no_edugain_md'  => $fedData['idp_no_edugain_md'],
+            'idp_http_error'     => $fedData['idp_http_error'],
+            'idp_disabled'       => $fedData['idp_disabled'],
+            'sg_deputy_name'     => $fedData['sgDeputyName'],
+            'sg_deputy_surname'  => $fedData['sgDeputySurname'],
+            'sg_deputy_email'    => $fedData['sgDeputyEmail'],
+            'sg_delegate_name'   => $fedData['sgDelegateName'],
+            'sg_delegate_surname'=> $fedData['sgDelegateSurname'],
+            'sg_delegate_email'  => $fedData['sgDelegateEmail'],
+        ));
+        */
+
         $body = $templateHtml->render(array(
             'eccs_baseUrl'       => $emailProperties['baseurl'],
             'federationName'     => $fedData['name'],

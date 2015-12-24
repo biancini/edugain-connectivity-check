@@ -15,10 +15,13 @@ parallel = 30
 check_history = 2
 verbose = False
 
+[disabled_federation]
+reg_auth = "http://www.federation1.nl/,https://www.federation2.dk,http://federation3.no/"
+
 [sp_1]
 name = SWITCH
 entityID = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
-acs_url = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
+acs_url = https://attribute-viewer.aai.switch.ch/interfederation-test/Shibboleth.sso/SAML2/POST
 
 [sp_2]
 name = GARR

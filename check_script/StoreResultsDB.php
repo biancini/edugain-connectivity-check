@@ -94,6 +94,7 @@ class StoreResultsDB {
             $query->addQueryParam($fed['reg_auth'], 's');
             $result = $this->dbManager->executeStatement(true, $query);
                
+            // Insert into ECCS DB the NEW Federations found.
             if ($result->num_rows <= 0) {
                 $query = new QueryBuilder();
                 $query->setSql("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, sgDelegateName, sgDelegateSurname, sgDelegateEmail, sgDeputyName, sgDeputySurname, sgDeputyEmail, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
@@ -106,11 +107,13 @@ class StoreResultsDB {
                 $query->addQueryParam($fed['tsg_deputy'][0][0], 's');
                 $query->addQueryParam($fed['tsg_deputy'][0][1], 's');
                 $query->addQueryParam($fed['tsg_deputy'][0][2], 's');
+
                 $this->dbManager->executeStatement(false, $query);
 
                 continue;
             }
 
+            // For all federations found.
             while ($row = $result->fetch_assoc()) {
                 $query = new QueryBuilder();
                 $query->setSql("UPDATE Federations SET updated = 1 WHERE registrationAuthority = ?");
@@ -224,30 +227,67 @@ class StoreResultsDB {
         $this->dbManager->executeStatement(false, $query);
     }
 
-    function getEntityPreviousStatus($idp) {
+    function getEntityPreviousStatus($idp, $fedsDisabledList) {
         $query = new QueryBuilder();
         $query->setSql('SELECT * FROM EntityDescriptors WHERE entityID = ? ORDER BY lastCheck');
-        $query->addQueryParam($idp['entityID']);
+        $query->addQueryParam($idp['entityID'], 's');
         $result = $this->dbManager->executeStatement(true, $query);
+        $previousStatus = NULL;
+        $ignoreEntity = false;
 
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-                $previousStatus = $row['currentResult'];
-                $ignoreEntity = $row['ignoreEntity'];
+
+               if (!(in_array($row['registrationAuthority'], $fedsDisabledList)) && $row['ignoreReason'] == 'Federation excluded from check'){
+                  $query = new QueryBuilder();
+                  $query->setSql("UPDATE EntityDescriptors SET ignoreEntity = 0, ignoreReason = NULL WHERE entityID = ?");
+                  $query->addQueryParam($row['entityID'], 's');
+                  $this->dbManager->executeStatement(false, $query);
+
+                  $previousStatus = NULL;
+                  $ignoreEntity = false;
+               }
+               else if (in_array($row['registrationAuthority'], $fedsDisabledList) && $row['ignoreReason'] != 'Federation excluded from check'){
+                  $query = new QueryBuilder();
+                  $query->setSql("UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check' WHERE entityID = ?");
+                  $query->addQueryParam($row['entityID'], 's');
+                  $this->dbManager->executeStatement(false, $query);
+
+                  $previousStatus = NULL;
+                  $ignoreEntity = true;
+               }
+               else {
+                  $previousStatus = $row['currentResult'];
+                  $ignoreEntity = $row['ignoreEntity'];
+               }
             }
             return array($ignoreEntity, $previousStatus);
+
         } else {
             $query = new QueryBuilder();
-            $query->setSql("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation) VALUES (?, ?, ?, ?, ?, ?)");
+            $query->setSql("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation, ignoreEntity, ignoreReason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $query->addQueryParam($idp['entityID'], 's');
             $query->addQueryParam($idp['registrationAuthority'], 's');
             $query->addQueryParam($idp['displayName'], 's');
             $query->addQueryParam($idp['technicalContacts'], 's');
             $query->addQueryParam($idp['supportContacts'], 's');
             $query->addQueryParam($idp['SingleSignOnService'], 's');
+            if (in_array($idp['registrationAuthority'], $fedsDisabledList)){
+                  $query->addQueryParam('1', 's');
+                  $query->addQueryParam('Federation excluded from check', 's');
+                  $previousStatus = NULL;
+                  $ignoreEntity = 1;
+            }
+            else{
+                  $query->addQueryParam('0', 's');
+                  $query->addQueryParam(NULL, 's');
+                  $previousStatus = NULL;
+                  $ignoreEntity = 0;
+            }
+               
             $result = $this->dbManager->executeStatement(false, $query);
 
-            return array(false, NULL);
-        }
+            return array($ignoreEntity, $previousStatus);
+         }
     }
 }

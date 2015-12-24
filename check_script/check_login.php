@@ -24,8 +24,7 @@ require_once 'IdPChecks.php';
 $idPChecks = new IdPChecks();
 $getDataFromJson = new GetDataFromJson();
 
-$json_edugain_idps = $getDataFromJson->obtainIdPList();
-$idpList = $getDataFromJson->extractIdPfromJSON($json_edugain_idps);
+$idpList = $getDataFromJson->obtainIdPList();
 if (!$idpList) {
     throw new Exception("Error loading eduGAIN JSON IdPs.");
 }
