@@ -137,7 +137,6 @@ class StoreResultsDB {
                 }
 
                 if (in_array("tsg_delegate", $fed)) {
-
                    if ($fed['tsg_delegate'][0][0] !== $row['sgDelegateName']) {
                        $query = new QueryBuilder();
                        $query->setSql("UPDATE Federations SET sgDelegateName = ? WHERE registrationAuthority = ?");
@@ -237,8 +236,7 @@ class StoreResultsDB {
 
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
-
-               if (!(in_array($row['registrationAuthority'], $fedsDisabledList)) && $row['ignoreReason'] == 'Federation excluded from check'){
+               if (!(in_array($row['registrationAuthority'], $fedsDisabledList)) && $row['ignoreReason'] == 'Federation excluded from check') {
                   $query = new QueryBuilder();
                   $query->setSql("UPDATE EntityDescriptors SET ignoreEntity = 0, ignoreReason = NULL WHERE entityID = ?");
                   $query->addQueryParam($row['entityID'], 's');
@@ -247,7 +245,7 @@ class StoreResultsDB {
                   $previousStatus = NULL;
                   $ignoreEntity = false;
                }
-               else if (in_array($row['registrationAuthority'], $fedsDisabledList) && $row['ignoreReason'] != 'Federation excluded from check'){
+               else if (in_array($row['registrationAuthority'], $fedsDisabledList) && $row['ignoreReason'] != 'Federation excluded from check') {
                   $query = new QueryBuilder();
                   $query->setSql("UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check' WHERE entityID = ?");
                   $query->addQueryParam($row['entityID'], 's');
@@ -262,7 +260,6 @@ class StoreResultsDB {
                }
             }
             return array($ignoreEntity, $previousStatus);
-
         } else {
             $query = new QueryBuilder();
             $query->setSql("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation, ignoreEntity, ignoreReason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -272,17 +269,17 @@ class StoreResultsDB {
             $query->addQueryParam($idp['technicalContacts'], 's');
             $query->addQueryParam($idp['supportContacts'], 's');
             $query->addQueryParam($idp['SingleSignOnService'], 's');
-            if (in_array($idp['registrationAuthority'], $fedsDisabledList)){
+            if (in_array($idp['registrationAuthority'], $fedsDisabledList)) {
                   $query->addQueryParam('1', 's');
                   $query->addQueryParam('Federation excluded from check', 's');
                   $previousStatus = NULL;
-                  $ignoreEntity = 1;
+                  $ignoreEntity = true;
             }
-            else{
+            else {
                   $query->addQueryParam('0', 's');
                   $query->addQueryParam(NULL, 's');
                   $previousStatus = NULL;
-                  $ignoreEntity = 0;
+                  $ignoreEntity = false;
             }
                
             $result = $this->dbManager->executeStatement(false, $query);
