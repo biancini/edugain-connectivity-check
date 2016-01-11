@@ -32,7 +32,7 @@ if (!$idpList) {
 foreach ($idpList as $curIdP) {
     if ($curIdP['entityID'] == $argv[1]) {
         print "Executing check for " . $curIdP['entityID'] . "\n";
-        $idPChecks->executeIdPchecks($curIdP, array(), 1);
+        $idPChecks->executeIdPchecks($curIdP, array(), false);
     }
 }
 
