@@ -101,7 +101,7 @@ class IdpChecks {
         return true;
     }
 
-    function executeIdPchecks($idp, $fedsDisabledList) {
+    function executeIdPchecks($idp, $fedsDisabledList, $insertFlag = 0) {
         list($ignoreEntity, $previousStatus) = $this->storeResultsDb->getEntityPreviousStatus($idp, $fedsDisabledList);
 
         if ($ignoreEntity) {
@@ -118,8 +118,9 @@ class IdpChecks {
             $result = $this->checkIdp($idp['entityID'], $idp['SingleSignOnService'], $this->spEntityIDs[$i], $this->spACSurls[$i]);
             $status = array_key_exists('status', $result) ? $result['status'] : -1;
             $reason = $result['message'] ? $result['message'] : '0 - UNKNOWN-Error';
-
-            $this->storeResultsDb->insertCheck($idp['entityID'], $this->spEntityIDs[$i], $idp['SingleSignOnService'], $this->spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory);
+            if ($insertFlag = 0){
+               $this->storeResultsDb->insertCheck($idp['entityID'], $this->spEntityIDs[$i], $idp['SingleSignOnService'], $this->spACSurls[$i], $result['html'], $result['http_code'], $reason, $lastCheckHistory);
+            }
         }
 
         $this->storeResultsDb->updateEntityLastCheckStatus($reason, $previousStatus, $idp['entityID']);
