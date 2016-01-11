@@ -1,4 +1,4 @@
-# ECCS
+# ECCS ![Build Status](https://travis-ci.org/biancini/edugain-connectivity-check.svg?branch=master) ![Codacy Badge](https://api.codacy.com/project/badge/grade/cd49b92435fc4793941ab4517fba4144)
 eduGAIN Connectivity Check Service
 
 # Requirements
