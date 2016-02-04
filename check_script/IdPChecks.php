@@ -17,6 +17,8 @@
 
 require_once 'StoreResultsDB.php';
 require_once 'GetDataFromJson.php';
+require __DIR__ . '/../vendor/autoload.php';
+
     
 class IdpChecks {
     protected $storeResultsDb;
@@ -130,18 +132,38 @@ class IdpChecks {
         } else {
             print "The IdP ".$idp['entityID']." did NOT consume metadata correctly.\n\n";
             print "Reason: " . $reason . "\n";
+            print "URL: ".$result['samlRequestUrl']."\n";
             if ($reason == '3 - CURL-Error') print "URL: ".$result['samlRequestUrl']."\n";
             print "Messages: " . $result['error'] . "\n\n";
         }
     }
 
     private function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spACSurl) {
+        $phantomjs = new HybridLogic\PhantomJS\Runner;
+        $script = dirname(__FILE__) . '/phjs-eccs.js'; // Full path to the script to execute
+
         date_default_timezone_set('UTC');
         $date = date('Y-m-d\TH:i:s\Z');
         $id = md5($date.rand(1, 1000000));
         $samlRequest = $this->getDataFromJson->generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
         $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
         list($curlError, $info, $html) = $this->getUrlWithCurl($url);
+
+        $patternUsername = '/<input[\s]+[^>]*((type=\s*[\'"](text|email)[\'"]|user)|(name=\s*[\'"](name)[\'"]))[^>]*>/im';
+        $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"]|password)[^>]*>/im';
+
+        $patternNoEdugainMetadata = "/Unable.to.locate(\sissuer.in|).metadata(\sfor|)|no.metadata.found|profile.is.not.configured.for.relying.party|Cannot.locate.entity|fail.to.load.unknown.provider|does.not.recognise.the.service|unable.to.load.provider|Nous.n'avons.pas.pu.(charg|charger).le.fournisseur.de service|Metadata.not.found|application.you.have.accessed.is.not.registered.for.use.with.this.service/i";
+
+        if (($this->isHTMLwithoutUserPassword($patternUsername, $patternPassword, $html)) && !preg_match($patternNoEdugainMetadata, $html) && $info['http_code'] != 401 && $curlError == false) {
+           $samlRequest = $this->getDataFromJson->generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
+           $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
+
+           $result = $phantomjs->execute($script,$url);
+           list($statusCode,$html) = split ("\|", $result, 2); 
+           
+           if ($statusCode) $info['http_code'] = $statusCode;
+        }       
+
         $error = '';
         $status = 0;
         $message = '1 - OK';
@@ -160,12 +182,7 @@ class IdpChecks {
             }
             $error = "Status code: ".$info['http_code'];
         } else {
-            $patternUsername = '/<input[\s]+[^>]*((type=\s*[\'"](text|email)[\'"]|user)|(name=\s*[\'"](name)[\'"]))[^>]*>/im';
-            $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"]|password)[^>]*>/im';
-            $patternNoEdugainMetadata = "/Unable.to.locate(\sissuer.in|).metadata(\sfor|)|no.metadata.found|profile.is.not.configured.for.relying.party|Cannot.locate.entity|fail.to.load.unknown.provider|does.not.recognise.the.service|unable.to.load.provider|Nous.n'avons.pas.pu.(charg|charger).le.fournisseur.de service|Metadata.not.found|application.you.have.accessed.is.not.registered.for.use.with.this.service/i";
-
-            if (!preg_match($patternUsername, $html) || !preg_match($patternPassword, $html)) {
-
+            if ($this->isHTMLwithoutUserPassword($patternUsername, $patternPassword, $html)) {
                 if (preg_match($patternNoEdugainMetadata, $html)){
                   $status = 2;
                   $message = '2 - No-eduGAIN-Metadata';
@@ -184,6 +201,7 @@ class IdpChecks {
                 }
             }
         }
+
         return array(
             'status' => $status,
             'message' => $message,
@@ -192,6 +210,25 @@ class IdpChecks {
             'html' => ($html) ? $html : "",
             'samlRequestUrl' => $url,
         );
+    }
+
+    private function isHTMLwithoutUserPassword($patternUsername, $patternPassword, $html){
+        if (!preg_match($patternUsername, $html) || !preg_match($patternPassword, $html)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private function getUrlWithPhantomJS($url){
+       $phantomjs = new HybridLogic\PhantomJS\Runner;
+       $script = dirname(__FILE__) . '/../eccs.js'; // Full path to the script to execute
+
+       $html = $phantomjs->execute($script, $url);
+   
+       return $html;
+
     }
 
     private function getUrlWithCurl($url) {
@@ -221,8 +258,8 @@ class IdpChecks {
                     CURLOPT_SSL_VERIFYHOST => false,
                     CURLOPT_COOKIEJAR => "/dev/null",
                     CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_TIMEOUT => 120,
-                    CURLOPT_CONNECTTIMEOUT => 120,
+                    CURLOPT_TIMEOUT => 60,
+                    CURLOPT_CONNECTTIMEOUT => 60,
                     CURLOPT_SSLVERSION => $vers,
                     CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
                 ));

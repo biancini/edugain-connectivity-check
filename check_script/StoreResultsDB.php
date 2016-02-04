@@ -128,10 +128,10 @@ class StoreResultsDB {
                     $this->dbManager->executeStatement(false, $query);
                 }
                           
-                if ($fed['contact_email'] !== $row['emailAddress']) {
+                if ($fed['email'] !== $row['emailAddress']) {
                     $query = new QueryBuilder();
                     $query->setSql("UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?");
-                    $query->addQueryParam($fed['contact_email'], 's');
+                    $query->addQueryParam($fed['email'], 's');
                     $query->addQueryParam($fed['reg_auth'], 's');
                     $this->dbManager->executeStatement(false, $query);
                 }
