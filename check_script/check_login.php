@@ -28,7 +28,6 @@ $idpList = $getDataFromJson->obtainIdPList();
 if (!$idpList) {
     throw new Exception("Error loading eduGAIN JSON IdPs.");
 }
-
 foreach ($idpList as $curIdP) {
     if ($curIdP['entityID'] == $argv[1]) {
         print "Executing check for " . $curIdP['entityID'] . "\n";

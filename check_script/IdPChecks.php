@@ -105,7 +105,6 @@ class IdpChecks {
 
     function executeIdPchecks($idp, $fedsDisabledList, $insertCheckIntoDB = true) {
         list($ignoreEntity, $previousStatus) = $this->storeResultsDb->getEntityPreviousStatus($idp, $fedsDisabledList);
-
         if ($ignoreEntity) {
             // update EntityDescriptors
             $this->storeResultsDb->updateDisabledEntities($idp['entityID']);
@@ -147,14 +146,16 @@ class IdpChecks {
         $id = md5($date.rand(1, 1000000));
         $samlRequest = $this->getDataFromJson->generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
         $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
+
         list($curlError, $info, $html) = $this->getUrlWithCurl($url);
 
         $patternUsername = '/<input[\s]+[^>]*((type=\s*[\'"](text|email)[\'"]|user)|(name=\s*[\'"](name)[\'"]))[^>]*>/im';
         $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"]|password)[^>]*>/im';
 
         $patternNoEdugainMetadata = "/Unable.to.locate(\sissuer.in|).metadata(\sfor|)|no.metadata.found|profile.is.not.configured.for.relying.party|Cannot.locate.entity|fail.to.load.unknown.provider|does.not.recognise.the.service|unable.to.load.provider|Nous.n'avons.pas.pu.(charg|charger).le.fournisseur.de service|Metadata.not.found|application.you.have.accessed.is.not.registered.for.use.with.this.service/i";
-
+  
         if (($this->isHTMLwithoutUserPassword($patternUsername, $patternPassword, $html)) && !preg_match($patternNoEdugainMetadata, $html) && $info['http_code'] != 401 && $curlError == false) {
+           $isPHJS = TRUE;
            $samlRequest = $this->getDataFromJson->generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
            $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
 

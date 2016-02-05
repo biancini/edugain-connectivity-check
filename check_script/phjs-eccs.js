@@ -5,6 +5,8 @@ var page = require('webpage').create();
 
 var url = args[1];
 
+var httpCode = 0;
+
 page.settings.javascriptEnabled = true;
 page.settings.webSecurityEnabled = false;
 page.settings.loadImages = false;
@@ -16,34 +18,46 @@ page.settings.loadImages = false;
 //};
 
 page.onResourceReceived = function (response) {
-   if (response.status == 401) {
-      console.log (response.status+'|');
-      phantom.exit(0);
-   }
+//   console.log("RESOURCE RECEIVED");
+   httpCode = response.status;
 };
 
 page.onLoadFinished = function(status) {
-
+//   console.log ("LOAD FINISHED\n");
   // Set timeout to give phantom some time to 
   // do the javascript redirect etc
 
   setTimeout(function() {
+      
       if (page.framesCount){
          var framescount = page.framesCount+1;
 
          for (var i = 0; i < framescount; i++){
             page.switchToFrame(i);
 
-            if (page.frameContent.indexOf("type=\"text\"") > -1 && page.frameContent.indexOf("type=\"password\"") > -1) {
+            if (page.frameContent.indexOf("type=\"text\"") > -1 && page.frameContent.indexOf("type=\"password\"") > -1){
 
-               console.log(page.frameContent);
-               phantom.exit(0);
+               if (httpCode == 401 && page.frameContent == null){
+                  console.log(httpCode+"|");
+                  phantom.exit(0);
+               }
+               else{
+                  console.log(httpCode+"|"+page.frameContent);
+                  phantom.exit(0);
+               }
             }
+
          }
       }
       else {
-               console.log(page.content);
+            if (httpCode == 401 && page.content == null){
+               console.log(httpCode+"|");
                phantom.exit(0);
+            }
+            else{
+               console.log(httpCode+"|"+page.content);
+               phantom.exit(0);
+            }
         }
       }, 5000);
 };
