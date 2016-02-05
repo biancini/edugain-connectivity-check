@@ -4,3 +4,6 @@
 [submodule "Twig"]
 	path = Twig
 	url = https://github.com/twigphp/Twig.git
+[submodule "PHP-PhantomJS"]
+	path = PHP-PhantomJS
+	url = https://github.com/Dachande663/PHP-PhantomJS
