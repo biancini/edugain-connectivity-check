@@ -99,7 +99,7 @@ class StoreResultsDB {
                 $query = new QueryBuilder();
                 $query->setSql("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, sgDelegateName, sgDelegateSurname, sgDelegateEmail, sgDeputyName, sgDeputySurname, sgDeputyEmail, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
                 $query->addQueryParam($fed['name'], 's');
-                $query->addQueryParam($fed['contact_email'], 's');
+                $query->addQueryParam($fed['email'], 's');
                 $query->addQueryParam($fed['reg_auth'], 's');
                 $query->addQueryParam($fed['tsg_delegate'][0][0], 's');
                 $query->addQueryParam($fed['tsg_delegate'][0][1], 's');
