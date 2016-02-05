@@ -1,5 +1,5 @@
 # ECCS ![Build Status](https://travis-ci.org/biancini/edugain-connectivity-check.svg?branch=master) ![Codacy Badge](https://api.codacy.com/project/badge/grade/cd49b92435fc4793941ab4517fba4144)
-eduGAIN Connectivity Check Service
+*eduGAIN Connectivity Check Service*
 
 # Requirements
 
@@ -10,6 +10,7 @@ eduGAIN Connectivity Check Service
 - **php5-curl** package any version (tested with 5.5.22)
 - **php5-json** package any version (tested with 1.3.6-1)
 - **Apache2** (with mod-php5)
+- **PhantomsJS** (tested wih v2.0.0)
 
 # HOWTO Install the Service (on Ubuntu architecture)
 
@@ -21,15 +22,60 @@ eduGAIN Connectivity Check Service
 
         # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
-2. Be sure to have enabled mod_alias apache module:
+2. Install PhantomJS as a linux service:
+
+ 1. Update your packages repository:
+
+            # sudo apt-get update
+
+ 2. Install the required packages:
+
+            # sudo apt-get install build-essential g++ flex bison gperf ruby perl libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev python libx11-dev libxext-dev
+
+     Only for Ubuntu 14.04:
+
+            # vim /etc/apt/sources.list.d/multiverse.list
+
+     add these lines:
+
+            deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty multiverse 
+            deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-updates multiverse
+            deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-backports main restricted universe multiverse
+
+ 3. [OPTIONAL] Install the Microsoft TrueType core fonts for completeness:
+
+            # sudo apt-get install ttf-mscorefonts-installer
+
+ 4. Create a SWAP area, almost large 1GB, to permit the building of phantomjs code (here is used an auxiliary swapfile):
+
+            # sudo fallocate -l 1G /swapfile
+            # sudo chmod 600 /swapfile
+            # sudo mkswap /swapfile
+            # sudo swapon /swapfile
+
+ 5. Retrieve the PhantomJS code needed:
+
+            # cd /usr/local/src ; git clone --recurse-submodules https://github.com/ariya/phantomjs.git
+
+ 6. Create your phantomjs executable (this process may take 30 minute or more):
+
+            # cd phantomjs ; ./build.py
+
+ 7. Put the phantoms executable placed inside '**phantomjs/bin**' directory into '**/usr/local/bin**' directory:
+
+            # cp /usr/local/src/phantomjs/bin/phantomjs /usr/local/bin
+
+      (Now you can run "**phantomjs**" from the command line)
+
+3. Be sure to have enabled mod_alias apache module:
 
         # sudo a2enmod alias
 
-3. Retrieve the service code and put it into the `/opt` directory
+4. Retrieve the service code and put it into the `/opt` directory
 
         # git clone --recursive https://code.geant.net/stash/scm/~switch.haemmerle/edugain-connectivity-check.git /opt/edugain-connectivity-check
 
-4. Create a new site for ECCS on the Apache instance:
+5. Create a new site for ECCS on the Apache instance:
 
         # vim /etc/apache2/sites-available/eccs.conf
 
@@ -57,25 +103,25 @@ eduGAIN Connectivity Check Service
            </Directory>
         </IfModule>
 
-5. Enable the new apache site:
+6. Enable the new apache site:
 
         # sudo a2ensite eccs.conf ; service apache2 reload
 
-6. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
+8. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
 
         # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
 
-7. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
+8. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
 
-8. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **web/services** and change it with your DB parameters (in this case the user created should only have SELECT grant on the tables of the database).
+9. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **web/services** and change it with your DB parameters (in this case the user created should only have SELECT grant on the tables of the database).
 
-9. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
+10. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
 
         00 8 * * * cd /opt/edugain-connectivity-check/check_script ; /usr/bin/php mccs.php > /var/log/eccs.log
 
-10. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
+11. Open a web browser and go to the ECCS Page: https://**FULL.QUALIFIED.DOMAIN.NAME**/eccs
 
-11. Enjoy yourself
+12. Enjoy yourself
 
 # Useful notes
 1. **HOWTO Disable an entity on the service's database:**
@@ -91,12 +137,12 @@ eduGAIN Connectivity Check Service
       Configure the [disabled_federation] settings inside the **properties.ini.php** file of the **check_script** folder by listing the federations that you want disable by separating them with a comma.
 
       For Example:
-      
+
         [disabled_federation]
         reg_auth = "http://www.federation1.nl/,https://www.federation2.dk,http://federation3.no/"
-       
+
       To **enable again** the federation, remove it from the comma-separated list.
-        
+
 
 # How to send emails to eduGAIN Steering Group members
 1. Configure the [email] settings inside the **properties.ini.php** file of the **check_script** folder:
@@ -157,4 +203,3 @@ The output for the command should show all tests passed with success:
 32 examples (32 passed)
 96ms
 ```
-
