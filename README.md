@@ -23,11 +23,12 @@
         # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
 2. Install PhantomJS as a linux service:
-   1. Update your packages repository:
+
+    1. Update your packages repository:
 
             # sudo apt-get update
 
-   2. Install the required packages:
+    2. Install the required packages:
 
             # sudo apt-get install build-essential g++ flex bison gperf ruby perl libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev python libx11-dev libxext-dev
 
@@ -41,26 +42,26 @@
             deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-updates multiverse
             deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-backports main restricted universe multiverse
 
-   3. [OPTIONAL] Install the Microsoft TrueType core fonts for completeness:
+    3. [OPTIONAL] Install the Microsoft TrueType core fonts for completeness:
 
             # sudo apt-get install ttf-mscorefonts-installer
 
-   4. Create a SWAP area, almost large 1GB, to permit the building of phantomjs code (here is used an auxiliary swapfile):
+    4. Create a SWAP area, almost large 1GB, to permit the building of phantomjs code (here is used an auxiliary swapfile):
 
             # sudo fallocate -l 1G /swapfile
             # sudo chmod 600 /swapfile
             # sudo mkswap /swapfile
             # sudo swapon /swapfile
 
-   5. Retrieve the PhantomJS code needed:
+    5. Retrieve the PhantomJS code needed:
 
             # cd /usr/local/src ; git clone -b 2.0 https://github.com/ariya/phantomjs.git
 
-   6. Create your phantomjs executable (this process may take 30 minute or more):
+    6. Create your phantomjs executable (this process may take 30 minute or more):
 
             # cd phantomjs ; ./build.py
 
-   7. Put the phantoms executable placed inside '**phantomjs/bin**' directory into '**/usr/local/bin**' directory:
+    7. Put the phantoms executable placed inside '**phantomjs/bin**' directory into '**/usr/local/bin**' directory:
 
             # cp /usr/local/src/phantomjs/bin/phantomjs /usr/local/bin
 
@@ -123,6 +124,7 @@
 12. Enjoy yourself
 
 # Useful notes
+
 1. **HOWTO Disable an entity on the service's database:**
 
         UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Uses Javascript to redirect', currentResult = NULL, previousResult = NULL WHERE entityID = 'https://idp-test-1.example.org/SSO/saml2/idp';
@@ -144,6 +146,7 @@
 
 
 # How to send emails to eduGAIN Steering Group members
+
 1. Configure the [email] settings inside the **properties.ini.php** file of the **check_script** folder:
 
         [email]
@@ -163,10 +166,12 @@
 
 
 # How to test the code
+
 The code developed can be easily tested with automated testing tools like PHPspec or AngularJS testing.
 To test the various components do as explained in the following:
 
 ## View
+
 For the AngularJS web interface, you can use karma:
 
 ```sh
@@ -186,6 +191,7 @@ Chrome 44.0.2403 (Windows 10 0.0.0): Executed 18 of 18 SUCCESS (0.155 secs / 0.0
 ```
 
 ## Json
+
 For the Json API used by the webpage, you can use PHPSpec:
 
 ```sh
