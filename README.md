@@ -23,6 +23,7 @@
         # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
 2. Install PhantomJS as a linux service:
+
     1. Update your packages repository:
 
             # sudo apt-get update
@@ -31,11 +32,11 @@
 
             # sudo apt-get install build-essential g++ flex bison gperf ruby perl libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev python libx11-dev libxext-dev
 
-        Only for Ubuntu 14.04:
+            Only for Ubuntu 14.04:
 
             # vim /etc/apt/sources.list.d/multiverse.list
 
-        add these lines:
+            add these lines:
 
             deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty multiverse
             deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-updates multiverse
@@ -52,7 +53,7 @@
             # sudo mkswap /swapfile
             # sudo swapon /swapfile
 
-    5. Retrieve the PhantomJS code needed:
+    5. Retrieve the PhantomJS code:
 
             # cd /usr/local/src ; git clone -b 2.0 https://github.com/ariya/phantomjs.git
 
@@ -60,13 +61,13 @@
 
             # cd phantomjs ; ./build.py
 
-    7. Put the phantoms executable placed inside '**phantomjs/bin**' directory into '**/usr/local/bin**' directory:
+    7. Put the phantoms executable placed inside **phantomjs/bin** directory into **/usr/local/bin** directory:
 
             # cp /usr/local/src/phantomjs/bin/phantomjs /usr/local/bin
 
-        (Now you can run "**phantomjs**" from the command line)
+        (Now you can run **phantomjs** from the command line)
 
-3. Be sure to have enabled mod_alias apache module:
+3. Be sure to have enabled *mod_alias* apache module:
 
         # sudo a2enmod alias
 
