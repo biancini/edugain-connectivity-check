@@ -24,11 +24,11 @@
 
 2. Install PhantomJS as a linux service:
 
-    1. Update your packages repository:
+    * Update your packages repository:
 
             # sudo apt-get update
 
-    2. Install the required packages:
+    * Install the required packages:
 
             # sudo apt-get install build-essential g++ flex bison gperf ruby perl libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev python libx11-dev libxext-dev
 
@@ -42,30 +42,30 @@
             deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-updates multiverse
             deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-backports main restricted universe multiverse
 
-    3. [OPTIONAL] Install the Microsoft TrueType core fonts for completeness:
+    * [OPTIONAL] Install the Microsoft TrueType core fonts for completeness:
 
             # sudo apt-get install ttf-mscorefonts-installer
 
-    4. Create a SWAP area, almost large 1GB, to permit the building of phantomjs code (here is used an auxiliary swapfile):
+    * Create a SWAP area, almost large 1GB, to permit the building of phantomjs code (here is used an auxiliary swapfile):
 
             # sudo fallocate -l 1G /swapfile
             # sudo chmod 600 /swapfile
             # sudo mkswap /swapfile
             # sudo swapon /swapfile
 
-    5. Retrieve the PhantomJS code:
+    * Retrieve the PhantomJS code:
 
             # cd /usr/local/src ; git clone -b 2.0 https://github.com/ariya/phantomjs.git
 
-    6. Create your phantomjs executable (this process may take 30 minute or more):
+    * Create your phantomjs executable (this process may take 30 minute or more):
 
             # cd phantomjs ; ./build.py
 
-    7. Put the phantoms executable placed inside **phantomjs/bin** directory into **/usr/local/bin** directory:
+    * Put the phantoms executable placed inside **phantomjs/bin** directory into **/usr/local/bin** directory:
 
             # cp /usr/local/src/phantomjs/bin/phantomjs /usr/local/bin
 
-        (Now you can run **phantomjs** from the command line)
+    (Now you can run **phantomjs** from the command line)
 
 3. Be sure to have enabled *mod_alias* apache module:
 
