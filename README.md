@@ -23,7 +23,6 @@
         # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
 2. Install PhantomJS as a linux service:
-
    1. Update your packages repository:
 
             # sudo apt-get update
