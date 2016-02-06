@@ -14,7 +14,7 @@
 
 # HOWTO Install the Service (on Ubuntu architecture)
 
-0. Install the requiremets packages:
+0. Install the requirements packages:
 
         # sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
 
