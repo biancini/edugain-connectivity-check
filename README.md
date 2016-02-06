@@ -65,9 +65,6 @@
 
             # cp /usr/local/src/phantomjs/bin/phantomjs /usr/local/bin
 
-    (Now you can run **phantomjs** from the command line)
-
-
 3. Be sure to have enabled *mod_alias* apache module:
 
         # sudo a2enmod alias
