@@ -67,6 +67,7 @@
 
     (Now you can run **phantomjs** from the command line)
 
+
 3. Be sure to have enabled *mod_alias* apache module:
 
         # sudo a2enmod alias
@@ -107,7 +108,7 @@
 
         # sudo a2ensite eccs.conf ; service apache2 reload
 
-7. Modify the "**password_db_mccs**" value inside the **database/mccs_db.sql** file and import it into your mysql server:
+7. Modify the **password_db_mccs** value inside the **database/mccs_db.sql** file and import it into your mysql server:
 
         # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
 
