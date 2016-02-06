@@ -139,7 +139,7 @@ class IdpChecks {
 
     private function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spACSurl) {
         $phantomjs = new HybridLogic\PhantomJS\Runner;
-        $script = dirname(__FILE__) . '/phjs-eccs.js'; // Full path to the script to execute
+        $script = "--ignore-ssl-errors=true --web-security=false ".dirname(__FILE__) . '/phjs-eccs.js'; // Full path to the script to execute
 
         date_default_timezone_set('UTC');
         $date = date('Y-m-d\TH:i:s\Z');
@@ -168,6 +168,7 @@ class IdpChecks {
         $error = '';
         $status = 0;
         $message = '1 - OK';
+
         if ($curlError !== false) {
             $status = 3;
             $message = '3 - CURL-Error';
