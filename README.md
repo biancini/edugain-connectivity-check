@@ -55,11 +55,15 @@
 
     * Retrieve the PhantomJS code:
 
-            # cd /usr/local/src ; git clone -b 2.0 https://github.com/ariya/phantomjs.git
+            # cd /usr/local/src ; git clone https://github.com/ariya/phantomjs.git
+
+    * Move to the 2.0.0 tag:
+
+            # cd /usr/local/src/phantomjs ; git checkout tags/2.0.0 -b 2.0.0
 
     * Create your phantomjs executable (this process may take 30 minute or more):
 
-            # cd phantomjs ; ./build.py
+            # cd /usr/local/src/phantomjs ; ./build.py
 
     * Put the phantoms executable placed inside **phantomjs/bin** directory into **/usr/local/bin** directory:
 
