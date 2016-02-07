@@ -6,24 +6,31 @@ var page = require('webpage').create();
 var url = args[1];
 
 var httpCode = 0;
+var statusText = '';
 
 page.settings.javascriptEnabled = true;
 page.settings.webSecurityEnabled = false;
 page.settings.loadImages = false;
-//page.settings.resourceTimeout = 120000;
+page.settings.resourceTimeout = 120000;
 
-//page.onResourceTimeout = function(request) {
-//   console.log(request.errorCode + ' ' + request.errorString);
-//   phantom.exit(0);
-//};
+page.onResourceTimeout = function(request) {
+   console.log(request.errorCode + '|');
+   phantom.exit(0);
+};
 
 page.onResourceReceived = function (response) {
-//   console.log("RESOURCE RECEIVED");
-   httpCode = response.status;
+
+   if (response.status == 401 && response.contentType == null){
+        console.log(response.status+'|');
+        phantom.exit(0);
+   }
+   else{
+        httpCode = response.status;
+        statusText = response.statusText;
+   }
 };
 
 page.onLoadFinished = function(status) {
-//   console.log ("LOAD FINISHED\n");
   // Set timeout to give phantom some time to 
   // do the javascript redirect etc
 
@@ -46,7 +53,6 @@ page.onLoadFinished = function(status) {
                   phantom.exit(0);
                }
             }
-
          }
       }
       else {
