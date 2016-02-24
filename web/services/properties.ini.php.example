@@ -12,7 +12,7 @@
 [sp_1]
 name = SWITCH
 entityID = https://attribute-viewer.aai.switch.ch/interfederation-test/shibboleth
-acs_url = https://attribute-viewer.aai.switch.ch/Shibboleth.sso/SAML2/POST
+acs_url = https://attribute-viewer.aai.switch.ch/interfederation-test/Shibboleth.sso/SAML2/POST
 
 [sp_2]
 name = GARR

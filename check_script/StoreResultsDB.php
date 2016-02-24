@@ -99,7 +99,7 @@ class StoreResultsDB {
                 $query = new QueryBuilder();
                 $query->setSql("INSERT INTO Federations (federationName, emailAddress, registrationAuthority, sgDelegateName, sgDelegateSurname, sgDelegateEmail, sgDeputyName, sgDeputySurname, sgDeputyEmail, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
                 $query->addQueryParam($fed['name'], 's');
-                $query->addQueryParam($fed['email'], 's');
+                $query->addQueryParam($fed['contact_email'], 's');
                 $query->addQueryParam($fed['reg_auth'], 's');
                 $query->addQueryParam($fed['tsg_delegate'][0][0], 's');
                 $query->addQueryParam($fed['tsg_delegate'][0][1], 's');
@@ -128,10 +128,10 @@ class StoreResultsDB {
                     $this->dbManager->executeStatement(false, $query);
                 }
                           
-                if ($fed['email'] !== $row['emailAddress']) {
+                if ($fed['contact_email'] !== $row['emailAddress']) {
                     $query = new QueryBuilder();
                     $query->setSql("UPDATE Federations SET emailAddress = ? WHERE registrationAuthority = ?");
-                    $query->addQueryParam($fed['email'], 's');
+                    $query->addQueryParam($fed['contact_email'], 's');
                     $query->addQueryParam($fed['reg_auth'], 's');
                     $this->dbManager->executeStatement(false, $query);
                 }

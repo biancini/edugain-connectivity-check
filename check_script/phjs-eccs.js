@@ -1,85 +1,67 @@
 var system = require('system');
 var args = system.args;
 
-var page = require('webpage').create();
-
 var url = args[1];
 
 var httpCode = 0;
 var statusText = '';
 
+var page = require('webpage').create();
+page.code = null;
 page.settings.javascriptEnabled = true;
 page.settings.webSecurityEnabled = false;
 page.settings.loadImages = false;
-page.settings.resourceTimeout = 120000;
+page.settings.resourceTimeout = 20000; // 20 seconds
+page.settings.userAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36';
 
-page.onResourceTimeout = function(request) {
-   console.log(request.errorCode + '|');
-   phantom.exit(0);
+
+page.onError = function (msg, trace) {
+  // Do nothing, ignore javascript errors
 };
 
 page.onResourceReceived = function (response) {
-
-   if (response.status == 401 && response.contentType == null){
-        console.log(response.status+'|');
-        phantom.exit(0);
-   }
-   else{
-        httpCode = response.status;
-        statusText = response.statusText;
-   }
+   page.httpCode = response.status;
 };
 
-page.onLoadFinished = function(status) {
-  // Set timeout to give phantom some time to 
-  // do the javascript redirect etc
+page.onResourceTimeout = function(request) {
+    page.code = request.errorCode;
+    page.reason = request.errorString;
+};
 
+page.onResourceError = function(resourceError) {
+    if(page.content == null || page.content == ''){
+      page.code = resourceError.errorCode;
+      page.reason = resourceError.errorString;
+    }
+};
+
+page.open(url, function (status) {
   setTimeout(function() {
-      
-      if (page.framesCount){
-         var framescount = page.framesCount+1;
+    if (page.code !== null) {
+      console.log(page.code+'|'+page.reason+'|NULL');
+    }
+    else {
+      var html = stampa_pagina(page);
+      console.log('false|'+page.httpCode+'|'+html);
+    }
+    phantom.exit(0);
+  }, 5000);
+});
 
-         for (var i = 0; i < framescount; i++){
-            page.switchToFrame(i);
+function stampa_pagina(page) {
+    var framescount = page.framesCount;
 
-            if (page.frameContent.indexOf("type=\"text\"") > -1 && page.frameContent.indexOf("type=\"password\"") > -1){
-
-               if (httpCode == 401 && page.frameContent == null){
-                  console.log(httpCode+"|");
-                  phantom.exit(0);
-               }
-               else{
-                  console.log(httpCode+"|"+page.frameContent);
-                  phantom.exit(0);
-               }
-            }
-         }
+    if (framescount > 0) {
+      var html = page.frameContent;
+      for (var i = 0; i < framescount; i++) {
+          html += "\n<!--- frame " + i + " --->\n";
+          page.switchToFrame(i);
+          html += stampa_pagina(page);
+          page.switchToParentFrame();
       }
-      else {
-            if (httpCode == 401 && page.content == null){
-               console.log(httpCode+"|");
-               phantom.exit(0);
-            }
-            else{
-               console.log(httpCode+"|"+page.content);
-               phantom.exit(0);
-            }
-        }
-      }, 5000);
-};
-
-page.open(url, function (status)
-{
-
-/*    if (status !== 'success') 
-    {
-        console.log('\nFAIL to load the address');
-        phantom.exit(0);
-    } 
-*/
-
-//    else{
-         //console.log('Success in fetching the page');
-//    }
+      return html;
+    }
+    else {
+      return page.frameContent;
+    }
 }
-);

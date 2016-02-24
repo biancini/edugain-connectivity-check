@@ -28,11 +28,20 @@ $idpList = $getDataFromJson->obtainIdPList();
 if (!$idpList) {
     throw new Exception("Error loading eduGAIN JSON IdPs.");
 }
+
+$found = false;
+
 foreach ($idpList as $curIdP) {
     if ($curIdP['entityID'] == $argv[1]) {
+        $found = true;
         print "Executing check for " . $curIdP['entityID'] . "\n";
         $idPChecks->executeIdPchecks($curIdP, array(), false);
     }
+}
+
+if ($found == false){
+    print "\nThe IdP does not exist into DB\n";
+    exit;
 }
 
 ?>

@@ -10,7 +10,7 @@
 - **php5-curl** package any version (tested with 5.5.22)
 - **php5-json** package any version (tested with 1.3.6-1)
 - **Apache2** (with mod-php5)
-- **PhantomsJS** (tested wih v2.0.0)
+- **PhantomsJS** (tested wih v2.1.1)
 
 # HOWTO Install the Service (on Ubuntu architecture)
 
@@ -22,52 +22,26 @@
 
         # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
-2. Install PhantomJS as a linux service:
+2. Install the pre-compiled version 2.1.1 of PhantomJS to your /usr/local/bin directory:
 
-    * Update your packages repository:
+    * Create a new directory into /usr/local/src:
 
-            # sudo apt-get update
+            # mkdir /usr/local/src/phantomjs ; cd /usr/local/src/phantomjs
 
-    * Install the required packages:
+    * Retrieve the PhantomJS binary and extract it:
 
-            # sudo apt-get install build-essential g++ flex bison gperf ruby perl libsqlite3-dev libfontconfig1-dev libicu-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev python libx11-dev libxext-dev
+            # wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2
 
-            Only for Ubuntu 14.04:
+            # bzip2 -d phantomjs-2.1.1-linux-x86_64.tar.bz2
+            # tar -xf phantomjs-2.1.1-linux-x86_64.tar 
 
-            # vim /etc/apt/sources.list.d/multiverse.list
+    * Put the phantoms executable placed inside **/bin** into **/usr/local/bin** directory:
 
-            add these lines:
+            # cd phantomjs-2.1.1-linux-x86_64/bin ; cp phantomjs /usr/local/bin
 
-            deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty multiverse
-            deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-updates multiverse
-            deb http://us-west-2.ec2.archive.ubuntu.com/ubuntu/ trusty-backports main restricted universe multiverse
+    * Verify the version of the PhantomJS installed (should return "2.1.1"):
 
-    * [OPTIONAL] Install the Microsoft TrueType core fonts for completeness:
-
-            # sudo apt-get install ttf-mscorefonts-installer
-
-    * Create a SWAP area, almost large 1GB, to permit the building of phantomjs code (here is used an auxiliary swapfile):
-
-            # sudo fallocate -l 1G /swapfile
-            # sudo chmod 600 /swapfile
-            # sudo mkswap /swapfile
-            # sudo swapon /swapfile
-
-    * Retrieve the PhantomJS code:
-
-            # cd /usr/local/src ; git clone https://github.com/ariya/phantomjs.git
-
-    * Move to the 2.0.0 tag:
-
-            # cd /usr/local/src/phantomjs ; git checkout tags/2.0.0 -b 2.0.0
-
-    * Create your phantomjs executable (this process may take 30 minute or more):
-
-            # cd /usr/local/src/phantomjs ; ./build.py
-
-    * Put the phantoms executable placed inside **phantomjs/bin** directory into **/usr/local/bin** directory:
-
-            # cp /usr/local/src/phantomjs/bin/phantomjs /usr/local/bin
+            # phantomjs -v
 
 3. Be sure to have enabled *mod_alias* apache module:
 
@@ -109,9 +83,9 @@
 
         # sudo a2ensite eccs.conf ; service apache2 reload
 
-7. Modify the **password_db_mccs** value inside the **database/mccs_db.sql** file and import it into your mysql server:
+7. Modify the **password_db_eccs** value inside the **database/eccs_db.sql** file and import it into your mysql server:
 
-        # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/mccs_db.sql
+        # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/eccs_db.sql
 
 8. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **check_script** and change it with your DB and Mail parameters.
 

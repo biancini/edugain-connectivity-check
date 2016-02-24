@@ -3,7 +3,7 @@
 #
 # Licensed under the GÉANT Standard Open Source (the "License")
 # you may not use this file except in compliance with the License.
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,9 @@
 
 require_once 'StoreResultsDB.php';
 require_once 'GetDataFromJson.php';
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../PHP-PhantomJS/autoload.php';
 
-    
+
 class IdpChecks {
     protected $storeResultsDb;
     protected $getDataFromJson;
@@ -52,7 +52,7 @@ class IdpChecks {
                 $this->spEntityIDs[] = $confArray[$val]['entityID'];
                 $this->spACSurls[] = $confArray[$val]['acs_url'];
             }
-        } 
+        }
 
         if (count($this->spEntityIDs) != count($this->spACSurls)) {
             throw new Exception("Configuration error. Please check properties.ini.");
@@ -69,7 +69,7 @@ class IdpChecks {
         $this->storeResultsDb->updateIgnoredEntities();
 
         $count = 0;
-        
+
         for ($i = 0; $i < $this->parallel; $i++) {
             $pid = pcntl_fork();
             if (!$pid) {
@@ -82,7 +82,7 @@ class IdpChecks {
             $count++;
         }
 
-        while (pcntl_waitpid(0, $status) != -1) { 
+        while (pcntl_waitpid(0, $status) != -1) {
             $status = pcntl_wexitstatus($status);
             if ($count < count($idpList)) {
                 $pid = pcntl_fork();
@@ -94,7 +94,7 @@ class IdpChecks {
                     return false;
                 }
                 $count++;
-            } 
+            }
         }
         // End of all cycles
         $this->storeResultsDb->resetDbConnection();
@@ -138,48 +138,47 @@ class IdpChecks {
     }
 
     private function checkIdp($idpEntityId, $httpRedirectServiceLocation, $spEntityID, $spACSurl) {
-        $phantomjs = new HybridLogic\PhantomJS\Runner;
-        $script = "--ignore-ssl-errors=true --web-security=false ".dirname(__FILE__) . '/phjs-eccs.js'; // Full path to the script to execute
-
         date_default_timezone_set('UTC');
         $date = date('Y-m-d\TH:i:s\Z');
         $id = md5($date.rand(1, 1000000));
         $samlRequest = $this->getDataFromJson->generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
         $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
 
-        list($curlError, $info, $html) = $this->getUrlWithCurl($url);
+        $result = $this->getUrlWithPhantomJS($url);
+
+        if ($result){
+            list($curlError, $statusCode, $html) = split ("\|", $result, 3);
+            if ($curlError === 'false') $curlError = false;
+            $info['http_code'] = $statusCode;
+        }
+        else{
+            print "\nERROR ON: ".$idpEntityId;
+            $curError = "Unspecified error";
+            $info['http_code'] = 0;
+            $html = '';
+        }
 
         $patternUsername = '/<input[\s]+[^>]*((type=\s*[\'"](text|email)[\'"]|user)|(name=\s*[\'"](name)[\'"]))[^>]*>/im';
         $patternPassword = '/<input[\s]+[^>]*(type=\s*[\'"]password[\'"]|password)[^>]*>/im';
 
         $patternNoEdugainMetadata = "/Unable.to.locate(\sissuer.in|).metadata(\sfor|)|no.metadata.found|profile.is.not.configured.for.relying.party|Cannot.locate.entity|fail.to.load.unknown.provider|does.not.recognise.the.service|unable.to.load.provider|Nous.n'avons.pas.pu.(charg|charger).le.fournisseur.de service|Metadata.not.found|application.you.have.accessed.is.not.registered.for.use.with.this.service/i";
-  
-        if (($this->isHTMLwithoutUserPassword($patternUsername, $patternPassword, $html)) && !preg_match($patternNoEdugainMetadata, $html) && $info['http_code'] != 401 && $curlError == false) {
-           $samlRequest = $this->getDataFromJson->generateSamlRequest($spACSurl, $httpRedirectServiceLocation, $id, $date, $spEntityID);
-           $url = $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
-
-           $result = $phantomjs->execute($script,$url);
-           list($statusCode,$html) = split ("\|", $result, 2); 
-           
-           if ($statusCode) $info['http_code'] = $statusCode;
-        }       
 
         $error = '';
         $status = 0;
         $message = '1 - OK';
 
-        if ($curlError !== false) {
+        if ($curlError !== false){
             $status = 3;
             $message = '3 - CURL-Error';
             if ($this->verbose) {
                 echo $idpEntityId . " Curl error: ".$curlError."\n";
             }
             $error = $curlError;
-        } else if ($info['http_code'] != 200 && $info['http_code'] != 401) {
+        } else if ($info['http_code'] != 200 && $info['http_code'] != 401 ) {
             $status = 3;
             $message = '3 - HTTP-Error';
             if ($this->verbose) {
-                echo $idpEntityId . " Status code: ".$info['http_code']."\n";
+                echo $idpEntityId . " has Status: ".$info['http_code']."\n";
             }
             $error = "Status code: ".$info['http_code'];
         } else {
@@ -224,13 +223,15 @@ class IdpChecks {
 
     private function getUrlWithPhantomJS($url){
        $phantomjs = new HybridLogic\PhantomJS\Runner;
-       $script = dirname(__FILE__) . '/../eccs.js'; // Full path to the script to execute
+       $script = '--local-url-access=yes --ssl-protocol=any --ignore-ssl-errors=true --web-security=false '.dirname(__FILE__) . '/phjs-eccs.js';
 
-       $html = $phantomjs->execute($script, $url);
-   
-       return $html;
+       $result = $phantomjs->execute($script, $url);
+
+       return $result;
 
     }
+
+    /* ---- KEPT FOR HISTORY AND NOT USED ----*/
 
     private function getUrlWithCurl($url) {
         $curl = curl_init($url);
@@ -243,7 +244,7 @@ class IdpChecks {
                       CURL_SSLVERSION_SSLv2   (2),
                       CURL_SSLVERSION_SSLv3   (3),
                       CURL_SSLVERSION_TLSv1_0 (4),
-                      CURL_SSLVERSION_TLSv1_1 (5) 
+                      CURL_SSLVERSION_TLSv1_1 (5)
                    or CURL_SSLVERSION_TLSv1_2 (6).
              */
             if ($vers === 2) {
@@ -259,8 +260,8 @@ class IdpChecks {
                     CURLOPT_SSL_VERIFYHOST => false,
                     CURLOPT_COOKIEJAR => "/dev/null",
                     CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_TIMEOUT => 60,
-                    CURLOPT_CONNECTTIMEOUT => 60,
+                    CURLOPT_TIMEOUT => 120,
+                    CURLOPT_CONNECTTIMEOUT => 120,
                     CURLOPT_SSLVERSION => $vers,
                     CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
                 ));
@@ -274,7 +275,7 @@ class IdpChecks {
                 }
             }
         }
-   
+
         $info = curl_getinfo($curl);
 
         $html = $this->cleanUtf8Curl($html, $curl);
@@ -293,7 +294,7 @@ class IdpChecks {
         $contentType = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
         $charset = $this->obtainCharset($contentType, $html);
         /* Convert it if it is anything but UTF-8 */
-        /* You can change "UTF-8"  to "UTF-8//IGNORE" to 
+        /* You can change "UTF-8"  to "UTF-8//IGNORE" to
         ignore conversion errors and still output something reasonable */
         if (isset($charset) && strtoupper($charset) != "UTF-8") {
             $html = iconv($charset, 'UTF-8', $html);
@@ -329,4 +330,6 @@ class IdpChecks {
         }
         return $charset;
     }
+
+    /* ---- END ----*/
 }

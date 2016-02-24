@@ -16,7 +16,7 @@ check_history = 2
 verbose = False
 
 [disabled_federation]
-reg_auth = "http://www.federation1.nl/,https://www.federation2.dk,http://federation3.no/"
+reg_auth = "http://www.surfconext.nl/,https://www.wayf.dk,http://feide.no/"
 
 [sp_1]
 name = SWITCH
@@ -37,7 +37,7 @@ db_password = password_db_mccs
 db_sock = /var/run/mysqld/mysqld.sock
 
 [edugain_db_json]
-json_feds_url = "http://technical.edugain.org/api.php?action=list_feds"
+json_feds_url = "http://technical.edugain.org/api.php?action=list_feds_full&key=xoaw1-cjws"
 json_idps_url = "http://technical.edugain.org/api.php?action=list_eccs_idps"
 
 [email]
