@@ -41,14 +41,14 @@ page.open(url, function (status) {
       console.log(page.code+'|'+page.reason+'|NULL');
     }
     else {
-      var html = stampa_pagina(page);
+      var html = print_page_html(page);
       console.log('false|'+page.httpCode+'|'+html);
     }
     phantom.exit(0);
   }, 5000);
 });
 
-function stampa_pagina(page) {
+function print_page_html(page) {
     var framescount = page.framesCount;
 
     if (framescount > 0) {
@@ -56,7 +56,7 @@ function stampa_pagina(page) {
       for (var i = 0; i < framescount; i++) {
           html += "\n<!--- frame " + i + " --->\n";
           page.switchToFrame(i);
-          html += stampa_pagina(page);
+          html += print_page_html(page);
           page.switchToParentFrame();
       }
       return html;

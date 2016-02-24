@@ -22,7 +22,7 @@
 
         # sudo apt-get install php5-curl php5-json php5-mysqlnd
 
-2. Install the pre-compiled version 2.1.1 of PhantomJS to your /usr/local/bin directory:
+2. Install the compiled version 2.1.1 of PhantomJS to your /usr/local/bin directory:
 
     * Create a new directory into /usr/local/src:
 
