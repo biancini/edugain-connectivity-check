@@ -120,6 +120,10 @@
 
       To **enable again** the federation, remove it from the comma-separated list.
 
+4. **HOWTO Empty the DB for a clean test:**
+
+        # mysql -u root -pPASSWORD < /opt/edugain-connectivity-check/database/clean_eccs_db.sql
+
 
 # How to send emails to eduGAIN Steering Group members
 
