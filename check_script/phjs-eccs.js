@@ -4,7 +4,6 @@ var args = system.args;
 var url = args[1];
 
 var httpCode = 0;
-var statusText = '';
 
 var page = require('webpage').create();
 page.code = null;
