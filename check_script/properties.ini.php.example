@@ -16,7 +16,7 @@ check_history = 2
 verbose = False
 
 [disabled_federation]
-reg_auth = "http://www.surfconext.nl/,https://www.wayf.dk,http://feide.no/"
+reg_auth = "http://www.federation1.org/,https://www.federation2.org,http://federation3.org/"
 
 [sp_1]
 name = SWITCH
@@ -31,9 +31,9 @@ acs_url = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
 [db_connection]
 db_host = localhost
 db_port = 3306
-db_name = mccs_db
-db_user = mccs_user
-db_password = password_db_mccs
+db_name = eccs_db
+db_user = eccs_user
+db_password = password_db_eccs
 db_sock = /var/run/mysqld/mysqld.sock
 
 [edugain_db_json]
@@ -48,7 +48,7 @@ user = username
 password = password
 from = edugain-integration@geant.net
 replyTo = edugain-integration@geant.net
-baseurl = https://server-hosting-mccs.edugain.net/mccs
+baseurl = https://server-hosting-eccs.edugain.net/eccs
 test_recipient = test.user@geant.net
 
 ;*/

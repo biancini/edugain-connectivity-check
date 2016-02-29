@@ -22,9 +22,9 @@ acs_url = https://sp24-test.garr.it/Shibboleth.sso/SAML2/POST
 [db_connection]
 db_host = localhost
 db_port = 3306
-db_name = mccs_db
-db_user = mccs_webuser
-db_password = password_db_mccs_web
+db_name = eccs_db
+db_user = eccs_webuser
+db_password = password_db_eccs_web
 db_sock = /var/run/mysqld/mysqld.sock
 
 ;*/

@@ -16,11 +16,11 @@
 
 0. Install the requirements packages:
 
-        # sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server
+        # sudo apt-get install apache2 php5 libapache2-mod-php5 mysql-server git
 
 1. Install the requirements libraries:
 
-        # sudo apt-get install php5-curl php5-json php5-mysqlnd
+        # sudo apt-get install libfontconfig php5-json php5-mysqlnd
 
 2. Install the compiled version 2.1.1 of PhantomJS to your /usr/local/bin directory:
 
@@ -91,7 +91,7 @@
 
 9. Copy the **properties.ini.php.example** to **properties.ini.php** in the folder **web/services** and change it with your DB parameters (in this case the user created should only have SELECT grant on the tables of the database).
 
-10. Add a line to the crontab (`crontab -e`) to repeat the script every day at 5 o'clock:
+10. Add a line to the crontab (`crontab -e`) to repeat the script every day at 8 o'clock:
 
         00 8 * * * cd /opt/edugain-connectivity-check/check_script ; /usr/bin/php mccs.php > /var/log/eccs.log
 
