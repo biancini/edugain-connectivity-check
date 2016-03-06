@@ -73,6 +73,7 @@ class IdpChecks {
         for ($i = 0; $i < $this->parallel; $i++) {
             $pid = pcntl_fork();
             if (!$pid) {
+                sleep(1);
                 //In child
                 $this->storeResultsDb->resetDbConnection();
                 print "Executing check for " . $idpList[$count]['entityID'] . "\n";
@@ -87,6 +88,7 @@ class IdpChecks {
             if ($count < count($idpList)) {
                 $pid = pcntl_fork();
                 if (!$pid) {
+                    sleep(1);
                     //In child
                     $this->storeResultsDb->resetDbConnection();
                     print "Executing check for " . $idpList[$count]['entityID'] . "\n";
@@ -174,14 +176,16 @@ class IdpChecks {
                 echo $idpEntityId . " Curl error: ".$curlError."\n";
             }
             $error = $curlError;
-        } else if ($info['http_code'] != 200 && $info['http_code'] != 401 ) {
+        }
+        else if ($info['http_code'] != 200 && $info['http_code'] != 401 && $this->isHTMLwithoutUserPassword($patternUsername, $patternPassword, $html) && !preg_match($patternNoEdugainMetadata, $html)) {
             $status = 3;
             $message = '3 - HTTP-Error';
             if ($this->verbose) {
                 echo $idpEntityId . " has Status: ".$info['http_code']."\n";
             }
             $error = "Status code: ".$info['http_code'];
-        } else {
+        }
+        else {
             if ($this->isHTMLwithoutUserPassword($patternUsername, $patternPassword, $html)) {
                 if (preg_match($patternNoEdugainMetadata, $html)){
                   $status = 2;

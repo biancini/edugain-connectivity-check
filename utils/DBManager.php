@@ -21,7 +21,7 @@ class DBManager {
     /**
      Create a new DB connection and return its pointer.
     
-     @param array $dbConnection Array containing the datas for DB connection
+     @param mysqli DB pointer
      */
     public function __construct($mysqli = null) {
         if ($mysqli) {
@@ -63,12 +63,13 @@ class DBManager {
     }
     
     /**
-     Execute a prepared satement on the DB and returns resultset
+     Execute a prepared statement on the DB and returns resultset
     
-     @param array $dbConnection Array containing the datas for DB connection
-     @return new mysqli($dbConnection),
+     @param retResSet boolean value that decide if the resultSet obtained from the query will be shown or not
+     @param query string contained the SQL query to execute on the DB
+     @return the value of the query executed or 1
      */
-    public function executeStatement($r, $query) {
+    public function executeStatement($retResSet, $query) {
         $sql = $query->getQuerySql();
         $params = $query->getQueryParams();
 
@@ -79,11 +80,11 @@ class DBManager {
         $stmt->execute();
         $resultset = $stmt->get_result();
 
-        if ($r && !$resultset) {
+        if ($retResSet && !$resultset) {
             throw new Exception('ERROR ' . mysqli_error($this->mysqli));
         }
 
-        return ($r) ? $resultset : (($resultset) ? $resultset->fetch_row()[0] : 1);
+        return ($retResSet) ? $resultset : (($resultset) ? $resultset->fetch_row()[0] : 1);
     }
 
     public function escapeStringChars($string) {

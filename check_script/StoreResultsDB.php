@@ -234,8 +234,10 @@ class StoreResultsDB {
         $previousStatus = NULL;
         $ignoreEntity = false;
 
+        // If I found the input IdP on the EntityDescriptors table
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
+               // If the IdP was disabled before, but now its registrationAuthority is accepted, then enables the IdP
                if (!(in_array($row['registrationAuthority'], $fedsDisabledList)) && $row['ignoreReason'] == 'Federation excluded from check') {
                   $query = new QueryBuilder();
                   $query->setSql("UPDATE EntityDescriptors SET ignoreEntity = 0, ignoreReason = NULL WHERE entityID = ?");
@@ -245,6 +247,7 @@ class StoreResultsDB {
                   $previousStatus = NULL;
                   $ignoreEntity = false;
                }
+               // Else if I found an IdP that must be disabled, then disables the IdP
                else if (in_array($row['registrationAuthority'], $fedsDisabledList) && $row['ignoreReason'] != 'Federation excluded from check') {
                   $query = new QueryBuilder();
                   $query->setSql("UPDATE EntityDescriptors SET ignoreEntity = 1, ignoreReason = 'Federation excluded from check' WHERE entityID = ?");
@@ -254,13 +257,16 @@ class StoreResultsDB {
                   $previousStatus = NULL;
                   $ignoreEntity = true;
                }
+               // If anything have to change, save the previousStatus and the value of the ignoreEntity field and then returns them
                else {
                   $previousStatus = $row['currentResult'];
                   $ignoreEntity = $row['ignoreEntity'];
                }
             }
             return array($ignoreEntity, $previousStatus);
-        } else {
+        }
+        // If I didn't find the input IdP on the EntityDescriptors table, I must insert the new IdP on the DB 
+        else {
             $query = new QueryBuilder();
             $query->setSql("INSERT INTO EntityDescriptors (entityID, registrationAuthority, displayName, technicalContacts, supportContacts, serviceLocation, ignoreEntity, ignoreReason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $query->addQueryParam($idp['entityID'], 's');
