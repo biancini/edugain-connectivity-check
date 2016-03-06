@@ -40,7 +40,7 @@ page.onResourceTimeout = function(request) {
 page.onResourceError = function(resourceError) {
    if (resourceError.url == url){
       if(page.content == null || page.content == '' || page.content == '<html><head></head><body></body></html>') {
-         page.code = (resourceError.errorCode == 5 || resourceError.errorCode == 99) ? 408 : resourceError.errorCode;
+         page.code = (resourceError.errorCode == 5 || resourceError.errorCode == 99) ? 4 : resourceError.errorCode;
          page.reason = (resourceError.errorCode == 5 || resourceError.errorCode == 99) ?  'ERR_CONNECTION_TIMED_OUT' : resourceError.errorString;
          page.errorURL = resourceError.url;
       }
