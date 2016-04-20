@@ -26,6 +26,7 @@ class EccsService {
         $this->requestParams = $requestParams ? $requestParams : $_REQUEST;
     }
 
+    /* This getParameter function take parameter key value and checks if it exists on the request ($_REQUEST) form */
     protected function getParameter($key, $defaultValue, $array=false) {
         $value = (array_key_exists($key, $this->requestParams) ? htmlspecialchars($this->requestParams[$key]) : $defaultValue);
     
@@ -40,6 +41,7 @@ class EccsService {
         return $value;
     }
     
+    /* This getParameters function obtains all parameters from list */
     protected function getAllParameters($list) {
         foreach ($list as $par) {
             $params[$par[0]] = $this->getParameter($par[0], $par[1], $par[2]);

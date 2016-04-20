@@ -41,6 +41,7 @@ class RunTest extends EccsService {
         return $httpRedirectServiceLocation."?SAMLRequest=".$samlRequest;
     }
 
+    /* This handle function creates and returns the SAML Request URL for the IdPs */
     function handle() {
         $acsUrl = $this->getParameter("acsUrl", null);
         $serviceLocation = $this->getParameter("serviceLocation", null);

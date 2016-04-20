@@ -19,6 +19,8 @@ require_once 'EccsService.php';
 require_once '../../utils/QueryBuilder.php';
 
 class CheckHtml extends EccsService {
+
+    /* This handle function returns the HTML source code of an IdP idenfied by its own checkID */
     public function handle() {
         $id = $this->getParameter('checkid', null);
         if (!$id) {
