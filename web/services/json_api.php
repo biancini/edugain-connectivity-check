@@ -19,7 +19,39 @@ require_once 'JsonAPI.php';
     
 $handler = new JsonAPI();
 try {
-    print json_encode($handler->handle()); 
+    $results = $handler->handle();
+    if (array_key_exists('page', $results) && array_key_exists('total_pages', $results)) {
+        parse_str($_SERVER['QUERY_STRING'], $query_string);
+        $base_url = "//{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
+
+	$link = "";
+	if ($result['page'] < $result['total_pages']) {
+	    $query_string['page'] = $result['page'] + 1;
+	    $next_querystring = http_build_query($query_string);
+	    if ($link !== "") $link .= ", ";
+	    $link .= "<{$base_url}{$next_querystring}>; rel=\"next\"";
+
+	    $query_string['page'] = $result['total_pages'];
+	    $last_querystring = http_build_query($query_string);
+	    if ($link !== "") $link .= ", ";
+	    $link .= "<{$base_url}{$last_querystring}>; rel=\"last\"";
+	}
+
+	if ($result['page'] > 1) {
+	    $query_string['page'] = $result['page'] - 1;
+	    $prev_querystring = http_build_query($query_string);
+	    if ($link !== "") $link .= ", ";
+	    $link .= "<{$base_url}{$prev_querystring}>; rel=\"prev\"";
+
+	    $query_string['page'] = 1;
+	    $first_querystring = http_build_query($query_string);
+	    if ($link !== "") $link .= ", ";
+	    $link .= "<{$base_url}{$first_querystring}>; rel=\"first\"";
+	}
+
+        header("Link: <{$link}");
+    }	    
+    print json_encode($results); 
 }
 catch (Exception $e) {
     print $e->getMessage();
